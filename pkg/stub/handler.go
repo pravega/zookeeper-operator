@@ -7,6 +7,7 @@ import (
 
 	"github.com/operator-framework/operator-sdk/pkg/sdk"
 	"github.com/sirupsen/logrus"
+	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -24,27 +25,25 @@ type Handler struct {
 func (h *Handler) Handle(ctx context.Context, event sdk.Event) error {
 	switch o := event.Object.(type) {
 	case *v1beta1.Cluster:
-		err := sdk.Create(newbusyBoxPod(o))
+		err := sdk.Create(newZkSts(o))
 		if err != nil && !errors.IsAlreadyExists(err) {
-			logrus.Errorf("Failed to create busybox pod : %v", err)
+			logrus.Errorf("Failed to create zookeeper stateful-set : %v", err)
 			return err
 		}
 	}
 	return nil
 }
 
-// newbusyBoxPod demonstrates how to create a busybox pod
-func newbusyBoxPod(cr *v1beta1.Cluster) *v1.Pod {
-	labels := map[string]string{
-		"app": "busy-box",
-	}
-	return &v1.Pod{
+// newZkSts creates a new Zookeeper StatefulSet
+func newZkSts(cr *v1beta1.Cluster) *appsv1.StatefulSet {
+	cr.WithDefaults()
+	return &appsv1.StatefulSet{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Pod",
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "busy-box",
+			Name:      cr.GetObjectMeta().GetClusterName(),
 			Namespace: cr.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(cr, schema.GroupVersionKind{
@@ -53,14 +52,18 @@ func newbusyBoxPod(cr *v1beta1.Cluster) *v1.Pod {
 					Kind:    "Cluster",
 				}),
 			},
-			Labels: labels,
+			Labels: cr.Spec.Pod.Labels,
 		},
-		Spec: v1.PodSpec{
-			Containers: []v1.Container{
-				{
-					Name:    "busybox",
-					Image:   "busybox",
-					Command: []string{"sleep", "3600"},
+		Spec: appsv1.StatefulSetSpec{
+			Template: v1.PodTemplateSpec{
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
+						{
+							Name:            "zookeeper",
+							Image:           cr.Spec.Image.ToString(),
+							ImagePullPolicy: cr.Spec.Image.PullPolicy,
+						},
+					},
 				},
 			},
 		},
