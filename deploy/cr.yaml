@@ -1,4 +1,4 @@
 apiVersion: "zookeeper.pravega.io/v1beta1"
-kind: "Cluster"
+kind: "ZookeeperCluster"
 metadata:
   name: "example"

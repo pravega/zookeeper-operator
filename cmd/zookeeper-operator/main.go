@@ -4,10 +4,10 @@ import (
 	"context"
 	"runtime"
 
-	stub "github.com/pravega/zookeeper-operator/pkg/stub"
 	sdk "github.com/operator-framework/operator-sdk/pkg/sdk"
 	k8sutil "github.com/operator-framework/operator-sdk/pkg/util/k8sutil"
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
+	stub "github.com/pravega/zookeeper-operator/pkg/stub"
 
 	"github.com/sirupsen/logrus"
 )
@@ -22,7 +22,7 @@ func main() {
 	printVersion()
 
 	resource := "zookeeper.pravega.io/v1beta1"
-	kind := "Cluster"
+	kind := "ZookeeperCluster"
 	namespace, err := k8sutil.GetWatchNamespace()
 	if err != nil {
 		logrus.Fatalf("Failed to get watch namespace: %v", err)

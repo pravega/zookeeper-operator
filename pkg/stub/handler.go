@@ -24,7 +24,7 @@ type Handler struct {
 
 func (h *Handler) Handle(ctx context.Context, event sdk.Event) error {
 	switch o := event.Object.(type) {
-	case *v1beta1.Cluster:
+	case *v1beta1.ZookeeperCluster:
 		err := sdk.Create(newZkSts(o))
 		if err != nil && !errors.IsAlreadyExists(err) {
 			logrus.Errorf("Failed to create zookeeper stateful-set : %v", err)
@@ -35,33 +35,45 @@ func (h *Handler) Handle(ctx context.Context, event sdk.Event) error {
 }
 
 // newZkSts creates a new Zookeeper StatefulSet
-func newZkSts(cr *v1beta1.Cluster) *appsv1.StatefulSet {
-	cr.WithDefaults()
+func newZkSts(z *v1beta1.ZookeeperCluster) *appsv1.StatefulSet {
+	z.WithDefaults()
 	return &appsv1.StatefulSet{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       "Pod",
-			APIVersion: "v1",
+			Kind:       "StatefulSet",
+			APIVersion: "apps/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      cr.GetObjectMeta().GetClusterName(),
-			Namespace: cr.Namespace,
+			Name:      z.GetObjectMeta().GetName(),
+			Namespace: z.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
-				*metav1.NewControllerRef(cr, schema.GroupVersionKind{
+				*metav1.NewControllerRef(z, schema.GroupVersionKind{
 					Group:   v1beta1.SchemeGroupVersion.Group,
 					Version: v1beta1.SchemeGroupVersion.Version,
-					Kind:    "Cluster",
+					Kind:    "ZookeeperCluster",
 				}),
 			},
-			Labels: cr.Spec.Pod.Labels,
+			Labels: z.Spec.Pod.Labels,
 		},
 		Spec: appsv1.StatefulSetSpec{
+			Replicas: &z.Spec.Size,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"app": z.GetObjectMeta().GetName(),
+				},
+			},
 			Template: v1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					GenerateName: z.GetObjectMeta().GetName(),
+					Labels: map[string]string{
+						"app": z.GetObjectMeta().GetName(),
+					},
+				},
 				Spec: v1.PodSpec{
 					Containers: []v1.Container{
 						{
 							Name:            "zookeeper",
-							Image:           cr.Spec.Image.ToString(),
-							ImagePullPolicy: cr.Spec.Image.PullPolicy,
+							Image:           z.Spec.Image.ToString(),
+							ImagePullPolicy: z.Spec.Image.PullPolicy,
 						},
 					},
 				},

@@ -13,23 +13,23 @@ const DefaultZkContainerPolicy = "IfNotPresent"
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type ClusterList struct {
+type ZookeeperClusterList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
-	Items           []Cluster `json:"items"`
+	Items           []ZookeeperCluster `json:"items"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type Cluster struct {
+type ZookeeperCluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
 	Spec              ClusterSpec   `json:"spec"`
 	Status            ClusterStatus `json:"status,omitempty"`
 }
 
-func (z *Cluster) WithDefaults() {
-	z.Spec.withDefaults()
+func (z *ZookeeperCluster) WithDefaults() {
+	z.Spec.withDefaults(z)
 }
 
 type ClusterSpec struct {
@@ -41,7 +41,7 @@ type ClusterSpec struct {
 	// equal to the expected size.
 	//
 	// The valid range of size is from 1 to 7.
-	Size int `json:"size"`
+	Size int32 `json:"size"`
 
 	Ports []v1.ContainerPort `json:"ports,omitempty"`
 
@@ -51,7 +51,7 @@ type ClusterSpec struct {
 	Pod *PodPolicy `json:"pod,omitempty"`
 }
 
-func (s *ClusterSpec) withDefaults() {
+func (s *ClusterSpec) withDefaults(z *ZookeeperCluster) {
 	s.Image.withDefaults()
 	if s.Size == 0 {
 		s.Size = 1
@@ -75,7 +75,11 @@ func (s *ClusterSpec) withDefaults() {
 			},
 		}
 	}
-	s.Pod.withDefaults()
+	if s.Pod == nil {
+		pod := PodPolicy{}
+		pod.withDefaults(z)
+		s.Pod = &pod
+	}
 }
 
 type ContainerImage struct {
@@ -143,7 +147,10 @@ type PodPolicy struct {
 	DNSTimeoutInSecond int `json:"DNSTimeoutInSecond,omitempty"`
 }
 
-func (c *PodPolicy) withDefaults() {
+func (p *PodPolicy) withDefaults(z *ZookeeperCluster) {
+	if p.Labels == nil {
+		p.Labels = map[string]string{"app": z.GetObjectMeta().GetName()}
+	}
 }
 
 type ClusterStatus struct {

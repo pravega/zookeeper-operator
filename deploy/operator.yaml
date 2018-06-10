@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zookeeper-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: zookeeper-operator
+  template:
+    metadata:
+      labels:
+        name: zookeeper-operator
+    spec:
+      containers:
+        - name: zookeeper-operator
+          image: spiegela/zookeeper-operator
+          command:
+          - zookeeper-operator
+          imagePullPolicy: Always
+          env:
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
