@@ -4,12 +4,16 @@ import (
 	"fmt"
 
 	"k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const DefaultZkContainerRepository = "zookeeper"
-const DefaultZkContainerVersion = "3.5"
-const DefaultZkContainerPolicy = "IfNotPresent"
+const (
+	DefaultZkContainerVersion     = "3.5.4-beta"
+	DefaultZkContainerPolicy      = "IfNotPresent"
+	DefaultTerminationGracePeriod = 1800
+)
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
@@ -36,6 +40,10 @@ type ClusterSpec struct {
 	// Zookeeper container image. default is zookeeper:latest
 	Image ContainerImage `json:"image"`
 
+	// Labels specifies the labels to attach to pods the operator creates for the
+	// zookeeper cluster.
+	Labels map[string]string `json:"labels,omitempty"`
+
 	// Size is the expected size of the zookeeper cluster.
 	// The pravega-operator will eventually make the size of the running cluster
 	// equal to the expected size.
@@ -49,12 +57,17 @@ type ClusterSpec struct {
 	//
 	// Updating the Pod does not take effect on any existing pods.
 	Pod *PodPolicy `json:"pod,omitempty"`
+
+	// PersistentVolumeClaimSpec is the spec to describe PVC for the container
+	// This field is optional. If no PVC spec, stateful containers will use
+	// emptyDir as volume.
+	PersistentVolumeClaimSpec *v1.PersistentVolumeClaimSpec `json:"persistentVolumeClaimSpec,omitempty"`
 }
 
 func (s *ClusterSpec) withDefaults(z *ZookeeperCluster) {
 	s.Image.withDefaults()
 	if s.Size == 0 {
-		s.Size = 1
+		s.Size = 3
 	}
 	if s.Ports == nil {
 		s.Ports = []v1.ContainerPort{
@@ -69,16 +82,31 @@ func (s *ClusterSpec) withDefaults(z *ZookeeperCluster) {
 				ContainerPort: 2888,
 			},
 			{
-				Name:          "election",
+				Name:          "leader-election",
 				HostPort:      3888,
 				ContainerPort: 3888,
 			},
 		}
 	}
+	if z.Spec.Labels == nil {
+		z.Spec.Labels = map[string]string{}
+	}
+	if _, ok := z.Spec.Labels["app"]; !ok {
+		z.Spec.Labels["app"] = z.GetName()
+	}
 	if s.Pod == nil {
-		pod := PodPolicy{}
-		pod.withDefaults(z)
-		s.Pod = &pod
+		s.Pod = &PodPolicy{}
+		s.Pod.withDefaults(z)
+	}
+	if s.PersistentVolumeClaimSpec == nil {
+		s.PersistentVolumeClaimSpec = &v1.PersistentVolumeClaimSpec{
+			AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
+			Resources: v1.ResourceRequirements{
+				Requests: v1.ResourceList{
+					v1.ResourceStorage: resource.MustParse("20Gi"),
+				},
+			},
+		}
 	}
 }
 
@@ -128,11 +156,6 @@ type PodPolicy struct {
 	// This field cannot be updated.
 	Env []v1.EnvVar `json:"Env,omitempty"`
 
-	// PersistentVolumeClaimSpec is the spec to describe PVC for the container
-	// This field is optional. If no PVC spec, stateful containers will use
-	// emptyDir as volume.
-	PersistentVolumeClaimSpec *v1.PersistentVolumeClaimSpec `json:"persistentVolumeClaimSpec,omitempty"`
-
 	// Annotations specifies the annotations to attach to pods the operator
 	// creates.
 	Annotations map[string]string `json:"annotations,omitempty"`
@@ -141,15 +164,45 @@ type PodPolicy struct {
 	// More info: https://kubernetes.io/docs/tasks/configure-pod-container/security-context
 	SecurityContext *v1.PodSecurityContext `json:"securityContext,omitempty"`
 
-	// DNSTimeoutInSecond is the maximum allowed time for the init container of the pod to
-	// reverse DNS lookup its IP given the hostname.
-	// The default is to wait indefinitely and has a vaule of 0.
-	DNSTimeoutInSecond int `json:"DNSTimeoutInSecond,omitempty"`
+	// TerminationGracePeriodSeconds is the amount of time that kubernetes will
+	// give for a pod instance to shutdown normally.
+	// The default value is 1800.
+	TerminationGracePeriodSeconds int64 `json:"terminationGracePeriodSeconds"`
 }
 
 func (p *PodPolicy) withDefaults(z *ZookeeperCluster) {
+	headlessSvcName := fmt.Sprintf("%s-headless", z.GetName())
 	if p.Labels == nil {
-		p.Labels = map[string]string{"app": z.GetObjectMeta().GetName()}
+		p.Labels = map[string]string{"app": z.GetName()}
+	}
+	if p.TerminationGracePeriodSeconds == 0 {
+		p.TerminationGracePeriodSeconds = DefaultTerminationGracePeriod
+	}
+	if z.Spec.Pod.Labels == nil {
+		z.Spec.Pod.Labels = map[string]string{}
+	}
+	if _, ok := z.Spec.Pod.Labels["app"]; !ok {
+		z.Spec.Pod.Labels["app"] = z.GetName()
+	}
+	if p.Affinity == nil {
+		p.Affinity = &v1.Affinity{
+			PodAntiAffinity: &v1.PodAntiAffinity{
+				RequiredDuringSchedulingIgnoredDuringExecution: []v1.PodAffinityTerm{
+					{
+						TopologyKey: "kubernetes.io/hostname",
+						LabelSelector: &metav1.LabelSelector{
+							MatchExpressions: []metav1.LabelSelectorRequirement{
+								{
+									Key:      "app",
+									Operator: metav1.LabelSelectorOpIn,
+									Values:   []string{headlessSvcName},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
 	}
 }
 
