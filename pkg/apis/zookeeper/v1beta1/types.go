@@ -8,8 +8,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const DefaultZkContainerRepository = "zookeeper"
 const (
+	DefaultZkContainerRepository  = "spiegela/zookeeper"
 	DefaultZkContainerVersion     = "3.5.4-beta"
 	DefaultZkContainerPolicy      = "IfNotPresent"
 	DefaultTerminationGracePeriod = 1800
@@ -62,10 +62,20 @@ type ClusterSpec struct {
 	// This field is optional. If no PVC spec, stateful containers will use
 	// emptyDir as volume.
 	PersistentVolumeClaimSpec *v1.PersistentVolumeClaimSpec `json:"persistentVolumeClaimSpec,omitempty"`
+
+	// Conf is the zookeeper configuration, which will be used to generate the
+	// static zookeeper configuration. If no configuration is provided required
+	// default values will be provided, and optional values will be excluded.
+	Conf *ZookeeperConfig `json:"zookeeperConfig,omitempty"`
 }
 
 func (s *ClusterSpec) withDefaults(z *ZookeeperCluster) {
 	s.Image.withDefaults()
+	if s.Conf == nil {
+		cfg := ZookeeperConfig{}
+		cfg.withDefaults()
+		s.Conf = &cfg
+	}
 	if s.Size == 0 {
 		s.Size = 3
 	}
@@ -77,7 +87,7 @@ func (s *ClusterSpec) withDefaults(z *ZookeeperCluster) {
 				ContainerPort: 2181,
 			},
 			{
-				Name:          "server",
+				Name:          "quorum",
 				HostPort:      2888,
 				ContainerPort: 2888,
 			},
@@ -203,6 +213,38 @@ func (p *PodPolicy) withDefaults(z *ZookeeperCluster) {
 				},
 			},
 		}
+	}
+}
+
+type ZookeeperConfig struct {
+	// InitLimit is the amount of time, in ticks, to allow followers to connect
+	// and sync to a leader.
+	//
+	// Default value is 10.
+	InitLimit int `json:"initLimit"`
+
+	// TickTime is the length of a single tick, which is the basic time unit used
+	// by ZooKeeper, as measured in milliseconds
+	//
+	// The default value is 2000.
+	TickTime int `json:"tickTime"`
+
+	// SyncLimit is the amount of time, in ticks, to allow followers to sync with
+	// ZooKeeper.
+	//
+	// The default value is 2.
+	SyncLimit int `json:"syncLimit"`
+}
+
+func (c *ZookeeperConfig) withDefaults() {
+	if c.InitLimit == 0 {
+		c.InitLimit = 10
+	}
+	if c.TickTime == 0 {
+		c.TickTime = 2000
+	}
+	if c.SyncLimit == 0 {
+		c.SyncLimit = 2
 	}
 }
 

@@ -2,9 +2,9 @@ package stub
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
@@ -28,17 +28,33 @@ type Handler struct {
 	// Fill me
 }
 
+type zkPorts struct {
+	Client int32
+	Quorum int32
+	Leader int32
+}
+
 func (h *Handler) Handle(ctx context.Context, event sdk.Event) error {
 	switch o := event.Object.(type) {
 	case *v1beta1.ZookeeperCluster:
 		o.WithDefaults()
+		var ports zkPorts
+		for _, p := range o.Spec.Ports {
+			if p.Name == "client" {
+				ports.Client = p.ContainerPort
+			} else if p.Name == "quorum" {
+				ports.Quorum = p.ContainerPort
+			} else if p.Name == "leader-election" {
+				ports.Leader = p.ContainerPort
+			}
+		}
 		configMapName := fmt.Sprintf("%s-configmap", o.GetName())
 		err := sdk.Create(newZkConfigMap(configMapName, o))
 		if err != nil && !k8serrors.IsAlreadyExists(err) {
 			logrus.Errorf("Failed to create zookeeper configmap : %v", err)
 			return err
 		}
-		err = sdk.Create(newZkSts(configMapName, o))
+		err = sdk.Create(newZkSts(configMapName, ports, o))
 		if err != nil && !k8serrors.IsAlreadyExists(err) {
 			logrus.Errorf("Failed to create zookeeper statefulset : %v", err)
 			return err
@@ -48,22 +64,12 @@ func (h *Handler) Handle(ctx context.Context, event sdk.Event) error {
 			logrus.Errorf("Failed to create zookeeper pod-disruption-budget : %v", err)
 			return err
 		}
-		clientSvc, err := newZkClientSvc(o)
+		err = sdk.Create(newZkClientSvc(ports, o))
 		if err != nil && !k8serrors.IsAlreadyExists(err) {
 			logrus.Errorf("Failed to create zookeeper client service : %v", err)
 			return err
 		}
-		err = sdk.Create(clientSvc)
-		if err != nil && !k8serrors.IsAlreadyExists(err) {
-			logrus.Errorf("Failed to create zookeeper client service : %v", err)
-			return err
-		}
-		headlessSvc, err := newZkHeadlessSvc(o)
-		if err != nil && !k8serrors.IsAlreadyExists(err) {
-			logrus.Errorf("Failed to create zookeeper headless service : %v", err)
-			return err
-		}
-		err = sdk.Create(headlessSvc)
+		err = sdk.Create(newZkHeadlessSvc(ports, o))
 		if err != nil && !k8serrors.IsAlreadyExists(err) {
 			logrus.Errorf("Failed to create zookeeper headless service : %v", err)
 			return err
@@ -73,7 +79,7 @@ func (h *Handler) Handle(ctx context.Context, event sdk.Event) error {
 }
 
 // newZkSts creates a new Zookeeper StatefulSet
-func newZkSts(configMapName string, z *v1beta1.ZookeeperCluster) *appsv1.StatefulSet {
+func newZkSts(configMapName string, ports zkPorts, z *v1beta1.ZookeeperCluster) *appsv1.StatefulSet {
 	sts := appsv1.StatefulSet{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "StatefulSet",
@@ -109,7 +115,7 @@ func newZkSts(configMapName string, z *v1beta1.ZookeeperCluster) *appsv1.Statefu
 						"app": z.GetName(),
 					},
 				},
-				Spec: newZkPodSpec(configMapName, z),
+				Spec: newZkPodSpec(configMapName, ports, z),
 			},
 			VolumeClaimTemplates: []v1.PersistentVolumeClaim{
 				{
@@ -125,14 +131,40 @@ func newZkSts(configMapName string, z *v1beta1.ZookeeperCluster) *appsv1.Statefu
 	return &sts
 }
 
-func newZkPodSpec(configMapName string, z *v1beta1.ZookeeperCluster) v1.PodSpec {
+func newZkPodSpec(configMapName string, ports zkPorts, z *v1beta1.ZookeeperCluster) v1.PodSpec {
+	probe := v1.Probe{
+		InitialDelaySeconds: 10,
+		TimeoutSeconds:      10,
+		Handler: v1.Handler{
+			Exec: &v1.ExecAction{
+				Command: []string{
+					"zookeeper-ready",
+					strconv.Itoa(int(ports.Client)),
+				},
+			},
+		},
+	}
 	container := v1.Container{
 		Name:            "zookeeper",
 		Image:           z.Spec.Image.ToString(),
 		ImagePullPolicy: z.Spec.Image.PullPolicy,
+		ReadinessProbe:  &probe,
+		LivenessProbe:   &probe,
 		VolumeMounts: []v1.VolumeMount{
 			{Name: "data", MountPath: "/data"},
 			{Name: "conf", MountPath: "/conf"},
+		},
+		Lifecycle: &v1.Lifecycle{
+			PostStart: &v1.Handler{
+				Exec: &v1.ExecAction{
+					Command: []string{
+						"zookeeper-bootstrap",
+						strconv.Itoa(int(ports.Client)),
+						strconv.Itoa(int(ports.Quorum)),
+						strconv.Itoa(int(ports.Leader)),
+					},
+				},
+			},
 		},
 	}
 	if z.Spec.Pod.Resources.Limits != nil || z.Spec.Pod.Resources.Requests != nil {
@@ -164,36 +196,22 @@ func newZkPodSpec(configMapName string, z *v1beta1.ZookeeperCluster) v1.PodSpec 
 }
 
 // newZkClientSvc creates a new Zookeeper Service
-func newZkClientSvc(z *v1beta1.ZookeeperCluster) (*v1.Service, error) {
+func newZkClientSvc(ports zkPorts, z *v1beta1.ZookeeperCluster) *v1.Service {
 	name := fmt.Sprintf("%s-client", z.GetName())
-	ports := []v1.ServicePort{}
-	for _, p := range z.Spec.Ports {
-		if p.Name == "client" {
-			ports = append(ports, v1.ServicePort{Name: "client", Port: p.ContainerPort})
-		}
+	svcPorts := []v1.ServicePort{
+		{Name: "client", Port: ports.Client},
 	}
-	if len(ports) == 0 {
-		return nil, errors.New("No port named \"client\" in Cluster specification")
-	}
-	return newSvc(name, ports, true, z), nil
+	return newSvc(name, svcPorts, true, z)
 }
 
 // newZkInternalSvc creates a new Zookeeper Service
-func newZkHeadlessSvc(z *v1beta1.ZookeeperCluster) (*v1.Service, error) {
+func newZkHeadlessSvc(ports zkPorts, z *v1beta1.ZookeeperCluster) *v1.Service {
 	name := fmt.Sprintf("%s-headless", z.GetName())
-	ports := []v1.ServicePort{}
-	for _, p := range z.Spec.Ports {
-		if p.Name == "server" {
-			ports = append(ports, v1.ServicePort{Name: "server", Port: p.ContainerPort})
-		}
-		if p.Name == "leader-election" {
-			ports = append(ports, v1.ServicePort{Name: "leader-election", Port: p.ContainerPort})
-		}
+	svcPorts := []v1.ServicePort{
+		{Name: "quorum", Port: ports.Quorum},
+		{Name: "leader-election", Port: ports.Leader},
 	}
-	if len(ports) < 2 {
-		return nil, errors.New("You must provide a port named \"leader-election\" and \"server\" in Cluster specification")
-	}
-	return newSvc(name, ports, false, z), nil
+	return newSvc(name, svcPorts, false, z)
 }
 
 func newZkConfigMap(name string, z *v1beta1.ZookeeperCluster) *v1.ConfigMap {
@@ -227,7 +245,10 @@ func newZkConfigString(z *v1beta1.ZookeeperCluster) string {
 			"dataDir=/data\n" +
 			"standaloneEnabled=false\n" +
 			"reconfigEnabled=true\n" +
-			"dynamicConfigFile=/conf/zoo.cfg.dynamic\n",
+			"initLimit=" + strconv.Itoa(z.Spec.Conf.InitLimit) + "\n" +
+			"syncLimit=" + strconv.Itoa(z.Spec.Conf.SyncLimit) + "\n" +
+			"tickTime=" + strconv.Itoa(z.Spec.Conf.TickTime) + "\n" +
+			"dynamicConfigFile=/data/zoo.cfg.dynamic\n",
 	)
 	return b.String()
 }
