@@ -378,6 +378,10 @@
 			"Rev": "53feefa2559fb8dfa8d81baad31be332c97d6c77"
 		},
 		{
+			"ImportPath": "k8s.io/apimachinery/pkg/util/sets",
+			"Rev": "ed135c5b96450fd24e5e981c708114fbbd950697"
+		},
+		{
 			"ImportPath": "k8s.io/gengo/args",
 			"Rev": "75356185a9af8f0464efa792e2e9508d5b4be83c"
 		},
