@@ -61,12 +61,12 @@ type ClusterSpec struct {
 	// PersistentVolumeClaimSpec is the spec to describe PVC for the container
 	// This field is optional. If no PVC spec, stateful containers will use
 	// emptyDir as volume.
-	PersistentVolumeClaimSpec *v1.PersistentVolumeClaimSpec `json:"persistentVolumeClaimSpec,omitempty"`
+	PersistentVolumeClaimSpec *v1.PersistentVolumeClaimSpec `json:"persistence,omitempty"`
 
 	// Conf is the zookeeper configuration, which will be used to generate the
 	// static zookeeper configuration. If no configuration is provided required
 	// default values will be provided, and optional values will be excluded.
-	Conf *ZookeeperConfig `json:"zookeeperConfig,omitempty"`
+	Conf *ZookeeperConfig `json:"config,omitempty"`
 }
 
 func (s *ClusterSpec) withDefaults(z *ZookeeperCluster) {
@@ -83,17 +83,14 @@ func (s *ClusterSpec) withDefaults(z *ZookeeperCluster) {
 		s.Ports = []v1.ContainerPort{
 			{
 				Name:          "client",
-				HostPort:      2181,
 				ContainerPort: 2181,
 			},
 			{
 				Name:          "quorum",
-				HostPort:      2888,
 				ContainerPort: 2888,
 			},
 			{
 				Name:          "leader-election",
-				HostPort:      3888,
 				ContainerPort: 3888,
 			},
 		}
@@ -123,7 +120,7 @@ func (s *ClusterSpec) withDefaults(z *ZookeeperCluster) {
 type ContainerImage struct {
 	Repository string        `json:"repository"`
 	Tag        string        `json:"tag"`
-	PullPolicy v1.PullPolicy `json:"imagePullPolicy"`
+	PullPolicy v1.PullPolicy `json:"pullPolicy"`
 }
 
 func (c *ContainerImage) withDefaults() {
@@ -164,7 +161,7 @@ type PodPolicy struct {
 
 	// List of environment variables to set in the container.
 	// This field cannot be updated.
-	Env []v1.EnvVar `json:"Env,omitempty"`
+	Env []v1.EnvVar `json:"env,omitempty"`
 
 	// Annotations specifies the annotations to attach to pods the operator
 	// creates.
