@@ -9,5 +9,7 @@ spec:
     listKind: ZookeeperClusterList
     plural: zookeeper-clusters
     singular: zookeeper-cluster
+    shortNames:
+    - zk
   scope: Namespaced
   version: v1beta1
