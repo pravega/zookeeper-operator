@@ -98,7 +98,8 @@ func newZkSts(configMapName string, ports zkPorts, z *v1beta1.ZookeeperCluster) 
 			Labels: z.Spec.Labels,
 		},
 		Spec: appsv1.StatefulSetSpec{
-			Replicas: &z.Spec.Size,
+			ServiceName: fmt.Sprintf("%s-headless", z.GetName()),
+			Replicas:    &z.Spec.Size,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"app": z.GetName(),
@@ -112,7 +113,8 @@ func newZkSts(configMapName string, ports zkPorts, z *v1beta1.ZookeeperCluster) 
 				ObjectMeta: metav1.ObjectMeta{
 					GenerateName: z.GetName(),
 					Labels: map[string]string{
-						"app": z.GetName(),
+						"app":  z.GetName(),
+						"kind": "ZookeeperMember",
 					},
 				},
 				Spec: newZkPodSpec(configMapName, ports, z),
@@ -279,11 +281,12 @@ func newSvc(name string, ports []v1.ServicePort, clusterIP bool, z *v1beta1.Zook
 					Kind:    "ZookeeperCluster",
 				}),
 			},
-			Labels: map[string]string{
-				"app": z.GetName(),
-			},
+			Labels: map[string]string{"app": z.GetName()},
 		},
-		Spec: v1.ServiceSpec{Ports: ports},
+		Spec: v1.ServiceSpec{
+			Ports:    ports,
+			Selector: map[string]string{"app": z.GetName()},
+		},
 	}
 	if clusterIP == false {
 		service.Spec.ClusterIP = v1.ClusterIPNone
