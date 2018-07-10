@@ -25,7 +25,6 @@ func NewHandler() sdk.Handler {
 }
 
 type Handler struct {
-	// Fill me
 }
 
 type zkPorts struct {
@@ -139,16 +138,14 @@ func newZkPodSpec(configMapName string, ports zkPorts, z *v1beta1.ZookeeperClust
 		TimeoutSeconds:      10,
 		Handler: v1.Handler{
 			Exec: &v1.ExecAction{
-				Command: []string{
-					"zookeeper-ready",
-					strconv.Itoa(int(ports.Client)),
-				},
+				Command: []string{"zookeeperReady.sh", strconv.Itoa(int(ports.Client))},
 			},
 		},
 	}
-	container := v1.Container{
+	zkContainer := v1.Container{
 		Name:            "zookeeper",
 		Image:           z.Spec.Image.ToString(),
+		Ports:           z.Spec.Ports,
 		ImagePullPolicy: z.Spec.Image.PullPolicy,
 		ReadinessProbe:  &probe,
 		LivenessProbe:   &probe,
@@ -156,25 +153,29 @@ func newZkPodSpec(configMapName string, ports zkPorts, z *v1beta1.ZookeeperClust
 			{Name: "data", MountPath: "/data"},
 			{Name: "conf", MountPath: "/conf"},
 		},
-		Lifecycle: &v1.Lifecycle{
-			PostStart: &v1.Handler{
-				Exec: &v1.ExecAction{
-					Command: []string{
-						"zookeeper-bootstrap",
-						strconv.Itoa(int(ports.Client)),
-						strconv.Itoa(int(ports.Quorum)),
-						strconv.Itoa(int(ports.Leader)),
-					},
+	}
+	if z.Spec.Pod.Resources.Limits != nil || z.Spec.Pod.Resources.Requests != nil {
+		zkContainer.Resources = z.Spec.Pod.Resources
+	}
+	zkContainer.Env = z.Spec.Pod.Env
+	podSpec := v1.PodSpec{
+		InitContainers: []v1.Container{
+			{
+				Name:  "zookeeper-init",
+				Image: "spiegela/zookeeper-init:latest",
+				VolumeMounts: []v1.VolumeMount{
+					{Name: "data", MountPath: "/data"},
+					{Name: "conf", MountPath: "/conf"},
+				},
+				Args: []string{
+					fmt.Sprintf("%s-headless.%s.svc.cluster.local", z.GetName(), z.GetNamespace()),
+					strconv.Itoa(int(ports.Client)),
+					strconv.Itoa(int(ports.Quorum)),
+					strconv.Itoa(int(ports.Leader)),
 				},
 			},
 		},
-	}
-	if z.Spec.Pod.Resources.Limits != nil || z.Spec.Pod.Resources.Requests != nil {
-		container.Resources = z.Spec.Pod.Resources
-	}
-	container.Env = z.Spec.Pod.Env
-	podSpec := v1.PodSpec{
-		Containers: []v1.Container{container},
+		Containers: []v1.Container{zkContainer},
 		Affinity:   z.Spec.Pod.Affinity,
 		Volumes: []v1.Volume{
 			{
