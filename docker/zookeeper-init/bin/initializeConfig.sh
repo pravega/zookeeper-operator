@@ -11,7 +11,7 @@ CLIENT_PORT=$2
 QUORUM_PORT=$3
 LEADER_PORT=$4
 
-source ./zookeeperFunctions.sh
+source /usr/local/bin/zookeeperFunctions.sh
 
 # Extract cluster name and this members ordinal value from pod hostname
 if [[ $HOST =~ (.*)-([0-9]+)$ ]]; then
@@ -49,7 +49,7 @@ if [ "$WRITE_CONFIGURATION" == true ]; then
 
     echo "Writing bootstrap configuration with the following config:"
     echo $ZKCONFIG
-    echo $ZKCONFIG > $DYNCONFIG
+    echo "server.${MYID}=${ZKCONFIG}" > $DYNCONFIG
 
   else
     echo "On incoming observer. Pulling config via Zookeeper client."

@@ -160,8 +160,9 @@ func makeZkPodSpec(configMapName string, ports zkPorts, z *v1beta1.ZookeeperClus
 	podSpec := v1.PodSpec{
 		InitContainers: []v1.Container{
 			{
-				Name:  "zookeeper-init",
-				Image: "spiegela/zookeeper-init:latest",
+				Name:            "zookeeper-init",
+				Image:           "spiegela/zookeeper-init:latest",
+				ImagePullPolicy: "Always",
 				VolumeMounts: []v1.VolumeMount{
 					{Name: "data", MountPath: "/data"},
 					{Name: "conf", MountPath: "/conf"},
@@ -245,6 +246,7 @@ func makeZkConfigString(ports zkPorts, z *v1beta1.ZookeeperCluster) string {
 			"dataDir=/data\n" +
 			"standaloneEnabled=false\n" +
 			"reconfigEnabled=true\n" +
+			"skipACL=yes\n" +
 			"initLimit=" + strconv.Itoa(z.Spec.Conf.InitLimit) + "\n" +
 			"syncLimit=" + strconv.Itoa(z.Spec.Conf.SyncLimit) + "\n" +
 			"tickTime=" + strconv.Itoa(z.Spec.Conf.TickTime) + "\n" +

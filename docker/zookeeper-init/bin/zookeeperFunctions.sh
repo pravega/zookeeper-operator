@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function zkConfig() {
-  echo "server.$MYID=$HOST.$DOMAIN:$QUORUM_PORT:$LEADER_PORT:$ROLE;$CLIENT_PORT"
+  echo "$HOST.$DOMAIN:$QUORUM_PORT:$LEADER_PORT:$ROLE;$CLIENT_PORT"
 }
 
 function zkConnectionString() {
