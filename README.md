@@ -35,6 +35,11 @@ docker push ${your-operator-image-tag}:latest
 
 ### Install the Kubernetes resources
 
+If you're running on GKE, be sure to enable cluster role bindings:
+```bash
+$ kubectl create clusterrolebinding your-user-cluster-admin-binding --clusterrole=cluster-admin --user=<your.google.cloud.email@example.org>
+```
+
 ```bash
 # Create Operator deployment, Roles, Service Account, and Custom Resource Definition for
 #   a Zookeeper cluster.
