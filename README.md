@@ -40,6 +40,8 @@ If you're running on GKE, be sure to enable cluster role bindings:
 $ kubectl create clusterrolebinding your-user-cluster-admin-binding --clusterrole=cluster-admin --user=<your.google.cloud.email@example.org>
 ```
 
+Now install the operator components:
+
 ```bash
 # Create Operator deployment, Roles, Service Account, and Custom Resource Definition for
 #   a Zookeeper cluster.
