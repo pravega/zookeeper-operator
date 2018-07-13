@@ -11,7 +11,7 @@ import (
 const (
 	DefaultZkContainerRepository  = "spiegela/zookeeper"
 	DefaultZkContainerVersion     = "3.5.4-beta"
-	DefaultZkContainerPolicy      = "IfNotPresent"
+	DefaultZkContainerPolicy      = "Always"
 	DefaultTerminationGracePeriod = 1800
 )
 

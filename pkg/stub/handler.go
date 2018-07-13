@@ -137,7 +137,10 @@ func makeZkPodSpec(configMapName string, ports zkPorts, z *v1beta1.ZookeeperClus
 		TimeoutSeconds:      10,
 		Handler: v1.Handler{
 			Exec: &v1.ExecAction{
-				Command: []string{"zookeeperReady.sh", strconv.Itoa(int(ports.Client))},
+				Command: []string{
+					"zookeeperReady.sh",
+					fmt.Sprintf("%s-headless.%s.svc.cluster.local", z.GetName(), z.GetNamespace()),
+					strconv.Itoa(int(ports.Client))},
 			},
 		},
 	}
@@ -152,29 +155,19 @@ func makeZkPodSpec(configMapName string, ports zkPorts, z *v1beta1.ZookeeperClus
 			{Name: "data", MountPath: "/data"},
 			{Name: "conf", MountPath: "/conf"},
 		},
+		Command: []string{"/usr/local/bin/zookeeperStart.sh"},
+		Args: []string{
+			fmt.Sprintf("%s-headless.%s.svc.cluster.local", z.GetName(), z.GetNamespace()),
+			strconv.Itoa(int(ports.Client)),
+			strconv.Itoa(int(ports.Quorum)),
+			strconv.Itoa(int(ports.Leader)),
+		},
 	}
 	if z.Spec.Pod.Resources.Limits != nil || z.Spec.Pod.Resources.Requests != nil {
 		zkContainer.Resources = z.Spec.Pod.Resources
 	}
 	zkContainer.Env = z.Spec.Pod.Env
 	podSpec := v1.PodSpec{
-		InitContainers: []v1.Container{
-			{
-				Name:            "zookeeper-init",
-				Image:           "spiegela/zookeeper-init:latest",
-				ImagePullPolicy: "Always",
-				VolumeMounts: []v1.VolumeMount{
-					{Name: "data", MountPath: "/data"},
-					{Name: "conf", MountPath: "/conf"},
-				},
-				Args: []string{
-					fmt.Sprintf("%s-headless.%s.svc.cluster.local", z.GetName(), z.GetNamespace()),
-					strconv.Itoa(int(ports.Client)),
-					strconv.Itoa(int(ports.Quorum)),
-					strconv.Itoa(int(ports.Leader)),
-				},
-			},
-		},
 		Containers: []v1.Container{zkContainer},
 		Affinity:   z.Spec.Pod.Affinity,
 		Volumes: []v1.Volume{

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 # INITIALIZE CONTANTS
 
@@ -43,17 +44,17 @@ if [ "$WRITE_CONFIGURATION" == true ]; then
   echo $MYID > $MYID_FILE
 
   if [[ $MYID -eq 1 ]]; then
-    ROLE="participant"
-    echo "Initial initialization of ordinal 0 pod, creating new config."
+    ROLE=participant
+    echo Initial initialization of ordinal 0 pod, creating new config.
     ZKCONFIG=$(zkConfig)
 
-    echo "Writing bootstrap configuration with the following config:"
+    echo Writing bootstrap configuration with the following config:
     echo $ZKCONFIG
     echo "server.${MYID}=${ZKCONFIG}" > $DYNCONFIG
 
   else
     echo "On incoming observer. Pulling config via Zookeeper client."
-    ROLE="observer"
+    ROLE=observer
     ZKURL=$(zkConnectionString)
     ZKCONFIG=$(zkConfig)
 
@@ -63,9 +64,10 @@ if [ "$WRITE_CONFIGURATION" == true ]; then
     echo Adding server to ensemble with config:
     echo $ZKCONFIG
 
-    BOOTSTRAP_CONFIG=`java -jar /root/add-zk-member.jar $ZKURL $MYID  $ZKCONFIG`
-    echo "Writing local configuration to disk."
-    echo $BOOTSTRAP_CONFIG > $DYNCONFIG
-
+    echo "Updating and writing local configuration to disk."
+    java -jar /root/zu.jar add $ZKURL $MYID  $ZKCONFIG $DYNCONFIG
   fi
 fi
+
+echo "Starting zookeeper service"
+zkServer.sh start-foreground

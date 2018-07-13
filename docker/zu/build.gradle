@@ -31,7 +31,7 @@ sourceSets {
 
 jar {
   manifest {
-    attributes 'Main-Class': 'io.pravega.zookeeper.AddServerKt'
+    attributes 'Main-Class': 'io.pravega.zookeeper.MainKt'
   }
   from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
 }

@@ -11,10 +11,9 @@ const val ZK_CONNECTION_TIMEOUT_MINS: Long  = 10
 
 /**
  * Creates a new Zookeeper client and waits until it's in a connected state
- */
-fun newZookeeperClient(zkUrl: String) : ZooKeeper {
-    println("Connecting to Zookeeper $zkUrl")
 
+fun newZookeeperClient(zkUrl: String) : ZooKeeper {
+    System.err.println("Connecting to Zookeeper $zkUrl")
     val connectionWatcher = ConnectionWatcher()
     val zk = ZooKeeper(zkUrl, 3000, connectionWatcher)
 
@@ -22,12 +21,13 @@ fun newZookeeperClient(zkUrl: String) : ZooKeeper {
 
     return zk
 }
+ */
 
 /**
  * Creates a new Zookeeper Admin client and waits until it's in a connected state
  */
 fun newZookeeperAdminClient(zkUrl: String) : ZooKeeperAdmin {
-    println("Connecting to Zookeeper $zkUrl")
+    System.err.println("Connecting to Zookeeper $zkUrl")
 
     val connectionWatcher = ConnectionWatcher()
     val zk = ZooKeeperAdmin(zkUrl, 3000, connectionWatcher)

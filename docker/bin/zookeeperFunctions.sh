@@ -16,5 +16,9 @@ function zkConnectionString() {
       ZK_CONNECTION_STRING="${ZK_CONNECTION_STRING},${HOST}:${CLIENT_PORT}"
     fi
   done
-  echo $ZK_CONNECTION_STRING
+  if [[ "$ZK_CONNECTION_STRING" == "" ]]; then
+    echo "localhost:${CLIENT_PORT}"
+  else
+    echo $ZK_CONNECTION_STRING
+  fi
 }
