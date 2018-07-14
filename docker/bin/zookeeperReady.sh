@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
 set -ex
 
+HOST=`hostname -s`
 DATA_DIR="/data"
 MYID_FILE="$DATA_DIR/myid"
 DOMAIN=$1
 CLIENT_PORT=$2
+QUORUM_PORT=$3
+LEADER_PORT=$4
 
 source /usr/local/bin/zookeeperFunctions.sh
 
@@ -19,16 +22,21 @@ if [[ "$OK" == "imok" ]]; then
   ROLE=`java -jar /root/zu.jar get-role $ZKURL $MYID`
 
   if [[ "$ROLE" == "participant" ]]; then
-  echo "Zookeeper service is available and an active participant"
-  exit 0
+    echo "Zookeeper service is available and an active participant"
+    exit 0
 
   elif [[ "$ROLE" == "observer" ]]; then
-    echo "Zookeeper service is ready to be upgraded from observer to participant"
+    echo "Zookeeper service is ready to be upgraded from observer to participant."
     ROLE=participant
     ZKCONFIG=$(zkConfig)
-    java -jar /root/zu.jar add $ZKURL $MYID  $ZKCONFIG
+    java -jar /root/zu.jar remove $ZKURL $MYID
+    sleep 5
+    java -jar /root/zu.jar add $ZKURL $MYID $ZKCONFIG
+    exit 1
+
   else
-  exit 1
+    echo "Something has gone wrong. Unable to determinal zookeeper role."
+    exit 1
 
   fi
 

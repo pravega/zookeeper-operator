@@ -140,7 +140,10 @@ func makeZkPodSpec(configMapName string, ports zkPorts, z *v1beta1.ZookeeperClus
 				Command: []string{
 					"zookeeperReady.sh",
 					fmt.Sprintf("%s-headless.%s.svc.cluster.local", z.GetName(), z.GetNamespace()),
-					strconv.Itoa(int(ports.Client))},
+					strconv.Itoa(int(ports.Client)),
+					strconv.Itoa(int(ports.Quorum)),
+					strconv.Itoa(int(ports.Leader)),
+				},
 			},
 		},
 	}
