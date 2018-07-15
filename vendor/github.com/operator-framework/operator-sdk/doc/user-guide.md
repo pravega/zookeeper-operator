@@ -20,7 +20,10 @@ The Operator SDK has a CLI tool that helps the developer to create, build, and d
 Checkout the desired release tag and install the SDK CLI tool:
 
 ```sh
-$ cd $GOPATH/src/github.com/operator-framework/operator-sdk
+$ mkdir -p $GOPATH/src/github.com/operator-framework
+$ cd $GOPATH/src/github.com/operator-framework
+$ git clone github.com/operator-framework/operator-sdk
+$ cd operator-sdk
 $ git checkout master
 $ make dep
 $ make install
@@ -91,7 +94,15 @@ Replace the default handler with the reference [memcached handler][memcached_han
 
 ### Build and run the operator
 
-There is two ways to run the operator:
+Before running the operator, Kubernetes needs to know about the new custom resource definition the operator will be watching.
+
+Deploy the CRD:
+
+```sh
+$ kubectl create -f deploy/crd.yaml
+```
+
+Once this is done, there are two ways to run the operator:
 
 - As pod inside Kubernetes cluster
 - As go program outside cluster
@@ -112,7 +123,6 @@ Deploy the memcached-operator:
 
 ```sh
 $ kubectl create -f deploy/rbac.yaml
-$ kubectl create -f deploy/crd.yaml
 $ kubectl create -f deploy/operator.yaml
 ```
 
