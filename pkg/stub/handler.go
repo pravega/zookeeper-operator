@@ -34,6 +34,11 @@ type zkPorts struct {
 }
 
 func (h *Handler) Handle(ctx context.Context, event sdk.Event) error {
+	if event.Deleted {
+		// K8s will garbage collect and resources until zookeeper cluster delete
+		return nil
+	}
+
 	switch o := event.Object.(type) {
 	case *v1beta1.ZookeeperCluster:
 		o.WithDefaults()
