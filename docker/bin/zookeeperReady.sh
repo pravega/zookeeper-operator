@@ -23,7 +23,7 @@ if [[ "$OK" == "imok" ]]; then
     ROLE=participant
     ZKCONFIG=$(zkConfig)
     java -jar -Dlog4j.configuration=file:"$LOG4J_CONF" /root/zu.jar remove $ZKURL $MYID
-    sleep 5
+    sleep 1
     java -jar -Dlog4j.configuration=file:"$LOG4J_CONF" /root/zu.jar add $ZKURL $MYID $ZKCONFIG
     exit 1
 

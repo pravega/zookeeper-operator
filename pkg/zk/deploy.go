@@ -156,6 +156,13 @@ func makeZkPodSpec(configMapName string, ports zkPorts, z *v1beta1.ZookeeperClus
 			{Name: "data", MountPath: "/data"},
 			{Name: "conf", MountPath: "/conf"},
 		},
+		Lifecycle: &v1.Lifecycle{
+			PreStop: &v1.Handler{
+				Exec: &v1.ExecAction{
+					Command: []string{"zookeeperTeardown.sh"},
+				},
+			},
+		},
 		Command: []string{"/usr/local/bin/zookeeperStart.sh"},
 	}
 	if z.Spec.Pod.Resources.Limits != nil || z.Spec.Pod.Resources.Requests != nil {
