@@ -195,12 +195,11 @@ func makeZkClientSvc(ports zkPorts, z *v1beta1.ZookeeperCluster) *v1.Service {
 }
 
 func makeZkHeadlessSvc(ports zkPorts, z *v1beta1.ZookeeperCluster) *v1.Service {
-	name := fmt.Sprintf(headlessSvcName(z), z.GetName())
 	svcPorts := []v1.ServicePort{
 		{Name: "quorum", Port: ports.Quorum},
 		{Name: "leader-election", Port: ports.Leader},
 	}
-	return makeSvc(name, svcPorts, false, z)
+	return makeSvc(headlessSvcName(z), svcPorts, false, z)
 }
 
 func makeZkConfigMap(name string, ports zkPorts, z *v1beta1.ZookeeperCluster) *v1.ConfigMap {
