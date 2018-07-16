@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -ex
 
 function zkConfig() {
   echo "$HOST.$DOMAIN:$QUORUM_PORT:$LEADER_PORT:$ROLE;$CLIENT_PORT"

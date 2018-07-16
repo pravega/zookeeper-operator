@@ -1,17 +1,7 @@
 #!/usr/bin/env bash
-set -e
+set -ex
 
-# INITIALIZE CONTANTS
-
-HOST=`hostname -s`
-DATA_DIR="/data"
-MYID_FILE="$DATA_DIR/myid"
-DYNCONFIG="$DATA_DIR/zoo.cfg.dynamic"
-DOMAIN=$1
-CLIENT_PORT=$2
-QUORUM_PORT=$3
-LEADER_PORT=$4
-
+source /conf/env.sh
 source /usr/local/bin/zookeeperFunctions.sh
 
 # Extract cluster name and this members ordinal value from pod hostname
@@ -65,7 +55,7 @@ if [ "$WRITE_CONFIGURATION" == true ]; then
     echo $ZKCONFIG
 
     echo "Updating and writing local configuration to disk."
-    java -jar /root/zu.jar add $ZKURL $MYID  $ZKCONFIG $DYNCONFIG
+    java -jar -Dlog4j.configuration=file:"$LOG4J_CONF" /root/zu.jar add $ZKURL $MYID  $ZKCONFIG $DYNCONFIG
   fi
 fi
 

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
-	"strings"
 
 	"github.com/operator-framework/operator-sdk/pkg/sdk"
 	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
@@ -24,10 +23,10 @@ type zkPorts struct {
 	Leader int32
 }
 
-func deploy(zk *v1beta1.ZookeeperCluster) (err error) {
+func deploy(z *v1beta1.ZookeeperCluster) (err error) {
 	var ports zkPorts
 
-	for _, p := range zk.Spec.Ports {
+	for _, p := range z.Spec.Ports {
 		if p.Name == "client" {
 			ports.Client = p.ContainerPort
 		} else if p.Name == "quorum" {
@@ -37,33 +36,33 @@ func deploy(zk *v1beta1.ZookeeperCluster) (err error) {
 		}
 	}
 
-	cm := configMapName(zk)
+	cm := configMapName(z)
 
-	err = sdk.Create(makeZkConfigMap(cm, ports, zk))
+	err = sdk.Create(makeZkConfigMap(cm, ports, z))
 	if err != nil && !k8serrors.IsAlreadyExists(err) {
 		logrus.Errorf("Failed to create zookeeper configmap : %v", err)
 		return err
 	}
 
-	err = sdk.Create(makeZkSts(cm, ports, zk))
+	err = sdk.Create(makeZkSts(cm, ports, z))
 	if err != nil && !k8serrors.IsAlreadyExists(err) {
 		logrus.Errorf("Failed to create zookeeper statefulset : %v", err)
 		return err
 	}
 
-	err = sdk.Create(makeZkPdb(zk))
+	err = sdk.Create(makeZkPdb(z))
 	if err != nil && !k8serrors.IsAlreadyExists(err) {
 		logrus.Errorf("Failed to create zookeeper pod-disruption-budget : %v", err)
 		return err
 	}
 
-	err = sdk.Create(makeZkClientSvc(ports, zk))
+	err = sdk.Create(makeZkClientSvc(ports, z))
 	if err != nil && !k8serrors.IsAlreadyExists(err) {
 		logrus.Errorf("Failed to create zookeeper client service : %v", err)
 		return err
 	}
 
-	err = sdk.Create(makeZkHeadlessSvc(ports, zk))
+	err = sdk.Create(makeZkHeadlessSvc(ports, z))
 	if err != nil && !k8serrors.IsAlreadyExists(err) {
 		logrus.Errorf("Failed to create zookeeper headless service : %v", err)
 		return err
@@ -72,8 +71,16 @@ func deploy(zk *v1beta1.ZookeeperCluster) (err error) {
 	return nil
 }
 
-func configMapName(zk *v1beta1.ZookeeperCluster) string {
-	return fmt.Sprintf("%s-configmap", zk.GetName())
+func configMapName(z *v1beta1.ZookeeperCluster) string {
+	return fmt.Sprintf("%s-configmap", z.GetName())
+}
+
+func headlessSvcName(z *v1beta1.ZookeeperCluster) string {
+	return fmt.Sprintf("%s-headless", z.GetName())
+}
+
+func headlessDomain(z *v1beta1.ZookeeperCluster) string {
+	return fmt.Sprintf("%s.%s.svc.cluster.local", headlessSvcName(z), z.GetNamespace())
 }
 
 func makeZkSts(configMapName string, ports zkPorts, z *v1beta1.ZookeeperCluster) *appsv1.StatefulSet {
@@ -95,7 +102,7 @@ func makeZkSts(configMapName string, ports zkPorts, z *v1beta1.ZookeeperCluster)
 			Labels: z.Spec.Labels,
 		},
 		Spec: appsv1.StatefulSetSpec{
-			ServiceName: fmt.Sprintf("%s-headless", z.GetName()),
+			ServiceName: headlessSvcName(z),
 			Replicas:    &z.Spec.Size,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
@@ -135,15 +142,7 @@ func makeZkPodSpec(configMapName string, ports zkPorts, z *v1beta1.ZookeeperClus
 		InitialDelaySeconds: 10,
 		TimeoutSeconds:      10,
 		Handler: v1.Handler{
-			Exec: &v1.ExecAction{
-				Command: []string{
-					"zookeeperReady.sh",
-					fmt.Sprintf("%s-headless.%s.svc.cluster.local", z.GetName(), z.GetNamespace()),
-					strconv.Itoa(int(ports.Client)),
-					strconv.Itoa(int(ports.Quorum)),
-					strconv.Itoa(int(ports.Leader)),
-				},
-			},
+			Exec: &v1.ExecAction{Command: []string{"zookeeperReady.sh"}},
 		},
 	}
 	zkContainer := v1.Container{
@@ -158,12 +157,6 @@ func makeZkPodSpec(configMapName string, ports zkPorts, z *v1beta1.ZookeeperClus
 			{Name: "conf", MountPath: "/conf"},
 		},
 		Command: []string{"/usr/local/bin/zookeeperStart.sh"},
-		Args: []string{
-			fmt.Sprintf("%s-headless.%s.svc.cluster.local", z.GetName(), z.GetNamespace()),
-			strconv.Itoa(int(ports.Client)),
-			strconv.Itoa(int(ports.Quorum)),
-			strconv.Itoa(int(ports.Leader)),
-		},
 	}
 	if z.Spec.Pod.Resources.Limits != nil || z.Spec.Pod.Resources.Requests != nil {
 		zkContainer.Resources = z.Spec.Pod.Resources
@@ -202,7 +195,7 @@ func makeZkClientSvc(ports zkPorts, z *v1beta1.ZookeeperCluster) *v1.Service {
 }
 
 func makeZkHeadlessSvc(ports zkPorts, z *v1beta1.ZookeeperCluster) *v1.Service {
-	name := fmt.Sprintf("%s-headless", z.GetName())
+	name := fmt.Sprintf(headlessSvcName(z), z.GetName())
 	svcPorts := []v1.ServicePort{
 		{Name: "quorum", Port: ports.Quorum},
 		{Name: "leader-election", Port: ports.Leader},
@@ -230,24 +223,21 @@ func makeZkConfigMap(name string, ports zkPorts, z *v1beta1.ZookeeperCluster) *v
 		Data: map[string]string{
 			"zoo.cfg":          makeZkConfigString(ports, z),
 			"log4j.properties": makeZkLog4JConfigString(),
+			"env.sh":           makeZkEnvConfigString(ports, z),
 		},
 	}
 }
 
 func makeZkConfigString(ports zkPorts, z *v1beta1.ZookeeperCluster) string {
-	var b strings.Builder
-	b.WriteString(
-		"4lw.commands.whitelist=mntr, ruok\n" +
-			"dataDir=/data\n" +
-			"standaloneEnabled=false\n" +
-			"reconfigEnabled=true\n" +
-			"skipACL=yes\n" +
-			"initLimit=" + strconv.Itoa(z.Spec.Conf.InitLimit) + "\n" +
-			"syncLimit=" + strconv.Itoa(z.Spec.Conf.SyncLimit) + "\n" +
-			"tickTime=" + strconv.Itoa(z.Spec.Conf.TickTime) + "\n" +
-			"dynamicConfigFile=/data/zoo.cfg.dynamic\n",
-	)
-	return b.String()
+	return "4lw.commands.whitelist=mntr, ruok\n" +
+		"dataDir=/data\n" +
+		"standaloneEnabled=false\n" +
+		"reconfigEnabled=true\n" +
+		"skipACL=yes\n" +
+		"initLimit=" + strconv.Itoa(z.Spec.Conf.InitLimit) + "\n" +
+		"syncLimit=" + strconv.Itoa(z.Spec.Conf.SyncLimit) + "\n" +
+		"tickTime=" + strconv.Itoa(z.Spec.Conf.TickTime) + "\n" +
+		"dynamicConfigFile=/data/zoo.cfg.dynamic\n"
 }
 
 func makeZkLog4JConfigString() string {
@@ -258,6 +248,19 @@ func makeZkLog4JConfigString() string {
 		"log4j.appender.CONSOLE.Threshold=${zookeeper.console.threshold}\n" +
 		"log4j.appender.CONSOLE.layout=org.apache.log4j.PatternLayout\n" +
 		"log4j.appender.CONSOLE.layout.ConversionPattern=%d{ISO8601} [myid:%X{myid}] - %-5p [%t:%C{1}@%L] - %m%n\n"
+}
+
+func makeZkEnvConfigString(ports zkPorts, z *v1beta1.ZookeeperCluster) string {
+	return "#!/usr/bin/env bash\n\n" +
+		"DOMAIN=" + headlessDomain(z) + "\n" +
+		"QUORUM_PORT=" + strconv.Itoa(int(ports.Quorum)) + "\n" +
+		"LEADER_PORT=" + strconv.Itoa(int(ports.Leader)) + "\n" +
+		"CLIENT_PORT=" + strconv.Itoa(int(ports.Client)) + "\n" +
+		"HOST=`hostname -s`" + "\n" +
+		"DATA_DIR=/data\n" +
+		"MYID_FILE=\"$DATA_DIR/myid\"\n" +
+		"LOG4J_CONF=\"/conf/log4j.properties\"\n" +
+		"DYNCONFIG=\"$DATA_DIR/zoo.cfg.dynamic\"\n"
 }
 
 func makeSvc(name string, ports []v1.ServicePort, clusterIP bool, z *v1beta1.ZookeeperCluster) *v1.Service {
