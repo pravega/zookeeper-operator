@@ -10,7 +10,7 @@ MYID_FILE=$DATA_DIR/myid
 LOG4J_CONF=/conf/log4j-quiet.properties
 DYNCONFIG=$DATA_DIR/zoo.cfg.dynamic
 
-# Extract cluster name and this members ordinal value from pod hostname
+# Extract resource name and this members ordinal value from pod hostname
 if [[ $HOST =~ (.*)-([0-9]+)$ ]]; then
     NAME=${BASH_REMATCH[1]}
     ORD=${BASH_REMATCH[2]}
@@ -21,58 +21,75 @@ fi
 
 MYID=$((ORD+1))
 
-# Check validity of on-disk configuration
 WRITE_CONFIGURATION=true
 REGISTER_NODE=true
 
-if [ -e $MYID_FILE ]; then
+# Check validity of on-disk configuration
+if [ -f $MYID_FILE ]; then
   EXISTING_ID="`cat $DATA_DIR/myid`"
-  if [ "$EXISTING_ID" == "$MYID" && -e $DYNCONFIG ]; then
-      echo $MYID_FILE found, Existing myid matches $MYID, using existing configuration
+  if [[ "$EXISTING_ID" == "$MYID" || -f $DYNCONFIG ]]; then
       WRITE_CONFIGURATION=false
   fi
+
 fi
 
-# The first node is a simple case. There is no cluster to join, so simply create
-# a local config
-if [[ $MYID -eq 1 && "$WRITE_CONFIGURATION" == true ]]; then
-  ROLE=participant
-  echo Initial initialization of ordinal 0 pod, creating new config.
-  ZKCONFIG=$(zkConfig)
+# Determine if there is a ensemble available to join by checking the service domain
 
-  echo Writing bootstrap configuration with the following config:
-  echo $ZKCONFIG
-  echo $MYID > $MYID_FILE
-  echo "server.${MYID}=${ZKCONFIG}" > $DYNCONFIG
-else
-  ROLE=observer
+set +e
+nslookup $DOMAIN
+if [[ $? -eq 1 ]]; then
   set -e
+  # If an nslookup of the headless service domain fails, then there is no
+  # active ensemble
+  WRITE_CONFIGURATION=true
+  REGISTER_NODE=false
+
+else
+  set -e
+  # An ensemble exists, check to see if this node is already a member.
+
   set +e
   ZKURL=$(zkConnectionString)
-
-  # Check to see if server is already joined to the cluster
   set -e
   CONFIG=`java -Dlog4j.configuration=file:"$LOG4J_CONF" -jar /root/zu.jar get-all $ZKURL`
   REGISTERED=`echo "$CONFIG" | grep "server.${MYID}=" | wc -l`
+
   if [[ $REGISTERED -eq 1 ]]; then
     REGISTER_NODE=false
+
+  else
+    # When registering the node to the ensemble, always [re]write the config
+    REGISTER_NODE=true
     WRITE_CONFIGURATION=true
+
   fi
+fi
 
-  if [[ "$WRITE_CONFIGURATION" == true ]]; then
-    echo "Writing myid: $MYID to: $MYID_FILE."
-    echo $MYID > $MYID_FILE
+if [[ "$WRITE_CONFIGURATION" == true ]]; then
+  echo "Writing myid: $MYID to: $MYID_FILE."
+  echo $MYID > $MYID_FILE
 
+  if [[ $MYID -eq 1 && "$REGISTER_NODE" == false ]]; then
+    ROLE=participant
+    echo Initial initialization of ordinal 0 pod, creating new config.
     ZKCONFIG=$(zkConfig)
 
-    if [[ "$REGISTER_NODE" == true ]]; then
-      echo Registering node and writing local configuration to disk.
-      java -Dlog4j.configuration=file:"$LOG4J_CONF" -jar /root/zu.jar add $ZKURL $MYID  $ZKCONFIG $DYNCONFIG
+    echo Writing bootstrap configuration with the following config:
+    echo $ZKCONFIG
+    echo $MYID > $MYID_FILE
+    echo "server.${MYID}=${ZKCONFIG}" > $DYNCONFIG
 
-    else
-      echo Writing configuration gleaned from zookeeper cluster
-      echo "$CONFIG" | grep -v "^version="> $DYNCONFIG
-    fi
+  elif [[ $MYID -ne 1 && "$REGISTER_NODE" == false ]]; then
+    echo Writing configuration gleaned from zookeeper ensemble
+    echo "$CONFIG" | grep -v "^version="> $DYNCONFIG
+
+  elif [[ "$REGISTER_NODE" == true ]]; then
+    ROLE=observer
+    ZKCONFIG=$(zkConfig)
+
+    echo Registering node and writing local configuration to disk.
+    java -Dlog4j.configuration=file:"$LOG4J_CONF" -jar /root/zu.jar add $ZKURL $MYID  $ZKCONFIG $DYNCONFIG
+
   fi
 fi
 
