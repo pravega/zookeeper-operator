@@ -227,15 +227,16 @@ func makeZkConfigMap(name string, ports zkPorts, z *v1beta1.ZookeeperCluster) *v
 			},
 		},
 		Data: map[string]string{
-			"zoo.cfg":          makeZkConfigString(ports, z),
-			"log4j.properties": makeZkLog4JConfigString(),
-			"env.sh":           makeZkEnvConfigString(ports, z),
+			"zoo.cfg":                makeZkConfigString(ports, z),
+			"log4j.properties":       makeZkLog4JConfigString(),
+			"log4j-quiet.properties": makeZkLog4JQuietConfigString(),
+			"env.sh":                 makeZkEnvConfigString(ports, z),
 		},
 	}
 }
 
 func makeZkConfigString(ports zkPorts, z *v1beta1.ZookeeperCluster) string {
-	return "4lw.commands.whitelist=mntr, ruok\n" +
+	return "4lw.commands.whitelist=cons, envi, conf, crst, srvr, stat, mntr, ruok\n" +
 		"dataDir=/data\n" +
 		"standaloneEnabled=false\n" +
 		"reconfigEnabled=true\n" +
@@ -244,6 +245,14 @@ func makeZkConfigString(ports zkPorts, z *v1beta1.ZookeeperCluster) string {
 		"syncLimit=" + strconv.Itoa(z.Spec.Conf.SyncLimit) + "\n" +
 		"tickTime=" + strconv.Itoa(z.Spec.Conf.TickTime) + "\n" +
 		"dynamicConfigFile=/data/zoo.cfg.dynamic\n"
+}
+
+func makeZkLog4JQuietConfigString() string {
+	return "log4j.rootLogger=ERROR, CONSOLE\n" +
+		"log4j.appender.CONSOLE=org.apache.log4j.ConsoleAppender\n" +
+		"log4j.appender.CONSOLE.Threshold=ERROR\n" +
+		"log4j.appender.CONSOLE.layout=org.apache.log4j.PatternLayout\n" +
+		"log4j.appender.CONSOLE.layout.ConversionPattern=%d{ISO8601} [myid:%X{myid}] - %-5p [%t:%C{1}@%L] - %m%n\n"
 }
 
 func makeZkLog4JConfigString() string {
@@ -261,12 +270,7 @@ func makeZkEnvConfigString(ports zkPorts, z *v1beta1.ZookeeperCluster) string {
 		"DOMAIN=" + headlessDomain(z) + "\n" +
 		"QUORUM_PORT=" + strconv.Itoa(int(ports.Quorum)) + "\n" +
 		"LEADER_PORT=" + strconv.Itoa(int(ports.Leader)) + "\n" +
-		"CLIENT_PORT=" + strconv.Itoa(int(ports.Client)) + "\n" +
-		"HOST=`hostname -s`" + "\n" +
-		"DATA_DIR=/data\n" +
-		"MYID_FILE=\"$DATA_DIR/myid\"\n" +
-		"LOG4J_CONF=\"/conf/log4j.properties\"\n" +
-		"DYNCONFIG=\"$DATA_DIR/zoo.cfg.dynamic\"\n"
+		"CLIENT_PORT=" + strconv.Itoa(int(ports.Client)) + "\n"
 }
 
 func makeSvc(name string, ports []v1.ServicePort, clusterIP bool, z *v1beta1.ZookeeperCluster) *v1.Service {

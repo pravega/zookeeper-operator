@@ -12,7 +12,7 @@ const (
 	DefaultZkContainerRepository  = "spiegela/zookeeper"
 	DefaultZkContainerVersion     = "3.5.4-beta"
 	DefaultZkContainerPolicy      = "Always"
-	DefaultTerminationGracePeriod = 1800
+	DefaultTerminationGracePeriod = 30 // give time for clients to disconnect gracefully
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

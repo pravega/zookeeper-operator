@@ -8,13 +8,13 @@ function zkConfig() {
 function zkConnectionString() {
   # Lookup the zookeeper ensemble membership using the headless cluster service domain.
   # We execute 2 lookups so that we can reference each node by hostname rather than IP.
-  HOSTS=`getent hosts $DOMAIN | awk '{print $1}' | xargs getent hosts | awk '{print $2}' | sort`
+  HOSTS=`nslookup $DOMAIN | awk '{print $4}'`
   ZK_CONNECTION_STRING=""
-  for HOST in $HOSTS; do
+  for i in $HOSTS; do
     if [[ "$ZK_CONNECTION_STRING" == "" ]]; then
-      ZK_CONNECTION_STRING="${HOST}:${CLIENT_PORT}"
+      ZK_CONNECTION_STRING="${i}:${CLIENT_PORT}"
     else
-      ZK_CONNECTION_STRING="${ZK_CONNECTION_STRING},${HOST}:${CLIENT_PORT}"
+      ZK_CONNECTION_STRING="${ZK_CONNECTION_STRING},${i}:${CLIENT_PORT}"
     fi
   done
   if [[ "$ZK_CONNECTION_STRING" == "" ]]; then

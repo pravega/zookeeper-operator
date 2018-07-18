@@ -4,6 +4,11 @@ set -ex
 source /conf/env.sh
 source /usr/local/bin/zookeeperFunctions.sh
 
+HOST=`hostname -s`
+DATA_DIR=/data
+MYID_FILE=$DATA_DIR/myid
+LOG4J_CONF=/conf/log4j-quiet.properties
+
 OK=$(echo ruok | nc 127.0.0.1 $CLIENT_PORT)
 
 # Check to see if zookeeper service answers
@@ -12,7 +17,7 @@ if [[ "$OK" == "imok" ]]; then
   # Check to see if zookeeper service for this node is a participant
   ZKURL=$(zkConnectionString)
   MYID=`cat $MYID_FILE`
-  ROLE=`java -jar -Dlog4j.configuration=file:"$LOG4J_CONF" /root/zu.jar get-role $ZKURL $MYID`
+  ROLE=`java -Dlog4j.configuration=file:"$LOG4J_CONF" -jar /root/zu.jar get-role $ZKURL $MYID`
 
   if [[ "$ROLE" == "participant" ]]; then
     echo "Zookeeper service is available and an active participant"
@@ -22,9 +27,9 @@ if [[ "$OK" == "imok" ]]; then
     echo "Zookeeper service is ready to be upgraded from observer to participant."
     ROLE=participant
     ZKCONFIG=$(zkConfig)
-    java -jar -Dlog4j.configuration=file:"$LOG4J_CONF" /root/zu.jar remove $ZKURL $MYID
+    java -Dlog4j.configuration=file:"$LOG4J_CONF" -jar /root/zu.jar remove $ZKURL $MYID
     sleep 1
-    java -jar -Dlog4j.configuration=file:"$LOG4J_CONF" /root/zu.jar add $ZKURL $MYID $ZKCONFIG
+    java -Dlog4j.configuration=file:"$LOG4J_CONF" -jar /root/zu.jar add $ZKURL $MYID $ZKCONFIG
     exit 1
 
   else
