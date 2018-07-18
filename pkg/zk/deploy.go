@@ -138,20 +138,25 @@ func makeZkSts(configMapName string, ports zkPorts, z *v1beta1.ZookeeperCluster)
 }
 
 func makeZkPodSpec(configMapName string, ports zkPorts, z *v1beta1.ZookeeperCluster) v1.PodSpec {
-	probe := v1.Probe{
-		InitialDelaySeconds: 10,
-		TimeoutSeconds:      10,
-		Handler: v1.Handler{
-			Exec: &v1.ExecAction{Command: []string{"zookeeperReady.sh"}},
-		},
-	}
 	zkContainer := v1.Container{
 		Name:            "zookeeper",
 		Image:           z.Spec.Image.ToString(),
 		Ports:           z.Spec.Ports,
 		ImagePullPolicy: z.Spec.Image.PullPolicy,
-		ReadinessProbe:  &probe,
-		LivenessProbe:   &probe,
+		ReadinessProbe: &v1.Probe{
+			InitialDelaySeconds: 10,
+			TimeoutSeconds:      10,
+			Handler: v1.Handler{
+				Exec: &v1.ExecAction{Command: []string{"zookeeperReady.sh"}},
+			},
+		},
+		LivenessProbe: &v1.Probe{
+			InitialDelaySeconds: 10,
+			TimeoutSeconds:      10,
+			Handler: v1.Handler{
+				Exec: &v1.ExecAction{Command: []string{"zookeeperLive.sh"}},
+			},
+		},
 		VolumeMounts: []v1.VolumeMount{
 			{Name: "data", MountPath: "/data"},
 			{Name: "conf", MountPath: "/conf"},
