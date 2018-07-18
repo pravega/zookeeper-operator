@@ -9,7 +9,9 @@ MYID_FILE=$DATA_DIR/myid
 LOG4J_CONF=/conf/log4j-quiet.properties
 
 # Check to see if zookeeper service for this node is a participant
+set +e
 ZKURL=$(zkConnectionString)
+set -e
 MYID=`cat $MYID_FILE`
 
 # Remove server from zk configuration
@@ -25,5 +27,4 @@ for (( i = 0; i < 36; i++ )); do
 done
 
 # Kill the primary process ourselves to circumvent the terminationGracePeriodSeconds
-PID=`ps -ef | grep zoo.cfg | grep -v grep | awk '{print $1}'`
-kill $PID
+ps -ef | grep zoo.cfg | grep -v grep | awk '{print $1}' | xargs kill

@@ -46,9 +46,12 @@ if [[ $MYID -eq 1 && "$WRITE_CONFIGURATION" == true ]]; then
   echo "server.${MYID}=${ZKCONFIG}" > $DYNCONFIG
 else
   ROLE=observer
+  set -e
+  set +e
   ZKURL=$(zkConnectionString)
 
   # Check to see if server is already joined to the cluster
+  set -e
   CONFIG=`java -Dlog4j.configuration=file:"$LOG4J_CONF" -jar /root/zu.jar get-all $ZKURL`
   REGISTERED=`echo "$CONFIG" | grep "server.${MYID}=" | wc -l`
   if [[ $REGISTERED -eq 1 ]]; then

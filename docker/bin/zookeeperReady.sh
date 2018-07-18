@@ -15,7 +15,9 @@ OK=$(echo ruok | nc 127.0.0.1 $CLIENT_PORT)
 if [[ "$OK" == "imok" ]]; then
 
   # Check to see if zookeeper service for this node is a participant
+  set +e
   ZKURL=$(zkConnectionString)
+  set -e
   MYID=`cat $MYID_FILE`
   ROLE=`java -Dlog4j.configuration=file:"$LOG4J_CONF" -jar /root/zu.jar get-role $ZKURL $MYID`
 
