@@ -110,7 +110,7 @@ func (s *ClusterSpec) withDefaults(z *ZookeeperCluster) {
 			AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
 			Resources: v1.ResourceRequirements{
 				Requests: v1.ResourceList{
-					v1.ResourceStorage: resource.MustParse("20Gi"),
+					v1.ResourceStorage: resource.MustParse("20G"),
 				},
 			},
 		}

@@ -24,7 +24,7 @@ spec:
     hostPort:      3888
     containerPort: 3888
   pod:
-    terminationGracePeriodSeconds: 1800,
+    terminationGracePeriodSeconds: 1800
     labels:
       app: example
     affinity:
