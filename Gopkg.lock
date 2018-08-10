@@ -70,8 +70,8 @@
     "proto",
     "sortkeys"
   ]
-  revision = "1adfc126b41513cc696b209667c8656ea7aac67c"
-  version = "v1.0.0"
+  revision = "636bf0302bc95575d69441b25a2603156ffdddf1"
+  version = "v1.1.1"
 
 [[projects]]
   branch = "master"
@@ -140,14 +140,14 @@
 [[projects]]
   name = "github.com/imdario/mergo"
   packages = ["."]
-  revision = "9316a62528ac99aaecb4e47eadd6dc8aa6533d58"
-  version = "v0.3.5"
+  revision = "9f23e2d6bd2a77f959b2bf6acdbefd708a83a4a4"
+  version = "v0.3.6"
 
 [[projects]]
   name = "github.com/json-iterator/go"
   packages = ["."]
-  revision = "ab8a2e0c74be9d3be70b3184d9acc634935ded82"
-  version = "1.1.4"
+  revision = "1624edc4454b8682399def8740d46db5e4362ba4"
+  version = "1.1.5"
 
 [[projects]]
   name = "github.com/juju/ratelimit"
@@ -163,7 +163,7 @@
     "jlexer",
     "jwriter"
   ]
-  revision = "3fdea8d05856a0c8df22ed4bc71b3219245e4485"
+  revision = "03f2033d19d5860aef995fe360ac7d395cd8ce65"
 
 [[projects]]
   name = "github.com/matttproud/golang_protobuf_extensions"
@@ -189,10 +189,11 @@
   packages = [
     "pkg/k8sclient",
     "pkg/sdk",
+    "pkg/sdk/internal/metrics",
     "pkg/util/k8sutil",
     "version"
   ]
-  revision = "25470b7caa370e58f35ae21c319fca9978195f87"
+  revision = "9cdfbf1bb22a9c70437572f3b69bd83e433cac11"
 
 [[projects]]
   branch = "master"
@@ -229,7 +230,7 @@
     "internal/bitbucket.org/ww/goautoneg",
     "model"
   ]
-  revision = "7600349dcfe1abd18d72d3a1770870d9800a7801"
+  revision = "c7de2306084e37d54b8be01f3541a8464345e9a5"
 
 [[projects]]
   branch = "master"
@@ -240,25 +241,25 @@
     "nfs",
     "xfs"
   ]
-  revision = "ae68e2d4c00fed4943b5f6698d504a5fe083da8a"
+  revision = "05ee40e3a273f7245e8777337fc7b46e533a9a92"
 
 [[projects]]
   name = "github.com/sirupsen/logrus"
   packages = ["."]
-  revision = "c155da19408a8799da419ed3eeb0cb5db0ad5dbc"
-  version = "v1.0.5"
+  revision = "3e01752db0189b9157070a0e1668a620f9a85da2"
+  version = "v1.0.6"
 
 [[projects]]
   name = "github.com/spf13/pflag"
   packages = ["."]
-  revision = "583c0c0531f06d5278b7d917446061adc344b5cd"
-  version = "v1.0.1"
+  revision = "9a97c102cda95a86cec2345a6f09f55a939babf5"
+  version = "v1.0.2"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
-  revision = "a49355c7e3f8fe157a85be2f77e6e269a0f89602"
+  revision = "de0752318171da717af4ce24d0a2e8626afaeb11"
 
 [[projects]]
   branch = "master"
@@ -270,7 +271,7 @@
     "http2/hpack",
     "idna"
   ]
-  revision = "d0887baf81f4598189d4e12a37c6da86f0bba4d0"
+  revision = "f9ce57c11b242f0f1599cf25c89d8cb02c45295a"
 
 [[projects]]
   branch = "master"
@@ -279,7 +280,7 @@
     "unix",
     "windows"
   ]
-  revision = "1b2967e3c290b7c545b3db0deeda16e9be4f98a2"
+  revision = "904bdc257025c7b3f43c19360ad3ab85783fad78"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -458,7 +459,7 @@
   branch = "master"
   name = "k8s.io/kube-openapi"
   packages = ["pkg/common"]
-  revision = "0cf8f7e6ed1d2e3d47d02e3b6e559369af24d803"
+  revision = "e3762e86a74c878ffed47484592986685639c2cd"
 
 [solve-meta]
   analyzer-name = "dep"
