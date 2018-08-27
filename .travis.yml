@@ -1,0 +1,37 @@
+language: go
+go_import_path: github.com/pravega/zookeeper-operator
+
+services:
+    - docker
+
+go:
+    - 1.10.x
+
+branches:
+    only:
+    - master
+
+install:
+    - echo "Installing Go Dep"
+    - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+    - echo "Installing Operator-SDK"
+    - mkdir -p $GOPATH/src/github.com/operator-framework
+    - pushd $GOPATH/src/github.com/operator-framework
+    - git clone https://github.com/operator-framework/operator-sdk
+    - pushd operator-sdk
+    - git checkout master
+    - make dep
+    - make install
+    - popd; popd;
+    - echo "Building operator"
+    - operator-sdk build $IMAGE_NAME:$IMAGE_TAG
+
+after_success:
+    - if [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then
+        echo "Pushing docker image";
+        docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD;
+        docker push $IMAGE_NAME:$IMAGE_TAG;
+      fi
+
+after_failure:
+    - echo "Failed"
