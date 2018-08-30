@@ -192,7 +192,7 @@
     "pkg/util/k8sutil",
     "version"
   ]
-  revision = "25470b7caa370e58f35ae21c319fca9978195f87"
+  revision = "69da14324b9cb9194f770f3b403638934ce528f6"
 
 [[projects]]
   branch = "master"

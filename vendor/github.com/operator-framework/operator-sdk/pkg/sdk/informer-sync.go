@@ -15,6 +15,7 @@
 package sdk
 
 import (
+	"github.com/operator-framework/operator-sdk/pkg/sdk/internal/metrics"
 	"github.com/operator-framework/operator-sdk/pkg/util/k8sutil"
 
 	"github.com/sirupsen/logrus"
@@ -66,14 +67,17 @@ func (i *informer) sync(key string) error {
 		// Lookup the last saved state for the deleted object
 		_, ok := i.deletedObjects[key]
 		if !ok {
-			logrus.Errorf("No last known state found for deleted object (%s)", key)
+			logrus.Errorf("no last known state found for deleted object (%s)", key)
 			return nil
 		}
 		obj = i.deletedObjects[key]
 	}
 
 	unstructObj := obj.(*unstructured.Unstructured).DeepCopy()
-	object := k8sutil.RuntimeObjectFromUnstructured(unstructObj)
+	object, err := k8sutil.RuntimeObjectFromUnstructured(unstructObj)
+	if err != nil {
+		return err
+	}
 
 	event := Event{
 		Object:  object,
@@ -84,6 +88,12 @@ func (i *informer) sync(key string) error {
 	err = RegisteredHandler.Handle(i.context, event)
 	if !exists && err == nil {
 		delete(i.deletedObjects, key)
+	}
+	switch {
+	case err == nil:
+		i.collector.ReconcileResult.WithLabelValues(metrics.ReconcileResultSuccess).Inc()
+	case err != nil:
+		i.collector.ReconcileResult.WithLabelValues(metrics.ReconcileResultFailure).Inc()
 	}
 	return err
 }

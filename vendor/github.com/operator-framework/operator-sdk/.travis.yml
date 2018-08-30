@@ -12,13 +12,15 @@ env:
 - CHANGE_MINIKUBE_NONE_USER=true
 
 before_script:
-- go get -u github.com/golang/dep/cmd/dep
+- curl -Lo dep https://github.com/golang/dep/releases/download/v0.5.0/dep-linux-amd64 && chmod +x dep && sudo mv dep /usr/local/bin/
 - dep ensure
 # Download kubectl, which is a requirement for using minikube.
-- curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/v1.9.0/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+- curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/v1.10.1/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
 # Download minikube.
+# We need to pin to an old version due to minikube requiring systemd starting with v0.26.0 and travis not providing it
+# - https://github.com/kubernetes/minikube/issues/2704
 - curl -Lo minikube https://storage.googleapis.com/minikube/releases/v0.25.2/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
-- sudo minikube start --vm-driver=none --kubernetes-version=v1.9.0
+- sudo minikube start --vm-driver=none --kubernetes-version=v1.10.0
 # Fix the kubectl context, as it's often stale.
 - minikube update-context
 # Wait for Kubernetes to be up and ready.
@@ -30,62 +32,12 @@ install:
 - go get -t -d ./...
 
 script:
-# Unit test and verify formatting
-- go test ./...
-- go vet ./...
 - make install
-# Create example operator
-- cd $GOPATH/src/github.com/example-inc
-- operator-sdk new memcached-operator --api-version=cache.example.com/v1alpha1 --kind=Memcached
-- cd memcached-operator
-- rm -rf vendor/github.com/operator-framework/operator-sdk/pkg
-- ln -s ${TRAVIS_BUILD_DIR}/pkg vendor/github.com/operator-framework/operator-sdk/pkg
-- curl https://raw.githubusercontent.com/operator-framework/operator-sdk/master/example/memcached-operator/handler.go.tmpl -o pkg/stub/handler.go
-- head -n -6 pkg/apis/cache/v1alpha1/types.go > tmp.txt
-- mv tmp.txt pkg/apis/cache/v1alpha1/types.go
-- echo 'type MemcachedSpec struct {	Size int32 `json:"size"`}' >> pkg/apis/cache/v1alpha1/types.go
-- echo 'type MemcachedStatus struct {Nodes []string `json:"nodes"`}' >> pkg/apis/cache/v1alpha1/types.go
-- operator-sdk generate k8s
-- operator-sdk build quay.io/example/memcached-operator:v0.0.1
-- |
-  sed -ie 's/imagePullPolicy: Always/imagePullPolicy: Never/g' deploy/operator.yaml
-# Run the operator as a pod
-- kubectl create -f deploy/rbac.yaml
-- kubectl create -f deploy/crd.yaml
-- kubectl create -f deploy/operator.yaml
-# Sleep until operator is ready, TODO poll api in retry loop
-- sleep 10s
-- kubectl get deployment
-- kubectl get pods
-# Create memcached cr
-- |
-  echo "apiVersion: \"cache.example.com/v1alpha1\"" > deploy/cr.yaml
-- |
-  echo "kind: \"Memcached\"" >> deploy/cr.yaml
-- echo "metadata:" >> deploy/cr.yaml
-- |
-  echo "  name: \"example-memcached\"" >> deploy/cr.yaml
-- echo "spec:" >> deploy/cr.yaml
-- |
-  echo "  size: 3" >> deploy/cr.yaml
-- kubectl apply -f deploy/cr.yaml
-# Sleep until 3 pods are up, TODO poll api in retry loop
-- sleep 10s
-- kubectl get deployment
-- kubectl get pods
-- kubectl get memcached/example-memcached -o yaml
-# Expand to size to 4
-- |
-  sed -ie 's/size: 3/size: 4/g' deploy/cr.yaml
-- kubectl apply -f deploy/cr.yaml
-# Sleep until 4 pods are up, TODO poll api in retry loop
-- sleep 10s
-- kubectl get deployment
-- kubectl get pods
-- kubectl get memcached/example-memcached -o yaml
-# Cleanup
-- kubectl delete -f deploy/cr.yaml
-- kubectl delete -f deploy/operator.yaml
+- go test ./pkg/...
+- go test ./test/e2e/...
+- go vet ./...
+- ./hack/check_license.sh
+- ./hack/check_error_case.sh
 
 after_success:
 - echo 'Build succeeded, operator was generated, memcached operator is running on minikube, and unit/integration tests pass'
