@@ -16,8 +16,10 @@ package sdk
 
 import (
 	"context"
+	"time"
 
 	"github.com/operator-framework/operator-sdk/pkg/k8sclient"
+	"github.com/operator-framework/operator-sdk/pkg/sdk/internal/metrics"
 
 	"github.com/sirupsen/logrus"
 )
@@ -25,6 +27,7 @@ import (
 var (
 	// informers is the set of all informers for the resources watched by the user
 	informers []Informer
+	collector *metrics.Collector
 )
 
 // Watch watches for changes on the given resource.
@@ -33,19 +36,25 @@ var (
 //   - Pods have Group "Core" and Version "v1" giving the APIVersion "v1"
 //   - The custom resource Memcached might have Group "cache.example.com" and Version "v1alpha1" giving the APIVersion "cache.example.com/v1alpha1"
 // kind is the Kind of the resource, e.g "Pod" for pods
-// resyncPeriod is the time period in seconds for how often an event with the latest resource version will be sent to the handler, even if there is no change.
+// resyncPeriod is the time period for how often an event with the latest resource version will be sent to the handler, even if there is no change.
 //   - 0 means no periodic events will be sent
 // Consult the API reference for the Group, Version and Kind of a resource: https://kubernetes.io/docs/reference/
 // namespace is the Namespace to watch for the resource
 // TODO: support opts for specifying label selector
-func Watch(apiVersion, kind, namespace string, resyncPeriod int) {
+func Watch(apiVersion, kind, namespace string, resyncPeriod time.Duration, opts ...watchOption) {
 	resourceClient, resourcePluralName, err := k8sclient.GetResourceClient(apiVersion, kind, namespace)
 	// TODO: Better error handling, e.g retry
 	if err != nil {
 		logrus.Errorf("failed to get resource client for (apiVersion:%s, kind:%s, ns:%s): %v", apiVersion, kind, namespace, err)
 		panic(err)
 	}
-	informer := NewInformer(resourcePluralName, namespace, resourceClient, resyncPeriod)
+	if collector == nil {
+		collector = metrics.New()
+		metrics.RegisterCollector(collector)
+	}
+	o := newWatchOp()
+	o.applyOpts(opts)
+	informer := NewInformer(resourcePluralName, namespace, resourceClient, resyncPeriod, collector, o.numWorkers, o.labelSelector)
 	informers = append(informers, informer)
 }
 
