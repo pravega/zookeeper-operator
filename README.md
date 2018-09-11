@@ -43,9 +43,24 @@ $ kubectl create clusterrolebinding your-user-cluster-admin-binding --clusterrol
 Now install the operator components:
 
 ```bash
-# Create Operator deployment, Roles, Service Account, and Custom Resource Definition for
-#   a Zookeeper cluster.
-$ kubectl apply -f deploy
+# Deploy the Custom Resource Definition
+$ kubectl apply -f deploy/crd.yaml
+
+#
+# To enable zookeeper operator for just the current namespace
+#
+
+# Deploy the role and binding when watching
+$ kubectl apply -f deploy/current_ns/rbac.yaml
+
+# Deploy the operator service
+$ kubectl apply -f deploy/current_ns/operator.yaml
+
+# Deploy the cluster role and binding when watching _all namespaces_
+$ kubectl apply -f deploy/all_ns/rbac.yaml
+
+# Deploy the operator service when watching _all namespaces_
+$ kubectl apply -f deploy/all_ns/operator.yaml
 
 # View the zookeeper-operator Pod
 $ kubectl get pod

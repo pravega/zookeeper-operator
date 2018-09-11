@@ -14,8 +14,12 @@ const (
 )
 
 var (
+	// SchemeBuilder registers custom resources with the Kubernetes cluster.
 	SchemeBuilder = runtime.NewSchemeBuilder(addKnownTypes)
-	AddToScheme   = SchemeBuilder.AddToScheme
+
+	// AddToScheme functions to the new scheme being defined.
+	AddToScheme = SchemeBuilder.AddToScheme
+
 	// SchemeGroupVersion is the group version used to register these objects.
 	SchemeGroupVersion = schema.GroupVersion{Group: groupName, Version: version}
 )

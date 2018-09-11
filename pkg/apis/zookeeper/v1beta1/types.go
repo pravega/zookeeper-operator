@@ -9,14 +9,23 @@ import (
 )
 
 const (
-	DefaultZkContainerRepository  = "spiegela/zookeeper"
-	DefaultZkContainerVersion     = "3.5.4-beta"
-	DefaultZkContainerPolicy      = "Always"
-	DefaultTerminationGracePeriod = 30 // give time for clients to disconnect gracefully
+	// DefaultZkContainerRepository is the default docker repo for the zookeeper container
+	DefaultZkContainerRepository = "spiegela/zookeeper"
+
+	// DefaultZkContainerVersion is the default tag used for for the zookeeper container
+	DefaultZkContainerVersion = "3.5.4-beta"
+
+	// DefaultZkContainerPolicy is the default container pull policy used
+	DefaultZkContainerPolicy = "Always"
+
+	// DefaultTerminationGracePeriod is the default time given before the container is
+	// stopped. This gives clients time to disconnect from a specific node gracefully.
+	DefaultTerminationGracePeriod = 30
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
+// ZookeeperClusterList is the plural form of the Zookeeper cluster kubernetes resource
 type ZookeeperClusterList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
@@ -25,6 +34,7 @@ type ZookeeperClusterList struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
+// ZookeeperCluster is the type representing the zookeeper cluster kubernetes resource
 type ZookeeperCluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
@@ -32,10 +42,12 @@ type ZookeeperCluster struct {
 	Status            ClusterStatus `json:"status,omitempty"`
 }
 
+// WithDefaults set default values when not defined in the spec.
 func (z *ZookeeperCluster) WithDefaults() {
 	z.Spec.withDefaults(z)
 }
 
+// ClusterSpec is the zookeeper cluster configuration
 type ClusterSpec struct {
 	// Zookeeper container image. default is zookeeper:latest
 	Image ContainerImage `json:"image"`
@@ -117,6 +129,8 @@ func (s *ClusterSpec) withDefaults(z *ZookeeperCluster) {
 	}
 }
 
+// ContainerImage defines the fields needed for a Docker repository image. The format here
+// matches the predominant format used in Helm charts.
 type ContainerImage struct {
 	Repository string        `json:"repository"`
 	Tag        string        `json:"tag"`
@@ -135,10 +149,13 @@ func (c *ContainerImage) withDefaults() {
 	}
 }
 
+// ToString formats a container image struct as a docker compatible repository string.
 func (c *ContainerImage) ToString() string {
 	return fmt.Sprintf("%s:%s", c.Repository, c.Tag)
 }
 
+// PodPolicy defines the common pod configuration for Pods, including when used in deployments,
+// stateful-sets, etc.
 type PodPolicy struct {
 	// Labels specifies the labels to attach to pods the operator creates for the
 	// zookeeper cluster.
@@ -213,6 +230,8 @@ func (p *PodPolicy) withDefaults(z *ZookeeperCluster) {
 	}
 }
 
+// ZookeeperConfig is the current configuration of each Zookeeper node, which sets these
+// values in the config-map
 type ZookeeperConfig struct {
 	// InitLimit is the amount of time, in ticks, to allow followers to connect
 	// and sync to a leader.
@@ -221,13 +240,13 @@ type ZookeeperConfig struct {
 	InitLimit int `json:"initLimit"`
 
 	// TickTime is the length of a single tick, which is the basic time unit used
-	// by ZooKeeper, as measured in milliseconds
+	// by Zookeeper, as measured in milliseconds
 	//
 	// The default value is 2000.
 	TickTime int `json:"tickTime"`
 
 	// SyncLimit is the amount of time, in ticks, to allow followers to sync with
-	// ZooKeeper.
+	// Zookeeper.
 	//
 	// The default value is 2.
 	SyncLimit int `json:"syncLimit"`
@@ -245,5 +264,18 @@ func (c *ZookeeperConfig) withDefaults() {
 	}
 }
 
+// ClusterStatus is the status representing the current state of a cluster.
 type ClusterStatus struct {
+	// Size is the current size of the cluster
+	Size int `json:"size"`
+
+	// Members is the zookeeper members in the cluster
+	Members MembersStatus `json:"members"`
+}
+
+// MembersStatus is the status of the members of the cluster with both
+// ready and unready node membership lists
+type MembersStatus struct {
+	Ready []string `json:"ready"`
+	Unready []string `json:"unready"`
 }

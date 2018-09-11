@@ -7,6 +7,7 @@ func Reconcile(zk *v1beta1.ZookeeperCluster) (err error) {
 	zk.WithDefaults()
 
 	deploy(zk)
+
 	syncClusterSize(zk)
 
 	return nil
