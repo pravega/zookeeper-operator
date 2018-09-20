@@ -1,8 +1,8 @@
 # Zookeeper Operator
 
-### Project status: in development
+### Project status: pre-alpha
 
-The development of Zookeeper operator is a WIP and it is expected that breaking changes to the API will be made in the upcoming releases.
+The project is currently pre-alpha and it is expected that breaking changes to the API will be made in the upcoming releases.
 
 ### Overview
 
@@ -12,7 +12,7 @@ The operator itself is built with the [Operator framework](https://github.com/op
 
 ## Requirements
 
-- Kubernetes 1.8+
+- Access to a Kubernetes v1.9.0+ cluster
 
 ## Usage
 
