@@ -1,76 +1,64 @@
 # Zookeeper Operator
->**This operator is in WIP state and subject to (breaking) changes.**
 
-This Operator runs a Zookeeper 3.5 cluster, and uses Zookeeper dynamic reconfiguration to handle node membership.
+### Project status: pre-alpha
 
-The operator itself is built with the: https://github.com/operator-framework/operator-sdk
+The project is currently pre-alpha and it is expected that breaking changes to the API will be made in the upcoming releases.
 
-## Build Requirements:
- - Install the Operator SDK first: https://github.com/operator-framework/operator-sdk#quick-start
+### Overview
 
-## Usage:
+This operator runs a Zookeeper 3.5 cluster, and uses Zookeeper dynamic reconfiguration to handle node membership.
 
-```bash
-mkdir -p $GOPATH/src/github.com/pravega
-cd $GOPATH/src/github.com/pravega
-git clone git@github.com:pravega/zookeeper-operator.git
-cd zookeeper-operator
+The operator itself is built with the [Operator framework](https://github.com/operator-framework/operator-sdk).
+
+## Requirements
+
+- Access to a Kubernetes v1.9.0+ cluster
+
+## Usage
+
+### Install the operator
+
+> Note: if you are running on Google Kubernetes Engine (GKE), please [check this first](#installation-on-google-kubernetes-engine).
+
+Register the `ZookeeperCluster` custom resource definition (CRD).
+
+```
+$ kubectl create -f deploy/crd.yaml
 ```
 
-### Get the operator Docker image
+You can choose to enable Zookeeper operator for all namespaces or just for the a specific namespace. The example is using the `default` namespace, but feel free to edit the Yaml files and use a different namespace.
 
-#### a. Build the image yourself
+Create the operator role and role binding.
 
-```bash
-operator-sdk build pravega/zookeeper-operator
-docker tag pravega/zookeeper-operator ${your-operator-image-tag}:latest
-docker push ${your-operator-image-tag}:latest
+```
+// default namespace
+$ kubectl create -f deploy/default_ns/rbac.yaml
+
+// all namespaces
+$ kubectl create -f deploy/all_ns/rbac.yaml
 ```
 
-#### b. Use the image from Docker Hub
+Deploy the Zookeeper operator.
 
-```bash
-# No addition steps needed
+```
+// default namespace
+$ kubectl create -f deploy/default_ns/operator.yaml
+
+// all namespaces
+$ kubectl create -f deploy/all_ns/operator.yaml
 ```
 
-### Install the Kubernetes resources
+Verify that the Zookeeper operator is running.
 
-If you're running on GKE, be sure to enable cluster role bindings:
-```bash
-$ kubectl create clusterrolebinding your-user-cluster-admin-binding --clusterrole=cluster-admin --user=<your.google.cloud.email@example.org>
+```
+$ kubectl get deploy
+NAME                 DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+zookeeper-operator   1         1         1            1           12m
 ```
 
-Now install the operator components:
+### Deploy a sample Zookeeper cluster
 
-```bash
-# Deploy the Custom Resource Definition
-$ kubectl apply -f deploy/crd.yaml
-
-#
-# To enable zookeeper operator for just the current namespace
-#
-
-# Deploy the role and binding when watching
-$ kubectl apply -f deploy/current_ns/rbac.yaml
-
-# Deploy the operator service
-$ kubectl apply -f deploy/current_ns/operator.yaml
-
-# Deploy the cluster role and binding when watching _all namespaces_
-$ kubectl apply -f deploy/all_ns/rbac.yaml
-
-# Deploy the operator service when watching _all namespaces_
-$ kubectl apply -f deploy/all_ns/operator.yaml
-
-# View the zookeeper-operator Pod
-$ kubectl get pod
-NAME                                  READY     STATUS              RESTARTS   AGE
-zookeeper-operator-5c7b8cfd85-ttb5g   1/1       Running             0          5m
-```
-
-### The Zookeeper Custom Resource
-
-With this YAML template you can install a 3 node Zookeeper Cluster easily into your Kubernetes cluster:
+Create a Yaml file called `zk.yaml` with the following content to install a 3-node Zookeeper cluster.
 
 ```yaml
 apiVersion: "zookeeper.pravega.io/v1beta1"
@@ -81,27 +69,117 @@ spec:
   size: 3
 ```
 
-After creating, you can view the cluster:
+```
+$ kubectl create -f zk.yaml
+```
 
-```bash
-# View the new zookeeper cluster instance
+Verify that the cluster instances and its components are running.
+
+```
 $ kubectl get zk
 NAME      AGE
-example   2s
+example   15s
+```
 
-# View what it's made of
+```
 $ kubectl get all -l app=example
-NAME            READY     STATUS              RESTARTS   AGE
-pod/example-0   1/1       Running             0          51m
-pod/example-1   1/1       Running             0          55m
-pod/example-2   1/1       Running             0          58m
+NAME                   DESIRED   CURRENT   AGE
+statefulsets/example   3         3         2m
 
-NAME                       TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)             AGE
-service/example-client     ClusterIP   x.x.x.x         <none>        2181/TCP            51m
-service/example-headless   ClusterIP   None            <none>        2888/TCP,3888/TCP   51m
+NAME           READY     STATUS    RESTARTS   AGE
+po/example-0   1/1       Running   0          2m
+po/example-1   1/1       Running   0          1m
+po/example-2   1/1       Running   0          1m
 
-NAME                       DESIRED   CURRENT   AGE
-statefulset.apps/example   3         3         58m
+NAME                   TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)             AGE
+svc/example-client     ClusterIP   10.31.243.173   <none>        2181/TCP            2m
+svc/example-headless   ClusterIP   None            <none>        2888/TCP,3888/TCP   2m
+```
 
-# There are a few other things here, like a configmap, poddisruptionbudget, etc...
+### Uninstall the Zookeeper cluster
+
+```
+$ kubectl delete -f zk.yaml
+```
+
+### Uninstall the operator
+
+> Note that the Zookeeper clusters managed by the Zookeeper operator will NOT be deleted even if the operator is uninstalled.
+
+To delete all clusters, delete all cluster CR objects before uninstalling the operator.
+
+```
+$ kubectl delete -f deploy/default_ns
+// or, depending on how you deployed it
+$ kubectl delete -f deploy/all_ns
+```
+
+## Development
+
+### Build the operator image
+
+Requirements:
+  - Go 1.10+
+  - [Operator SDK](https://github.com/operator-framework/operator-sdk#quick-start)
+
+Use the `operator-sdk` command to build the Zookeeper operator image.
+
+```
+$ operator-sdk build pravega/zookeeper-operator
+```
+
+The Zookeeper operator image will be available in your Docker environment.
+
+```
+$ docker images pravega/zookeeper-operator
+REPOSITORY                   TAG                 IMAGE ID            CREATED             SIZE
+pravega/zookeeper-operator   latest              7e735b292e14        59 seconds ago      37.2MB
+```
+
+Optionally push it to a Docker registry.
+
+```
+docker tag pravega/zookeeper-operator [REGISTRY_HOST]:[REGISTRY_PORT]/pravega/zookeeper-operator
+docker push [REGISTRY_HOST]:[REGISTRY_PORT]/pravega/zookeeper-operator
+```
+
+where:
+
+- `[REGISTRY_HOST]` is your registry host or IP (e.g. `registry.example.com`)
+- `[REGISTRY_PORT]` is your registry port (e.g. `5000`)
+
+### Direct access to the cluster
+
+For debugging and development you might want to access the Zookeeper cluster directly. For example, if you created the cluster with name `example` in the `default` namespace you can forward the Zookeeper port from any of the pods (e.g. `example-0`) as follows:
+
+```
+$ kubectl port-forward -n default example-0 2181:2181
+```
+
+### Run the operator locally
+
+You can run the operator locally to help with development, testing, and debugging tasks.
+
+The following command will run the operator locally with the default Kubernetes config file present at `$HOME/.kube/config`. Use the `--kubeconfig` flag to provide a different path.
+
+```
+$ operator-sdk up local
+```
+
+### Installation on Google Kubernetes Engine
+
+The Operator requires elevated privileges in order to watch for the custom resources.
+
+According to Google Container Engine docs:
+
+> Ensure the creation of RoleBinding as it grants all the permissions included in the role that we want to create. Because of the way Container Engine checks permissions when we create a Role or ClusterRole.
+>
+> An example workaround is to create a RoleBinding that gives your Google identity a cluster-admin role before attempting to create additional Role or ClusterRole permissions.
+>
+> This is a known issue in the Beta release of Role-Based Access Control in Kubernetes and Container Engine version 1.6.
+
+On GKE, the following command must be run before installing the operator, replacing the user with your own details.
+
+```
+$ kubectl create clusterrolebinding your-user-cluster-admin-binding --clusterrole=cluster-admin --user=your.google.cloud.email@example.org
 ```

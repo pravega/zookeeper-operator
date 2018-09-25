@@ -44,10 +44,8 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: default
-  namespace: ""
+  namespace: default
 roleRef:
   kind: ClusterRole
   name: zookeeper-operator
   apiGroup: rbac.authorization.k8s.io
-
-
