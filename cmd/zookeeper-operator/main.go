@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"os"
 	"runtime"
 	"time"
 
@@ -9,9 +10,8 @@ import (
 	"github.com/operator-framework/operator-sdk/pkg/util/k8sutil"
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
 	"github.com/pravega/zookeeper-operator/pkg/stub"
-
 	"github.com/sirupsen/logrus"
-	"os"
+	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 )
 
 func printVersion() {
