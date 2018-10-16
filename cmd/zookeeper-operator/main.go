@@ -40,6 +40,7 @@ func init() {
 func main() {
 	if printVersion {
 		fmt.Println("zookeeper-operator Version:", version.Version)
+		fmt.Println("Git SHA:", version.GitSHA)
 		fmt.Println("Go Version:", runtime.Version())
 		fmt.Printf("Go OS/Arch: %s/%s\n", runtime.GOOS, runtime.GOARCH)
 		fmt.Printf("operator-sdk Version: %v", sdkVersion.Version)
@@ -47,6 +48,7 @@ func main() {
 	}
 
 	logrus.Infof("zookeeper-operator Version: %v", version.Version)
+	logrus.Infof("Git SHA: %s", version.GitSHA)
 	logrus.Infof("Go Version: %s", runtime.Version())
 	logrus.Infof("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH)
 	logrus.Infof("operator-sdk Version: %v", sdkVersion.Version)
