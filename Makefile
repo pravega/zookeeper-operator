@@ -10,7 +10,7 @@ SHELL=/bin/bash -o pipefail
 
 PROJECT_NAME=zookeeper-operator
 REPO=pravega/$(PROJECT_NAME)
-VERSION=$(shell git describe --always --tags --dirty)
+VERSION=$(shell git describe --always --tags --dirty | sed "s/\(.*\)-g`git rev-parse --short HEAD`/\1/")
 GIT_SHA=$(shell git rev-parse --short HEAD)
 GOOS=linux
 GOARCH=amd64
