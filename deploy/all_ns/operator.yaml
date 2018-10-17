@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: zookeeper-operator
-          image: spiegela/zookeeper-operator
+          image: pravega/zookeeper-operator:latest
           ports:
           - containerPort: 60000
             name: metrics
