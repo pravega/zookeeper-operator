@@ -4,6 +4,23 @@
 
 The project is currently alpha. While no breaking API changes are currently planned, we reserve the right to address bugs and change the API before the project is declared stable.
 
+## Table of Contents
+
+ * [Overview](#overview)
+ * [Requirements](#requirements)
+ * [Usage](#usage)    
+    * [Installation of the Operator](#install-the-operator)
+    * [Deploy a sample Zookeeper Cluster](#deploy-a-sample-zookeeper-cluster)
+    * [Uninstall the Zookeeper Cluster](#uninstall-the-zookeeper-cluster)
+    * [Uninstall the Operator](#uninstall-the-operator)
+ * [Development](#development)
+    * [Build the Operator Image](#build-the-operator-image)
+    * [Direct Access to Cluster](#direct-access-to-the-cluster)
+    * [Run the Operator Locally](#run-the-operator-locally)
+    * [Installation on GKE](#installation-on-google-kubernetes-engine)
+
+
+
 ### Overview
 
 This operator runs a Zookeeper 3.5 cluster, and uses Zookeeper dynamic reconfiguration to handle node membership.
