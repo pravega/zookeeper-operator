@@ -35,6 +35,12 @@ func syncClusterSize(zk *v1beta1.ZookeeperCluster) (err error) {
 		return fmt.Errorf("failed to get stateful-set (%s): %v", sts.Name, err)
 	}
 
+	zk.Status.Size = int(sts.Status.Replicas)
+	err = sdk.Update(zk)
+	if err != nil {
+		return fmt.Errorf("failed to update project: %v", err)
+	}
+
 	if *sts.Spec.Replicas != zk.Spec.Size {
 		sts.Spec.Replicas = &(zk.Spec.Size)
 		err = sdk.Update(sts)
@@ -42,5 +48,6 @@ func syncClusterSize(zk *v1beta1.ZookeeperCluster) (err error) {
 			return fmt.Errorf("failed to update size of stateful-set (%s): %v", sts.Name, err)
 		}
 	}
+
 	return nil
 }
