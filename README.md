@@ -137,22 +137,31 @@ $ kubectl delete -f deploy/all_ns
 
 Requirements:
   - Go 1.10+
-  - [Operator SDK](https://github.com/operator-framework/operator-sdk#quick-start)
 
-Use the `operator-sdk` command to build the Zookeeper operator image.
+Use the `make` command to build the Zookeeper operator image.
 
 ```
-$ operator-sdk build pravega/zookeeper-operator
+$ make build
 ```
+That will generate a Docker image with the format
+`<latest_release_tag>-<number_of_commits_after_the_release>`` (it will append-dirty if there are uncommitted changes). The image will also be tagged as `latest`.
+
+Example image after running `make build`.
 
 The Zookeeper operator image will be available in your Docker environment.
 
 ```
 $ docker images pravega/zookeeper-operator
-REPOSITORY                   TAG                 IMAGE ID            CREATED             SIZE
-pravega/zookeeper-operator   latest              7e735b292e14        59 seconds ago      37.2MB
-```
 
+REPOSITORY                    TAG              IMAGE ID        CREATED     
+
+SIZE                                                                                                                       
+pravega/zookeeper-operator    0.1.1-3-dirty    2b2d5bcbedf5    10 minutes ago      
+
+41.7MB                                                                                                                                
+pravega/zookeeper-operator    latest           2b2d5bcbedf5    10 minutes ago
+
+```
 Optionally push it to a Docker registry.
 
 ```
