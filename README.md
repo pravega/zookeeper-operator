@@ -156,8 +156,8 @@ $ docker images pravega/zookeeper-operator
 REPOSITORY                    TAG              IMAGE ID        CREATED         SIZE   
 
 pravega/zookeeper-operator    0.1.1-3-dirty    2b2d5bcbedf5    10 minutes ago  41.7MB
-                                                                      
-pravega/zookeeper-operator    latest           2b2d5bcbedf5    10 minutes ago
+
+pravega/zookeeper-operator    latest           2b2d5bcbedf5    10 minutes ago  41.7MB 
 
 ```
 Optionally push it to a Docker registry.
