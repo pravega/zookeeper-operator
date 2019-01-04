@@ -12,58 +12,36 @@ package v1beta1
 
 import (
 	"fmt"
-
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
-	// DefaultZkContainerRepository is the default docker repo for the zookeeper container
-	DefaultZkContainerRepository = "spiegela/zookeeper"
+	// DefaultZkContainerRepository is the default docker repo for the zookeeper
+	// container
+	DefaultZkContainerRepository = "emccorp/zookeeper"
 
-	// DefaultZkContainerVersion is the default tag used for for the zookeeper container
+	// DefaultZkContainerVersion is the default tag used for for the zookeeper
+	// container
 	DefaultZkContainerVersion = "3.5.4-beta"
 
 	// DefaultZkContainerPolicy is the default container pull policy used
 	DefaultZkContainerPolicy = "Always"
 
-	// DefaultTerminationGracePeriod is the default time given before the container is
-	// stopped. This gives clients time to disconnect from a specific node gracefully.
+	// DefaultTerminationGracePeriod is the default time given before the
+	// container is stopped. This gives clients time to disconnect from a
+	// specific node gracefully.
 	DefaultTerminationGracePeriod = 30
 )
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-// ZookeeperClusterList is the plural form of the Zookeeper cluster kubernetes resource
-type ZookeeperClusterList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata"`
-	Items           []ZookeeperCluster `json:"items"`
-}
-
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-// ZookeeperCluster is the type representing the zookeeper cluster kubernetes resource
-type ZookeeperCluster struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata"`
-	Spec              ClusterSpec   `json:"spec"`
-	Status            ClusterStatus `json:"status,omitempty"`
-}
-
-// WithDefaults set default values when not defined in the spec.
-func (z *ZookeeperCluster) WithDefaults() {
-	z.Spec.withDefaults(z)
-}
-
-// ClusterSpec is the zookeeper cluster configuration
-type ClusterSpec struct {
+// ZookeeperClusterSpec defines the desired state of ZookeeperCluster
+type ZookeeperClusterSpec struct {
 	// Zookeeper container image. default is zookeeper:latest
 	Image ContainerImage `json:"image"`
 
-	// Labels specifies the labels to attach to pods the operator creates for the
-	// zookeeper cluster.
+	// Labels specifies the labels to attach to pods the operator creates for
+	// the zookeeper cluster.
 	Labels map[string]string `json:"labels,omitempty"`
 
 	// Size is the expected size of the zookeeper cluster.
@@ -91,7 +69,7 @@ type ClusterSpec struct {
 	Conf *ZookeeperConfig `json:"config,omitempty"`
 }
 
-func (s *ClusterSpec) withDefaults(z *ZookeeperCluster) {
+func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) {
 	s.Image.withDefaults()
 	if s.Conf == nil {
 		cfg := ZookeeperConfig{}
@@ -139,8 +117,41 @@ func (s *ClusterSpec) withDefaults(z *ZookeeperCluster) {
 	}
 }
 
-// ContainerImage defines the fields needed for a Docker repository image. The format here
-// matches the predominant format used in Helm charts.
+// ZookeeperClusterStatus defines the observed state of ZookeeperCluster
+type ZookeeperClusterStatus struct {
+	// Size is the current size of the cluster
+	Size int `json:"size"`
+
+	// Members is the zookeeper members in the cluster
+	Members MembersStatus `json:"members"`
+}
+
+// MembersStatus is the status of the members of the cluster with both
+// ready and unready node membership lists
+type MembersStatus struct {
+	Ready   []string `json:"ready"`
+	Unready []string `json:"unready"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// ZookeeperCluster is the Schema for the zookeeperclusters API
+// +k8s:openapi-gen=true
+type ZookeeperCluster struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   ZookeeperClusterSpec   `json:"spec,omitempty"`
+	Status ZookeeperClusterStatus `json:"status,omitempty"`
+}
+
+// WithDefaults set default values when not defined in the spec.
+func (z *ZookeeperCluster) WithDefaults() {
+	z.Spec.withDefaults(z)
+}
+
+// ContainerImage defines the fields needed for a Docker repository image. The
+// format here matches the predominant format used in Helm charts.
 type ContainerImage struct {
 	Repository string        `json:"repository"`
 	Tag        string        `json:"tag"`
@@ -159,21 +170,22 @@ func (c *ContainerImage) withDefaults() {
 	}
 }
 
-// ToString formats a container image struct as a docker compatible repository string.
+// ToString formats a container image struct as a docker compatible repository
+// string.
 func (c *ContainerImage) ToString() string {
 	return fmt.Sprintf("%s:%s", c.Repository, c.Tag)
 }
 
-// PodPolicy defines the common pod configuration for Pods, including when used in deployments,
-// stateful-sets, etc.
+// PodPolicy defines the common pod configuration for Pods, including when used
+// in deployments, stateful-sets, etc.
 type PodPolicy struct {
-	// Labels specifies the labels to attach to pods the operator creates for the
-	// zookeeper cluster.
+	// Labels specifies the labels to attach to pods the operator creates for
+	// the zookeeper cluster.
 	Labels map[string]string `json:"labels,omitempty"`
 
-	// NodeSelector specifies a map of key-value pairs. For the pod to be eligible
-	// to run on a node, the node must have each of the indicated key-value pairs as
-	// labels.
+	// NodeSelector specifies a map of key-value pairs. For the pod to be
+	// eligible to run on a node, the node must have each of the indicated
+	// key-value pairs as labels.
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 
 	// The scheduling constraints on pods.
@@ -240,8 +252,8 @@ func (p *PodPolicy) withDefaults(z *ZookeeperCluster) {
 	}
 }
 
-// ZookeeperConfig is the current configuration of each Zookeeper node, which sets these
-// values in the config-map
+// ZookeeperConfig is the current configuration of each Zookeeper node, which
+// sets these values in the config-map
 type ZookeeperConfig struct {
 	// InitLimit is the amount of time, in ticks, to allow followers to connect
 	// and sync to a leader.
@@ -274,18 +286,15 @@ func (c *ZookeeperConfig) withDefaults() {
 	}
 }
 
-// ClusterStatus is the status representing the current state of a cluster.
-type ClusterStatus struct {
-	// Size is the current size of the cluster
-	Size int `json:"size"`
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-	// Members is the zookeeper members in the cluster
-	Members MembersStatus `json:"members"`
+// ZookeeperClusterList contains a list of ZookeeperCluster
+type ZookeeperClusterList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []ZookeeperCluster `json:"items"`
 }
 
-// MembersStatus is the status of the members of the cluster with both
-// ready and unready node membership lists
-type MembersStatus struct {
-	Ready   []string `json:"ready"`
-	Unready []string `json:"unready"`
+func init() {
+	SchemeBuilder.Register(&ZookeeperCluster{}, &ZookeeperClusterList{})
 }

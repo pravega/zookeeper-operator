@@ -8,8 +8,8 @@
  *     http://www.apache.org/licenses/LICENSE-2.0
  */
 
-// +k8s:deepcopy-gen=package
+// Package v1beta1 contains API Schema definitions for the zookeeper v1beta1 API
+// group
+// +k8s:deepcopy-gen=package,register
 // +groupName=zookeeper.pravega.io
-
-// Package v1beta1 includes the types for the Zookeeper operator
 package v1beta1
