@@ -8,17 +8,16 @@
  *     http://www.apache.org/licenses/LICENSE-2.0
  */
 
-package zk
+package controller
 
-import "github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
+import (
+	"github.com/pravega/zookeeper-operator/pkg/controller/zookeepercluster"
+)
 
-func Reconcile(zk *v1beta1.ZookeeperCluster) (err error) {
-	zk = zk.DeepCopy()
-	zk.WithDefaults()
-
-	deploy(zk)
-
-	syncClusterSize(zk)
-
-	return nil
+func init() {
+	// AddToManagerFuncs is a list of functions to create controllers and add them to a manager.
+	AddToManagerFuncs = append(
+		AddToManagerFuncs,
+		zookeepercluster.AddZookeeperReconciler,
+	)
 }

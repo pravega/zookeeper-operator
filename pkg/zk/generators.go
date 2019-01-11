@@ -11,90 +11,33 @@
 package zk
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
 
-	"github.com/operator-framework/operator-sdk/pkg/sdk"
 	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
-	"github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-type zkPorts struct {
-	Client int32
-	Quorum int32
-	Leader int32
-}
+const InvalidStatefulSetUpdateError = "updates to statefuleset fields other than 'replicas', 'template', and 'updateStrategy' are forbidden"
 
-func deploy(z *v1beta1.ZookeeperCluster) (err error) {
-	var ports zkPorts
-
-	for _, p := range z.Spec.Ports {
-		if p.Name == "client" {
-			ports.Client = p.ContainerPort
-		} else if p.Name == "quorum" {
-			ports.Quorum = p.ContainerPort
-		} else if p.Name == "leader-election" {
-			ports.Leader = p.ContainerPort
-		}
-	}
-
-	cm := configMapName(z)
-
-	err = sdk.Create(makeZkConfigMap(cm, ports, z))
-	if err != nil && !k8serrors.IsAlreadyExists(err) {
-		logrus.Errorf("Failed to create zookeeper configmap : %v", err)
-		return err
-	}
-
-	err = sdk.Create(makeZkSts(cm, ports, z))
-	if err != nil && !k8serrors.IsAlreadyExists(err) {
-		logrus.Errorf("Failed to create zookeeper statefulset : %v", err)
-		return err
-	}
-
-	err = sdk.Create(makeZkPdb(z))
-	if err != nil && !k8serrors.IsAlreadyExists(err) {
-		logrus.Errorf("Failed to create zookeeper pod-disruption-budget : %v", err)
-		return err
-	}
-
-	err = sdk.Create(makeZkClientSvc(ports, z))
-	if err != nil && !k8serrors.IsAlreadyExists(err) {
-		logrus.Errorf("Failed to create zookeeper client service : %v", err)
-		return err
-	}
-
-	err = sdk.Create(makeZkHeadlessSvc(ports, z))
-	if err != nil && !k8serrors.IsAlreadyExists(err) {
-		logrus.Errorf("Failed to create zookeeper headless service : %v", err)
-		return err
-	}
-
-	return nil
-}
-
-func configMapName(z *v1beta1.ZookeeperCluster) string {
-	return fmt.Sprintf("%s-configmap", z.GetName())
+func headlessDomain(z *v1beta1.ZookeeperCluster) string {
+	return fmt.Sprintf("%s.%s.svc.cluster.local", headlessSvcName(z), z.GetNamespace())
 }
 
 func headlessSvcName(z *v1beta1.ZookeeperCluster) string {
 	return fmt.Sprintf("%s-headless", z.GetName())
 }
 
-func headlessDomain(z *v1beta1.ZookeeperCluster) string {
-	return fmt.Sprintf("%s.%s.svc.cluster.local", headlessSvcName(z), z.GetNamespace())
-}
-
-func makeZkSts(configMapName string, ports zkPorts, z *v1beta1.ZookeeperCluster) *appsv1.StatefulSet {
-	sts := appsv1.StatefulSet{
+// MakeStatefulSet return a zookeeper stateful set from the zk spec
+func MakeStatefulSet(z *v1beta1.ZookeeperCluster) *appsv1.StatefulSet {
+	return &appsv1.StatefulSet{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "StatefulSet",
 			APIVersion: "apps/v1",
@@ -102,18 +45,11 @@ func makeZkSts(configMapName string, ports zkPorts, z *v1beta1.ZookeeperCluster)
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      z.GetName(),
 			Namespace: z.Namespace,
-			OwnerReferences: []metav1.OwnerReference{
-				*metav1.NewControllerRef(z, schema.GroupVersionKind{
-					Group:   v1beta1.SchemeGroupVersion.Group,
-					Version: v1beta1.SchemeGroupVersion.Version,
-					Kind:    "ZookeeperCluster",
-				}),
-			},
-			Labels: z.Spec.Labels,
+			Labels:    z.Spec.Labels,
 		},
 		Spec: appsv1.StatefulSetSpec{
 			ServiceName: headlessSvcName(z),
-			Replicas:    &z.Spec.Size,
+			Replicas:    &z.Spec.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"app": z.GetName(),
@@ -131,7 +67,7 @@ func makeZkSts(configMapName string, ports zkPorts, z *v1beta1.ZookeeperCluster)
 						"kind": "ZookeeperMember",
 					},
 				},
-				Spec: makeZkPodSpec(configMapName, ports, z),
+				Spec: makeZkPodSpec(z),
 			},
 			VolumeClaimTemplates: []v1.PersistentVolumeClaim{
 				{
@@ -139,15 +75,27 @@ func makeZkSts(configMapName string, ports zkPorts, z *v1beta1.ZookeeperCluster)
 						Name:   "data",
 						Labels: map[string]string{"app": z.GetName()},
 					},
-					Spec: *z.Spec.PersistentVolumeClaimSpec,
+					Spec: z.Spec.PersistentVolumeClaimSpec,
 				},
 			},
 		},
 	}
-	return &sts
 }
 
-func makeZkPodSpec(configMapName string, ports zkPorts, z *v1beta1.ZookeeperCluster) v1.PodSpec {
+// SyncStatefulSet synchronizes any updates to the stateful-set
+func SyncStatefulSet(curr *appsv1.StatefulSet, next *appsv1.StatefulSet) (*appsv1.StatefulSet, error) {
+	updateSpec := curr.Spec
+	updateSpec.Replicas = next.Spec.Replicas
+	updateSpec.Template = next.Spec.Template
+	updateSpec.UpdateStrategy = next.Spec.UpdateStrategy
+	if !reflect.DeepEqual(updateSpec, next.Spec) {
+		return nil, errors.New(InvalidStatefulSetUpdateError)
+	}
+	curr.Spec = updateSpec
+	return curr, nil
+}
+
+func makeZkPodSpec(z *v1beta1.ZookeeperCluster) v1.PodSpec {
 	zkContainer := v1.Container{
 		Name:            "zookeeper",
 		Image:           z.Spec.Image.ToString(),
@@ -192,7 +140,9 @@ func makeZkPodSpec(configMapName string, ports zkPorts, z *v1beta1.ZookeeperClus
 				Name: "conf",
 				VolumeSource: v1.VolumeSource{
 					ConfigMap: &v1.ConfigMapVolumeSource{
-						LocalObjectReference: v1.LocalObjectReference{Name: configMapName},
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: z.ConfigMapName(),
+						},
 					},
 				},
 			},
@@ -208,57 +158,68 @@ func makeZkPodSpec(configMapName string, ports zkPorts, z *v1beta1.ZookeeperClus
 	return podSpec
 }
 
-func makeZkClientSvc(ports zkPorts, z *v1beta1.ZookeeperCluster) *v1.Service {
-	name := fmt.Sprintf("%s-client", z.GetName())
+// MakeClientService returns a client service resource for the zookeeper cluster
+func MakeClientService(z *v1beta1.ZookeeperCluster) *v1.Service {
+	ports := z.ZookeeperPorts()
 	svcPorts := []v1.ServicePort{
 		{Name: "client", Port: ports.Client},
 	}
-	return makeSvc(name, svcPorts, true, z)
+	return makeService(z.GetClientServiceName(), svcPorts, true, z)
 }
 
-func makeZkHeadlessSvc(ports zkPorts, z *v1beta1.ZookeeperCluster) *v1.Service {
-	svcPorts := []v1.ServicePort{
-		{Name: "quorum", Port: ports.Quorum},
-		{Name: "leader-election", Port: ports.Leader},
-	}
-	return makeSvc(headlessSvcName(z), svcPorts, false, z)
+// SyncService synchronizes a service with an updated spec and validates it
+func SyncService(curr *v1.Service, next *v1.Service) (*v1.Service, error) {
+	curr.Spec = next.Spec
+	return curr, nil
 }
 
-func makeZkConfigMap(name string, ports zkPorts, z *v1beta1.ZookeeperCluster) *v1.ConfigMap {
+// MakeConfigMap returns a zookeeper config map
+func MakeConfigMap(z *v1beta1.ZookeeperCluster) *v1.ConfigMap {
 	return &v1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ConfigMap",
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
+			Name:      z.ConfigMapName(),
 			Namespace: z.Namespace,
-			OwnerReferences: []metav1.OwnerReference{
-				*metav1.NewControllerRef(z, schema.GroupVersionKind{
-					Group:   v1beta1.SchemeGroupVersion.Group,
-					Version: v1beta1.SchemeGroupVersion.Version,
-					Kind:    "ZookeeperCluster",
-				}),
-			},
 		},
 		Data: map[string]string{
-			"zoo.cfg":                makeZkConfigString(ports, z),
+			"zoo.cfg":                makeZkConfigString(z.Spec),
 			"log4j.properties":       makeZkLog4JConfigString(),
 			"log4j-quiet.properties": makeZkLog4JQuietConfigString(),
-			"env.sh":                 makeZkEnvConfigString(ports, z),
+			"env.sh":                 makeZkEnvConfigString(z),
 		},
 	}
 }
 
-func makeZkConfigString(ports zkPorts, z *v1beta1.ZookeeperCluster) string {
+// SyncService synchronizes a service with an updated spec and validates it
+func SyncConfigMap(curr *v1.ConfigMap, next *v1.ConfigMap) (*v1.ConfigMap, error) {
+	curr.Data = next.Data
+	curr.BinaryData = next.BinaryData
+	return curr, nil
+}
+
+// MakeHeadlessService returns an internal headless-service for the zk
+// stateful-set
+func MakeHeadlessService(z *v1beta1.ZookeeperCluster) *v1.Service {
+	ports := z.ZookeeperPorts()
+	svcPorts := []v1.ServicePort{
+		{Name: "quorum", Port: ports.Quorum},
+		{Name: "leader-election", Port: ports.Leader},
+	}
+	return makeService(headlessSvcName(z), svcPorts, false, z)
+}
+
+func makeZkConfigString(s v1beta1.ZookeeperClusterSpec) string {
 	return "4lw.commands.whitelist=cons, envi, conf, crst, srvr, stat, mntr, ruok\n" +
 		"dataDir=/data\n" +
 		"standaloneEnabled=false\n" +
 		"reconfigEnabled=true\n" +
 		"skipACL=yes\n" +
-		"initLimit=" + strconv.Itoa(z.Spec.Conf.InitLimit) + "\n" +
-		"syncLimit=" + strconv.Itoa(z.Spec.Conf.SyncLimit) + "\n" +
-		"tickTime=" + strconv.Itoa(z.Spec.Conf.TickTime) + "\n" +
+		"initLimit=" + strconv.Itoa(s.Conf.InitLimit) + "\n" +
+		"syncLimit=" + strconv.Itoa(s.Conf.SyncLimit) + "\n" +
+		"tickTime=" + strconv.Itoa(s.Conf.TickTime) + "\n" +
 		"dynamicConfigFile=/data/zoo.cfg.dynamic\n"
 }
 
@@ -280,15 +241,17 @@ func makeZkLog4JConfigString() string {
 		"log4j.appender.CONSOLE.layout.ConversionPattern=%d{ISO8601} [myid:%X{myid}] - %-5p [%t:%C{1}@%L] - %m%n\n"
 }
 
-func makeZkEnvConfigString(ports zkPorts, z *v1beta1.ZookeeperCluster) string {
+func makeZkEnvConfigString(z *v1beta1.ZookeeperCluster) string {
+	ports := z.ZookeeperPorts()
 	return "#!/usr/bin/env bash\n\n" +
 		"DOMAIN=" + headlessDomain(z) + "\n" +
 		"QUORUM_PORT=" + strconv.Itoa(int(ports.Quorum)) + "\n" +
 		"LEADER_PORT=" + strconv.Itoa(int(ports.Leader)) + "\n" +
+		"CLIENT_HOST=" + z.GetClientServiceName() + "\n" +
 		"CLIENT_PORT=" + strconv.Itoa(int(ports.Client)) + "\n"
 }
 
-func makeSvc(name string, ports []v1.ServicePort, clusterIP bool, z *v1beta1.ZookeeperCluster) *v1.Service {
+func makeService(name string, ports []v1.ServicePort, clusterIP bool, z *v1beta1.ZookeeperCluster) *v1.Service {
 	service := v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
@@ -317,7 +280,8 @@ func makeSvc(name string, ports []v1.ServicePort, clusterIP bool, z *v1beta1.Zoo
 	return &service
 }
 
-func makeZkPdb(z *v1beta1.ZookeeperCluster) *policyv1beta1.PodDisruptionBudget {
+// MakePodDisruptionBudget returns a pdb for the zookeeper cluster
+func MakePodDisruptionBudget(z *v1beta1.ZookeeperCluster) *policyv1beta1.PodDisruptionBudget {
 	pdbCount := intstr.FromInt(1)
 	return &policyv1beta1.PodDisruptionBudget{
 		TypeMeta: metav1.TypeMeta{
