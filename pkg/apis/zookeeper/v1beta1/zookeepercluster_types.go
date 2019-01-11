@@ -24,7 +24,7 @@ const (
 
 	// DefaultZkContainerVersion is the default tag used for for the zookeeper
 	// container
-	DefaultZkContainerVersion = "3.5.4-beta"
+	DefaultZkContainerVersion = "3.5.4-beta-operator"
 
 	// DefaultZkContainerPolicy is the default container pull policy used
 	DefaultZkContainerPolicy = "Always"
@@ -37,47 +37,56 @@ const (
 
 // ZookeeperClusterSpec defines the desired state of ZookeeperCluster
 type ZookeeperClusterSpec struct {
-	// Zookeeper container image. default is zookeeper:latest
+	// Image is the  container image. default is zookeeper:latest
 	Image ContainerImage `json:"image"`
 
 	// Labels specifies the labels to attach to pods the operator creates for
 	// the zookeeper cluster.
 	Labels map[string]string `json:"labels,omitempty"`
 
-	// Size is the expected size of the zookeeper cluster.
+	// Size (DEPRECATED) is the expected size of the zookeeper cluster. This
+	// has been replaced with "Replicas"
+	//
+	// The valid range of size is from 1 to 7.
+	Size int32 `json:"size"`
+
+	// Replicas is the expected size of the zookeeper cluster.
 	// The pravega-operator will eventually make the size of the running cluster
 	// equal to the expected size.
 	//
 	// The valid range of size is from 1 to 7.
-	Size int32 `json:"size"`
+	Replicas int32 `json:"replicas"`
 
 	Ports []v1.ContainerPort `json:"ports,omitempty"`
 
 	// Pod defines the policy to create pod for the zookeeper cluster.
 	//
 	// Updating the Pod does not take effect on any existing pods.
-	Pod *PodPolicy `json:"pod,omitempty"`
+	Pod PodPolicy `json:"pod,omitempty"`
 
 	// PersistentVolumeClaimSpec is the spec to describe PVC for the container
 	// This field is optional. If no PVC spec, stateful containers will use
 	// emptyDir as volume.
-	PersistentVolumeClaimSpec *v1.PersistentVolumeClaimSpec `json:"persistence,omitempty"`
+	PersistentVolumeClaimSpec v1.PersistentVolumeClaimSpec `json:"persistence,omitempty"`
 
 	// Conf is the zookeeper configuration, which will be used to generate the
 	// static zookeeper configuration. If no configuration is provided required
 	// default values will be provided, and optional values will be excluded.
-	Conf *ZookeeperConfig `json:"config,omitempty"`
+	Conf ZookeeperConfig `json:"config,omitempty"`
 }
 
-func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) {
-	s.Image.withDefaults()
-	if s.Conf == nil {
-		cfg := ZookeeperConfig{}
-		cfg.withDefaults()
-		s.Conf = &cfg
+func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) {
+	changed = s.Image.withDefaults()
+	if s.Conf.withDefaults() {
+		changed = true
 	}
-	if s.Size == 0 {
-		s.Size = 3
+	if s.Replicas == 0 {
+		if s.Size != 0 {
+			s.Replicas = s.Size
+		} else {
+			s.Replicas = 3
+		}
+		changed = true
 	}
 	if s.Ports == nil {
 		s.Ports = []v1.ContainerPort{
@@ -94,27 +103,33 @@ func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) {
 				ContainerPort: 3888,
 			},
 		}
+		changed = true
 	}
 	if z.Spec.Labels == nil {
 		z.Spec.Labels = map[string]string{}
+		changed = true
 	}
 	if _, ok := z.Spec.Labels["app"]; !ok {
 		z.Spec.Labels["app"] = z.GetName()
+		changed = true
 	}
-	if s.Pod == nil {
-		s.Pod = &PodPolicy{}
-		s.Pod.withDefaults(z)
+	if _, ok := z.Spec.Labels["release"]; !ok {
+		z.Spec.Labels["release"] = z.GetName()
+		changed = true
 	}
-	if s.PersistentVolumeClaimSpec == nil {
-		s.PersistentVolumeClaimSpec = &v1.PersistentVolumeClaimSpec{
-			AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
-			Resources: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
-					v1.ResourceStorage: resource.MustParse("20Gi"),
-				},
-			},
+	if s.Pod.withDefaults(z) {
+		changed = true
+	}
+	s.PersistentVolumeClaimSpec.AccessModes = []v1.PersistentVolumeAccessMode{
+		v1.ReadWriteOnce,
+	}
+	if len(s.PersistentVolumeClaimSpec.Resources.Requests) == 0 {
+		s.PersistentVolumeClaimSpec.Resources.Requests = v1.ResourceList{
+			v1.ResourceStorage: resource.MustParse("20Gi"),
 		}
+		changed = true
 	}
+	return changed
 }
 
 // ZookeeperClusterStatus defines the observed state of ZookeeperCluster
@@ -146,8 +161,40 @@ type ZookeeperCluster struct {
 }
 
 // WithDefaults set default values when not defined in the spec.
-func (z *ZookeeperCluster) WithDefaults() {
-	z.Spec.withDefaults(z)
+func (z *ZookeeperCluster) WithDefaults() bool {
+	return z.Spec.withDefaults(z)
+}
+
+// ConfigMapName returns the name of the cluster config-map
+func (z *ZookeeperCluster) ConfigMapName() string {
+	return fmt.Sprintf("%s-configmap", z.GetName())
+}
+
+// ZookeeperPorts returns a struct of ports
+func (z *ZookeeperCluster) ZookeeperPorts() Ports {
+	ports := Ports{}
+	for _, p := range z.Spec.Ports {
+		if p.Name == "client" {
+			ports.Client = p.ContainerPort
+		} else if p.Name == "quorum" {
+			ports.Quorum = p.ContainerPort
+		} else if p.Name == "leader-election" {
+			ports.Leader = p.ContainerPort
+		}
+	}
+	return ports
+}
+
+// GetClientServiceName returns the name of the client service for the cluster
+func (z *ZookeeperCluster) GetClientServiceName() string {
+	return fmt.Sprintf("%s-client", z.GetName())
+}
+
+// ZookeeperPorts groups the ports for a zookeeper cluster node for easy access
+type Ports struct {
+	Client int32
+	Quorum int32
+	Leader int32
 }
 
 // ContainerImage defines the fields needed for a Docker repository image. The
@@ -158,16 +205,20 @@ type ContainerImage struct {
 	PullPolicy v1.PullPolicy `json:"pullPolicy"`
 }
 
-func (c *ContainerImage) withDefaults() {
+func (c *ContainerImage) withDefaults() (changed bool) {
 	if c.Repository == "" {
+		changed = true
 		c.Repository = DefaultZkContainerRepository
 	}
 	if c.Tag == "" {
+		changed = true
 		c.Tag = DefaultZkContainerVersion
 	}
 	if c.PullPolicy == "" {
+		changed = true
 		c.PullPolicy = DefaultZkContainerPolicy
 	}
+	return changed
 }
 
 // ToString formats a container image struct as a docker compatible repository
@@ -216,32 +267,42 @@ type PodPolicy struct {
 	TerminationGracePeriodSeconds int64 `json:"terminationGracePeriodSeconds"`
 }
 
-func (p *PodPolicy) withDefaults(z *ZookeeperCluster) {
-	headlessSvcName := fmt.Sprintf("%s-headless", z.GetName())
+func (p *PodPolicy) withDefaults(z *ZookeeperCluster) (changed bool) {
 	if p.Labels == nil {
-		p.Labels = map[string]string{"app": z.GetName()}
+		p.Labels = map[string]string{}
+		changed = true
 	}
 	if p.TerminationGracePeriodSeconds == 0 {
 		p.TerminationGracePeriodSeconds = DefaultTerminationGracePeriod
+		changed = true
 	}
 	if z.Spec.Pod.Labels == nil {
-		z.Spec.Pod.Labels = map[string]string{}
+		p.Labels = map[string]string{}
+		changed = true
 	}
-	if _, ok := z.Spec.Pod.Labels["app"]; !ok {
-		z.Spec.Pod.Labels["app"] = z.GetName()
+	if _, ok := p.Labels["app"]; !ok {
+		p.Labels["app"] = z.GetName()
+		changed = true
+	}
+	if _, ok := p.Labels["release"]; !ok {
+		p.Labels["release"] = z.GetName()
+		changed = true
 	}
 	if p.Affinity == nil {
 		p.Affinity = &v1.Affinity{
 			PodAntiAffinity: &v1.PodAntiAffinity{
-				RequiredDuringSchedulingIgnoredDuringExecution: []v1.PodAffinityTerm{
+				PreferredDuringSchedulingIgnoredDuringExecution: []v1.WeightedPodAffinityTerm{
 					{
-						TopologyKey: "kubernetes.io/hostname",
-						LabelSelector: &metav1.LabelSelector{
-							MatchExpressions: []metav1.LabelSelectorRequirement{
-								{
-									Key:      "app",
-									Operator: metav1.LabelSelectorOpIn,
-									Values:   []string{headlessSvcName},
+						Weight: 20,
+						PodAffinityTerm: v1.PodAffinityTerm{
+							TopologyKey: "kubernetes.io/hostname",
+							LabelSelector: &metav1.LabelSelector{
+								MatchExpressions: []metav1.LabelSelectorRequirement{
+									{
+										Key:      "app",
+										Operator: metav1.LabelSelectorOpIn,
+										Values:   []string{z.GetName()},
+									},
 								},
 							},
 						},
@@ -249,7 +310,9 @@ func (p *PodPolicy) withDefaults(z *ZookeeperCluster) {
 				},
 			},
 		}
+		changed = true
 	}
+	return changed
 }
 
 // ZookeeperConfig is the current configuration of each Zookeeper node, which
@@ -274,16 +337,20 @@ type ZookeeperConfig struct {
 	SyncLimit int `json:"syncLimit"`
 }
 
-func (c *ZookeeperConfig) withDefaults() {
+func (c *ZookeeperConfig) withDefaults() (changed bool) {
 	if c.InitLimit == 0 {
+		changed = true
 		c.InitLimit = 10
 	}
 	if c.TickTime == 0 {
+		changed = true
 		c.TickTime = 2000
 	}
 	if c.SyncLimit == 0 {
+		changed = true
 		c.SyncLimit = 2
 	}
+	return changed
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
