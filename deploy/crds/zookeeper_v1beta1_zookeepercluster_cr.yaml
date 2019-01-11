@@ -1,0 +1,7 @@
+apiVersion: zookeeper.pravega.io/v1beta1
+kind: ZookeeperCluster
+metadata:
+  name: example-zookeepercluster
+spec:
+  # Add fields here
+  replicas: 3
