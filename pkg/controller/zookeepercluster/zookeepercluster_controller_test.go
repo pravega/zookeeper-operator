@@ -35,14 +35,12 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 	var (
 		s = scheme.Scheme
 		r *ReconcileZookeeperCluster
-		cl client.Client
 	)
 
 	Context("Reconcile", func() {
 		var (
 			res reconcile.Result
 			req reconcile.Request
-			err error
 			z *v1beta1.ZookeeperCluster
 		)
 
@@ -63,6 +61,10 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 		})
 
 		Context("Before defaults are applied", func() {
+			var (
+				cl client.Client
+				err error
+			)
 
 			BeforeEach(func() {
 				cl = fake.NewFakeClient(z)
@@ -88,6 +90,10 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 		})
 
 		Context("After defaults are applied", func() {
+			var (
+				cl client.Client
+				err error
+			)
 
 			BeforeEach(func() {
 				z.WithDefaults()
@@ -150,6 +156,10 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 		})
 
 		Context("With an invalid update to existing sts", func() {
+			var (
+				cl client.Client
+				err error
+			)
 
 			BeforeEach(func() {
 				z.WithDefaults()
@@ -179,19 +189,58 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 		})
 
 		Context("With valid update to sts", func() {
+			var (
+				cl client.Client
+				err error
+			)
 
 			BeforeEach(func() {
 				z.WithDefaults()
+				next := z.DeepCopy()
 				st := zk.MakeStatefulSet(z)
-				z.Spec.Replicas = 6
-				cl = fake.NewFakeClient([]runtime.Object{st, z}...)
+				next.Spec.Replicas = 6
+				cl = fake.NewFakeClient([]runtime.Object{next, st}...)
+				r = &ReconcileZookeeperCluster{client: cl, scheme: s}
 				res, err = r.Reconcile(req)
 			})
 
 			It("should not raise an error", func() {
 				Ω(err).To(BeNil())
 			})
+
+			It("should update the sts", func() {
+				foundSts := &appsv1.StatefulSet{}
+				err = cl.Get(context.TODO(), req.NamespacedName, foundSts)
+				Ω(err).To(BeNil())
+				Ω(*foundSts.Spec.Replicas).To(BeEquivalentTo(6))
+			})
 		})
 
+		Context("With no update to sts", func() {
+				var (
+				cl client.Client
+				err error
+			)
+
+			BeforeEach(func() {
+				z.WithDefaults()
+				next := z.DeepCopy()
+				st := zk.MakeStatefulSet(z)
+				cl = fake.NewFakeClient([]runtime.Object{next, st}...)
+				r = &ReconcileZookeeperCluster{client: cl, scheme: s}
+				res, err = r.Reconcile(req)
+			})
+
+			It("should not raise an error", func() {
+				Ω(err).To(BeNil())
+			})
+
+			It("should update the sts", func() {
+				foundSts := &appsv1.StatefulSet{}
+				err = cl.Get(context.TODO(), req.NamespacedName, foundSts)
+				Ω(err).To(BeNil())
+			})
+
+		})
 	})
 })

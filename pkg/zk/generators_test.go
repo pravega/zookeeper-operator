@@ -120,7 +120,7 @@ var _ = Describe("Generators", func() {
 
 	Context("#SyncStatefulSet", func() {
 		var (
-			sts *appsv1.StatefulSet
+			sts1 *appsv1.StatefulSet
 			err error
 		)
 
@@ -134,12 +134,12 @@ var _ = Describe("Generators", func() {
 					},
 				}
 				z.WithDefaults()
-				sts1 := zk.MakeStatefulSet(z)
+				sts1 = zk.MakeStatefulSet(z)
 				sts2 := zk.MakeStatefulSet(z)
 				reps := int32(4)
 				sts2.Spec.Replicas = &reps
 				sts2.Spec.Template.Spec.Containers[0].Image = "repo/newimage:latest"
-				sts, err = zk.SyncStatefulSet(sts1, sts2)
+				err = zk.SyncStatefulSet(sts1, sts2)
 			})
 
 			It("should not error", func() {
@@ -147,8 +147,8 @@ var _ = Describe("Generators", func() {
 			})
 
 			It("should have the updated fields", func() {
-				Ω(*sts.Spec.Replicas).To(BeEquivalentTo(4))
-				Ω(sts.Spec.Template.Spec.Containers[0].Image).
+				Ω(*sts1.Spec.Replicas).To(BeEquivalentTo(4))
+				Ω(sts1.Spec.Template.Spec.Containers[0].Image).
 					To(Equal("repo/newimage:latest"))
 			})
 
@@ -167,12 +167,12 @@ var _ = Describe("Generators", func() {
 				sts1 := zk.MakeStatefulSet(z)
 				sts2 := zk.MakeStatefulSet(z)
 				sts2.Spec.ServiceName = "newservicename"
-				sts, err = zk.SyncStatefulSet(sts1, sts2)
+				err = zk.SyncStatefulSet(sts1, sts2)
 			})
 
 			It("should return an error", func() {
 				Ω(err).NotTo(BeNil())
-				Ω(err.Error()).To(Equal("updates to statefuleset fields other than 'replicas', 'template', and 'updateStrategy' are forbidden"))
+				Ω(err.Error()).To(Equal(zk.InvalidStatefulSetUpdateError))
 			})
 		})
 	})

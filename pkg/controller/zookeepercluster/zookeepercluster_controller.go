@@ -86,7 +86,6 @@ type ReconcileZookeeperCluster struct {
 	// that reads objects from the cache and writes to the apiserver
 	client   client.Client
 	scheme   *runtime.Scheme
-	instance *zookeeperv1beta1.ZookeeperCluster
 	log      logr.Logger
 }
 
@@ -99,8 +98,8 @@ func (r *ReconcileZookeeperCluster) Reconcile(request reconcile.Request) (reconc
 	r.log.Info("Reconciling ZookeeperCluster")
 
 	// Fetch the ZookeeperCluster instance
-	r.instance = &zookeeperv1beta1.ZookeeperCluster{}
-	err := r.client.Get(context.TODO(), request.NamespacedName, r.instance)
+	instance := &zookeeperv1beta1.ZookeeperCluster{}
+	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile
@@ -112,36 +111,36 @@ func (r *ReconcileZookeeperCluster) Reconcile(request reconcile.Request) (reconc
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
-	changed := r.instance.WithDefaults()
+	changed := instance.WithDefaults()
 	if changed {
 		r.log.Info("Setting default settings for zookeeper-cluster")
-		if err := r.client.Update(context.TODO(), r.instance); err != nil {
+		if err := r.client.Update(context.TODO(), instance); err != nil {
 			return reconcile.Result{}, err
 		}
 		return reconcile.Result{Requeue: true}, nil
 	}
-	if err = r.reconcileConfigMap(); err != nil {
+	if err = r.reconcileConfigMap(instance); err != nil {
 		return reconcile.Result{}, err
 	}
-	if err = r.reconcileStatefulSet(); err != nil {
+	if err = r.reconcileStatefulSet(instance); err != nil {
 		return reconcile.Result{}, err
 	}
-	if err = r.reconcileClientService(); err != nil {
+	if err = r.reconcileClientService(instance); err != nil {
 		return reconcile.Result{}, err
 	}
-	if err = r.reconcileHeadlessService(); err != nil {
+	if err = r.reconcileHeadlessService(instance); err != nil {
 		return reconcile.Result{}, err
 	}
-	if err = r.reconcilePodDisruptionBudget(); err != nil {
+	if err = r.reconcilePodDisruptionBudget(instance); err != nil {
 		return reconcile.Result{}, err
 	}
 	// Recreate any missing resources every 'ReconcileTime'
 	return reconcile.Result{RequeueAfter: ReconcileTime}, nil
 }
 
-func (r *ReconcileZookeeperCluster) reconcileStatefulSet() (err error) {
-	sts := zk.MakeStatefulSet(r.instance)
-	if err = controllerutil.SetControllerReference(r.instance, sts, r.scheme); err != nil {
+func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
+	sts := zk.MakeStatefulSet(instance)
+	if err = controllerutil.SetControllerReference(instance, sts, r.scheme); err != nil {
 		return err
 	}
 	foundSts := &appsv1.StatefulSet{}
@@ -165,11 +164,11 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet() (err error) {
 			r.log.Info("Updating StatefulSet",
 				"StatefulSet.Namespace", foundSts.Namespace,
 				"StatefulSet.Name", foundSts.Name)
-			sts, err = zk.SyncStatefulSet(foundSts, sts)
+			err = zk.SyncStatefulSet(foundSts, sts)
 			if err != nil {
 				return err
 			}
-			err = r.client.Update(context.TODO(), sts)
+			err = r.client.Update(context.TODO(), foundSts)
 			if err != nil {
 				return err
 			}
@@ -178,9 +177,9 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet() (err error) {
 	return nil
 }
 
-func (r *ReconcileZookeeperCluster) reconcileClientService() (err error) {
-	svc := zk.MakeClientService(r.instance)
-	if err = controllerutil.SetControllerReference(r.instance, svc, r.scheme); err != nil {
+func (r *ReconcileZookeeperCluster) reconcileClientService(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
+	svc := zk.MakeClientService(instance)
+	if err = controllerutil.SetControllerReference(instance, svc, r.scheme); err != nil {
 		return err
 	}
 	foundSvc := &corev1.Service{}
@@ -203,7 +202,7 @@ func (r *ReconcileZookeeperCluster) reconcileClientService() (err error) {
 		r.log.Info("Updating: Client Service already exists",
 			"Service.Namespace", foundSvc.Namespace,
 			"Service.Name", foundSvc.Name)
-		svc, err = zk.SyncService(foundSvc, svc)
+		err = zk.SyncService(foundSvc, svc)
 		if err != nil {
 			return err
 		}
@@ -215,9 +214,9 @@ func (r *ReconcileZookeeperCluster) reconcileClientService() (err error) {
 	return nil
 }
 
-func (r *ReconcileZookeeperCluster) reconcileHeadlessService() (err error) {
-	svc := zk.MakeHeadlessService(r.instance)
-	if err = controllerutil.SetControllerReference(r.instance, svc, r.scheme); err != nil {
+func (r *ReconcileZookeeperCluster) reconcileHeadlessService(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
+	svc := zk.MakeHeadlessService(instance)
+	if err = controllerutil.SetControllerReference(instance, svc, r.scheme); err != nil {
 		return err
 	}
 	foundSvc := &corev1.Service{}
@@ -240,7 +239,7 @@ func (r *ReconcileZookeeperCluster) reconcileHeadlessService() (err error) {
 		r.log.Info("Updating: Headless Service already exists",
 			"Service.Namespace", foundSvc.Namespace,
 			"Service.Name", foundSvc.Name)
-		svc, err = zk.SyncService(foundSvc, svc)
+		err = zk.SyncService(foundSvc, svc)
 		if err != nil {
 			return err
 		}
@@ -252,9 +251,9 @@ func (r *ReconcileZookeeperCluster) reconcileHeadlessService() (err error) {
 	return nil
 }
 
-func (r *ReconcileZookeeperCluster) reconcilePodDisruptionBudget() (err error) {
-	pdb := zk.MakePodDisruptionBudget(r.instance)
-	if err = controllerutil.SetControllerReference(r.instance, pdb, r.scheme); err != nil {
+func (r *ReconcileZookeeperCluster) reconcilePodDisruptionBudget(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
+	pdb := zk.MakePodDisruptionBudget(instance)
+	if err = controllerutil.SetControllerReference(instance, pdb, r.scheme); err != nil {
 		return err
 	}
 	foundPdb := &policyv1beta1.PodDisruptionBudget{}
@@ -277,9 +276,9 @@ func (r *ReconcileZookeeperCluster) reconcilePodDisruptionBudget() (err error) {
 	return nil
 }
 
-func (r *ReconcileZookeeperCluster) reconcileConfigMap() (err error) {
-	cm := zk.MakeConfigMap(r.instance)
-	if err = controllerutil.SetControllerReference(r.instance, cm, r.scheme); err != nil {
+func (r *ReconcileZookeeperCluster) reconcileConfigMap(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
+	cm := zk.MakeConfigMap(instance)
+	if err = controllerutil.SetControllerReference(instance, cm, r.scheme); err != nil {
 		return err
 	}
 	foundCm := &corev1.ConfigMap{}
@@ -302,7 +301,7 @@ func (r *ReconcileZookeeperCluster) reconcileConfigMap() (err error) {
 		r.log.Info("Updating: ConfigMap already exists",
 			"ConfigMap.Namespace", foundCm.Namespace,
 			"ConfigMap.Name", foundCm.Name)
-		cm, err = zk.SyncConfigMap(foundCm, cm)
+		err = zk.SyncConfigMap(foundCm, cm)
 		if err != nil {
 			return err
 		}

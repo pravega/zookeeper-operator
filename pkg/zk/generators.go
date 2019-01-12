@@ -83,16 +83,16 @@ func MakeStatefulSet(z *v1beta1.ZookeeperCluster) *appsv1.StatefulSet {
 }
 
 // SyncStatefulSet synchronizes any updates to the stateful-set
-func SyncStatefulSet(curr *appsv1.StatefulSet, next *appsv1.StatefulSet) (*appsv1.StatefulSet, error) {
-	updateSpec := curr.Spec
-	updateSpec.Replicas = next.Spec.Replicas
-	updateSpec.Template = next.Spec.Template
-	updateSpec.UpdateStrategy = next.Spec.UpdateStrategy
-	if !reflect.DeepEqual(updateSpec, next.Spec) {
-		return nil, errors.New(InvalidStatefulSetUpdateError)
+func SyncStatefulSet(curr *appsv1.StatefulSet, next *appsv1.StatefulSet) (error) {
+	curr.Spec.Replicas = next.Spec.Replicas
+	curr.Spec.Template = next.Spec.Template
+	curr.Spec.UpdateStrategy = next.Spec.UpdateStrategy
+
+	if ! reflect.DeepEqual(curr.Spec, next.Spec) {
+		return errors.New(InvalidStatefulSetUpdateError)
 	}
-	curr.Spec = updateSpec
-	return curr, nil
+
+	return nil
 }
 
 func makeZkPodSpec(z *v1beta1.ZookeeperCluster) v1.PodSpec {
@@ -168,9 +168,9 @@ func MakeClientService(z *v1beta1.ZookeeperCluster) *v1.Service {
 }
 
 // SyncService synchronizes a service with an updated spec and validates it
-func SyncService(curr *v1.Service, next *v1.Service) (*v1.Service, error) {
+func SyncService(curr *v1.Service, next *v1.Service) error {
 	curr.Spec = next.Spec
-	return curr, nil
+	return nil
 }
 
 // MakeConfigMap returns a zookeeper config map
@@ -194,10 +194,10 @@ func MakeConfigMap(z *v1beta1.ZookeeperCluster) *v1.ConfigMap {
 }
 
 // SyncService synchronizes a service with an updated spec and validates it
-func SyncConfigMap(curr *v1.ConfigMap, next *v1.ConfigMap) (*v1.ConfigMap, error) {
+func SyncConfigMap(curr *v1.ConfigMap, next *v1.ConfigMap) error {
 	curr.Data = next.Data
 	curr.BinaryData = next.BinaryData
-	return curr, nil
+	return nil
 }
 
 // MakeHeadlessService returns an internal headless-service for the zk
