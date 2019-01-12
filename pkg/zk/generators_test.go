@@ -11,13 +11,14 @@
 package zk_test
 
 import (
+	"testing"
+
 	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	"github.com/pravega/zookeeper-operator/pkg/utils"
 	"github.com/pravega/zookeeper-operator/pkg/zk"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"testing"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -39,7 +40,7 @@ var _ = Describe("Generators", func() {
 			BeforeEach(func() {
 				z := &v1beta1.ZookeeperCluster{
 					ObjectMeta: metav1.ObjectMeta{
-						Name: "example",
+						Name:      "example",
 						Namespace: "default",
 					},
 				}
@@ -121,7 +122,7 @@ var _ = Describe("Generators", func() {
 	Context("#SyncStatefulSet", func() {
 		var (
 			sts1 *appsv1.StatefulSet
-			err error
+			err  error
 		)
 
 		Context("with a valid update specs", func() {
@@ -129,7 +130,7 @@ var _ = Describe("Generators", func() {
 			BeforeEach(func() {
 				z := &v1beta1.ZookeeperCluster{
 					ObjectMeta: metav1.ObjectMeta{
-						Name: "example",
+						Name:      "example",
 						Namespace: "default",
 					},
 				}
@@ -159,7 +160,7 @@ var _ = Describe("Generators", func() {
 			BeforeEach(func() {
 				z := &v1beta1.ZookeeperCluster{
 					ObjectMeta: metav1.ObjectMeta{
-						Name: "example",
+						Name:      "example",
 						Namespace: "default",
 					},
 				}
@@ -183,7 +184,7 @@ var _ = Describe("Generators", func() {
 		BeforeEach(func() {
 			z := &v1beta1.ZookeeperCluster{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "example",
+					Name:      "example",
 					Namespace: "default",
 				},
 			}
@@ -212,7 +213,7 @@ var _ = Describe("Generators", func() {
 		BeforeEach(func() {
 			z := &v1beta1.ZookeeperCluster{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "example",
+					Name:      "example",
 					Namespace: "default",
 				},
 			}
@@ -241,5 +242,3 @@ var _ = Describe("Generators", func() {
 		})
 	})
 })
-
-

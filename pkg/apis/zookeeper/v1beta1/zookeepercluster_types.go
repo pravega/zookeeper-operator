@@ -12,6 +12,7 @@ package v1beta1
 
 import (
 	"fmt"
+
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -190,7 +191,7 @@ func (z *ZookeeperCluster) GetClientServiceName() string {
 	return fmt.Sprintf("%s-client", z.GetName())
 }
 
-// ZookeeperPorts groups the ports for a zookeeper cluster node for easy access
+// Ports groups the ports for a zookeeper cluster node for easy access
 type Ports struct {
 	Client int32
 	Quorum int32

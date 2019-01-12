@@ -2,6 +2,8 @@ package zookeepercluster
 
 import (
 	"context"
+	"testing"
+
 	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	"github.com/pravega/zookeeper-operator/pkg/zk"
 	appsv1 "k8s.io/api/apps/v1"
@@ -15,7 +17,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"testing"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -41,7 +42,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 		var (
 			res reconcile.Result
 			req reconcile.Request
-			z *v1beta1.ZookeeperCluster
+			z   *v1beta1.ZookeeperCluster
 		)
 
 		BeforeEach(func() {
@@ -62,7 +63,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 
 		Context("Before defaults are applied", func() {
 			var (
-				cl client.Client
+				cl  client.Client
 				err error
 			)
 
@@ -91,7 +92,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 
 		Context("After defaults are applied", func() {
 			var (
-				cl client.Client
+				cl  client.Client
 				err error
 			)
 
@@ -113,7 +114,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 			It("should create a config-map", func() {
 				foundCm := &corev1.ConfigMap{}
 				nn := types.NamespacedName{
-					Name: Name + "-configmap",
+					Name:      Name + "-configmap",
 					Namespace: Namespace,
 				}
 				err = cl.Get(context.TODO(), nn, foundCm)
@@ -130,7 +131,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 			It("should create a client-service", func() {
 				foundSvc := &corev1.Service{}
 				nn := types.NamespacedName{
-					Name: Name + "-client",
+					Name:      Name + "-client",
 					Namespace: Namespace,
 				}
 				err = cl.Get(context.TODO(), nn, foundSvc)
@@ -140,7 +141,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 			It("should create a headless-service", func() {
 				foundSvc := &corev1.Service{}
 				nn := types.NamespacedName{
-					Name: Name + "-headless",
+					Name:      Name + "-headless",
 					Namespace: Namespace,
 				}
 				err = cl.Get(context.TODO(), nn, foundSvc)
@@ -157,7 +158,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 
 		Context("With an invalid update to existing sts", func() {
 			var (
-				cl client.Client
+				cl  client.Client
 				err error
 			)
 
@@ -190,7 +191,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 
 		Context("With valid update to sts", func() {
 			var (
-				cl client.Client
+				cl  client.Client
 				err error
 			)
 
@@ -217,8 +218,8 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 		})
 
 		Context("With no update to sts", func() {
-				var (
-				cl client.Client
+			var (
+				cl  client.Client
 				err error
 			)
 

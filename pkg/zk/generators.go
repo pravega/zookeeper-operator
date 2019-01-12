@@ -25,6 +25,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+// InvalidStatefulSetUpdateError is the error test when a statefulset update is
+// invalid
 const InvalidStatefulSetUpdateError = "updates to statefuleset fields other than 'replicas', 'template', and 'updateStrategy' are forbidden"
 
 func headlessDomain(z *v1beta1.ZookeeperCluster) string {
@@ -83,12 +85,12 @@ func MakeStatefulSet(z *v1beta1.ZookeeperCluster) *appsv1.StatefulSet {
 }
 
 // SyncStatefulSet synchronizes any updates to the stateful-set
-func SyncStatefulSet(curr *appsv1.StatefulSet, next *appsv1.StatefulSet) (error) {
+func SyncStatefulSet(curr *appsv1.StatefulSet, next *appsv1.StatefulSet) error {
 	curr.Spec.Replicas = next.Spec.Replicas
 	curr.Spec.Template = next.Spec.Template
 	curr.Spec.UpdateStrategy = next.Spec.UpdateStrategy
 
-	if ! reflect.DeepEqual(curr.Spec, next.Spec) {
+	if !reflect.DeepEqual(curr.Spec, next.Spec) {
 		return errors.New(InvalidStatefulSetUpdateError)
 	}
 
@@ -193,7 +195,7 @@ func MakeConfigMap(z *v1beta1.ZookeeperCluster) *v1.ConfigMap {
 	}
 }
 
-// SyncService synchronizes a service with an updated spec and validates it
+// SyncConfigMap synchronizes a configmap with an updated spec and validates it
 func SyncConfigMap(curr *v1.ConfigMap, next *v1.ConfigMap) error {
 	curr.Data = next.Data
 	curr.BinaryData = next.BinaryData

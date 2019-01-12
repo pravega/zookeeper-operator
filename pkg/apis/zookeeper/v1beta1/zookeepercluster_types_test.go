@@ -1,11 +1,12 @@
 package v1beta1_test
 
 import (
+	"testing"
+
 	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"testing"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -100,21 +101,21 @@ var _ = Describe("ZookeeperCluster Types", func() {
 
 			It("should have the default client port", func() {
 				Ω(ports).To(ContainElement(corev1.ContainerPort{
-					Name: "client",
+					Name:          "client",
 					ContainerPort: 2181,
 				}))
 			})
 
 			It("should have the default quorum port", func() {
 				Ω(ports).To(ContainElement(corev1.ContainerPort{
-					Name: "quorum",
+					Name:          "quorum",
 					ContainerPort: 2888,
 				}))
 			})
 
 			It("should have the default leader port", func() {
 				Ω(ports).To(ContainElement(corev1.ContainerPort{
-					Name: "leader-election",
+					Name:          "leader-election",
 					ContainerPort: 3888,
 				}))
 			})
@@ -147,7 +148,7 @@ var _ = Describe("ZookeeperCluster Types", func() {
 				It("should have a weight of 20", func() {
 					Ω(a.Weight).To(BeEquivalentTo(20))
 				})
-				
+
 				It("should have a topology key of the hostname", func() {
 					Ω(a.PodAffinityTerm.TopologyKey).To(Equal("kubernetes.io/hostname"))
 				})
@@ -155,10 +156,10 @@ var _ = Describe("ZookeeperCluster Types", func() {
 				It("should have a label selector based on the app", func() {
 					Ω(a.PodAffinityTerm.LabelSelector.MatchExpressions).
 						To(ContainElement(metav1.LabelSelectorRequirement{
-							Key: "app",
+							Key:      "app",
 							Operator: metav1.LabelSelectorOpIn,
-							Values: []string{z.GetName()},
-					}))
+							Values:   []string{z.GetName()},
+						}))
 				})
 
 			})

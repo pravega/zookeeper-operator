@@ -12,12 +12,13 @@ package zookeepercluster
 
 import (
 	"context"
+	"reflect"
+	"time"
+
 	"github.com/go-logr/logr"
 	"github.com/pravega/zookeeper-operator/pkg/zk"
 	corev1 "k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
-	"reflect"
-	"time"
 
 	zookeeperv1beta1 "github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -34,6 +35,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
+// ReconcileTime is the delay between reconciliations
 const ReconcileTime = 30 * time.Second
 
 var log = logf.Log.WithName("controller_zookeepercluster")
@@ -70,11 +72,17 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		IsController: true,
 		OwnerType:    &zookeeperv1beta1.ZookeeperCluster{},
 	})
+	if err != nil {
+		return err
+	}
 	// Watch for changes to zookeeper service secondary resources
 	err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &zookeeperv1beta1.ZookeeperCluster{},
 	})
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -84,9 +92,9 @@ var _ reconcile.Reconciler = &ReconcileZookeeperCluster{}
 type ReconcileZookeeperCluster struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	client   client.Client
-	scheme   *runtime.Scheme
-	log      logr.Logger
+	client client.Client
+	scheme *runtime.Scheme
+	log    logr.Logger
 }
 
 // Reconcile reads that state of the cluster for a ZookeeperCluster object and
