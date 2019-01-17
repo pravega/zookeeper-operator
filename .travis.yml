@@ -13,7 +13,9 @@ services:
 - docker
 
 script:
+- go get -u github.com/golang/dep/...
 - make check
+- make dep
 - make test
 - make build
 - make clean
