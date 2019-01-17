@@ -12,7 +12,10 @@ package zookeepercluster
 
 import (
 	"context"
+	"fmt"
 	"time"
+
+	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/go-logr/logr"
 	"github.com/pravega/zookeeper-operator/pkg/zk"
@@ -76,6 +79,14 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	}
 	// Watch for changes to zookeeper service secondary resources
 	err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &zookeeperv1beta1.ZookeeperCluster{},
+	})
+	if err != nil {
+		return err
+	}
+	// Watch for changes to zookeeper pod secondary resources
+	err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &zookeeperv1beta1.ZookeeperCluster{},
 	})
@@ -174,6 +185,8 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 		if err != nil {
 			return err
 		}
+		instance.Status.Replicas = foundSts.Status.Replicas
+		instance.Status.ReadyReplicas = foundSts.Status.ReadyReplicas
 	}
 	return nil
 }
@@ -207,6 +220,19 @@ func (r *ReconcileZookeeperCluster) reconcileClientService(instance *zookeeperv1
 		err = r.client.Update(context.TODO(), foundSvc)
 		if err != nil {
 			return err
+		}
+		port := instance.ZookeeperPorts().Client
+		instance.Status.InternalClientEndpoint = fmt.Sprintf("%s:%d",
+			foundSvc.Spec.ClusterIP, port)
+		if foundSvc.Spec.Type == "LoadBalancer" {
+			for _, i := range foundSvc.Status.LoadBalancer.Ingress {
+				if i.IP != "" {
+					instance.Status.ExternalClientEndpoint = fmt.Sprintf("%s:%d",
+						i.IP, port)
+				}
+			}
+		} else {
+			instance.Status.ExternalClientEndpoint = "N/A"
 		}
 	}
 	return nil
@@ -306,5 +332,37 @@ func (r *ReconcileZookeeperCluster) reconcileConfigMap(instance *zookeeperv1beta
 }
 
 func (r *ReconcileZookeeperCluster) reconcileClusterStatus(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
-	return nil
+	foundPods := &corev1.PodList{}
+	labelSelector := labels.SelectorFromSet(map[string]string{"app": instance.GetName()})
+	listOps := &client.ListOptions{
+		Namespace:     instance.Namespace,
+		LabelSelector: labelSelector,
+	}
+	err = r.client.List(context.TODO(), listOps, foundPods)
+	if err != nil {
+		return err
+	}
+	var (
+		readyMembers   []string
+		unreadyMembers []string
+	)
+	for _, p := range foundPods.Items {
+		ready := true
+		for _, c := range p.Status.ContainerStatuses {
+			if !c.Ready {
+				ready = false
+			}
+		}
+		if ready {
+			readyMembers = append(readyMembers, p.Name)
+		} else {
+			unreadyMembers = append(unreadyMembers, p.Name)
+		}
+	}
+	instance.Status.Members.Ready = readyMembers
+	instance.Status.Members.Unready = unreadyMembers
+	r.log.Info("Updating zookeeper status",
+		"StatefulSet.Namespace", instance.Namespace,
+		"StatefulSet.Name", instance.Name)
+	return r.client.Status().Update(context.TODO(), instance)
 }

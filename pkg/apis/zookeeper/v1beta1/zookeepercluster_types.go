@@ -135,9 +135,6 @@ func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) 
 
 // ZookeeperClusterStatus defines the observed state of ZookeeperCluster
 type ZookeeperClusterStatus struct {
-	// Size is the current size of the cluster
-	Size int `json:"size"`
-
 	// Members is the zookeeper members in the cluster
 	Members MembersStatus `json:"members"`
 

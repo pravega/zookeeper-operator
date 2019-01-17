@@ -10,7 +10,7 @@ import (
 func ServicePortByName(ports []corev1.ServicePort, name string) (port corev1.ServicePort, err error) {
 	for _, port := range ports {
 		if port.Name == name {
-			return port, err
+			return port, nil
 		}
 	}
 	return port, fmt.Errorf("port not found")

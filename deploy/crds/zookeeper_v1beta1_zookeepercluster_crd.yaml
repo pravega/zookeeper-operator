@@ -11,6 +11,26 @@ spec:
     singular: zookeepercluster
     shortNames:
       - zk
+  additionalPrinterColumns:
+  - name: Members
+    type: integer
+    description: The number zookeeper members running
+    JSONPath: .status.replicas
+  - name: Ready Members
+    type: integer
+    description: The number zookeeper members ready
+    JSONPath: .status.readyReplicas
+  - name: Internal Endpoint
+    type: string
+    description: Client endpoint internal to cluster network
+    JSONPath: .status.internalClientEndpoint
+  - name: External Endpoint
+    type: string
+    description: Client endpoint external to cluster network via LoadBalancer
+    JSONPath: .status.externalClientEndpoint
+  - name: Age
+    type: date
+    JSONPath: .metadata.creationTimestamp
   scope: Namespaced
   version: v1beta1
   subresources:
