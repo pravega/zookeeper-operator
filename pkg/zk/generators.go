@@ -11,7 +11,6 @@
 package zk
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -24,10 +23,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
-
-// InvalidStatefulSetUpdateError is the error test when a statefulset update is
-// invalid
-const InvalidStatefulSetUpdateError = "updates to statefuleset fields other than 'replicas', 'template', and 'updateStrategy' are forbidden"
 
 func headlessDomain(z *v1beta1.ZookeeperCluster) string {
 	return fmt.Sprintf("%s.%s.svc.cluster.local", headlessSvcName(z), z.GetNamespace())
@@ -82,19 +77,6 @@ func MakeStatefulSet(z *v1beta1.ZookeeperCluster) *appsv1.StatefulSet {
 			},
 		},
 	}
-}
-
-// SyncStatefulSet synchronizes any updates to the stateful-set
-func SyncStatefulSet(curr *appsv1.StatefulSet, next *appsv1.StatefulSet) error {
-	curr.Spec.Replicas = next.Spec.Replicas
-	curr.Spec.Template = next.Spec.Template
-	curr.Spec.UpdateStrategy = next.Spec.UpdateStrategy
-
-	if !reflect.DeepEqual(curr.Spec, next.Spec) {
-		return errors.New(InvalidStatefulSetUpdateError)
-	}
-
-	return nil
 }
 
 func makeZkPodSpec(z *v1beta1.ZookeeperCluster) v1.PodSpec {
@@ -169,12 +151,6 @@ func MakeClientService(z *v1beta1.ZookeeperCluster) *v1.Service {
 	return makeService(z.GetClientServiceName(), svcPorts, true, z)
 }
 
-// SyncService synchronizes a service with an updated spec and validates it
-func SyncService(curr *v1.Service, next *v1.Service) error {
-	curr.Spec = next.Spec
-	return nil
-}
-
 // MakeConfigMap returns a zookeeper config map
 func MakeConfigMap(z *v1beta1.ZookeeperCluster) *v1.ConfigMap {
 	return &v1.ConfigMap{
@@ -193,13 +169,6 @@ func MakeConfigMap(z *v1beta1.ZookeeperCluster) *v1.ConfigMap {
 			"env.sh":                 makeZkEnvConfigString(z),
 		},
 	}
-}
-
-// SyncConfigMap synchronizes a configmap with an updated spec and validates it
-func SyncConfigMap(curr *v1.ConfigMap, next *v1.ConfigMap) error {
-	curr.Data = next.Data
-	curr.BinaryData = next.BinaryData
-	return nil
 }
 
 // MakeHeadlessService returns an internal headless-service for the zk

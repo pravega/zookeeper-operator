@@ -16,7 +16,6 @@ import (
 	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	"github.com/pravega/zookeeper-operator/pkg/utils"
 	"github.com/pravega/zookeeper-operator/pkg/zk"
-	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -26,10 +25,10 @@ import (
 
 func TestGenerators(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Zk Spec")
+	RunSpecs(t, "Generators Spec")
 }
 
-var _ = Describe("Generators", func() {
+var _ = Describe("Generators Spec", func() {
 
 	Context("#MakeConfigMap", func() {
 		var cm *v1.ConfigMap
@@ -115,65 +114,6 @@ var _ = Describe("Generators", func() {
 					Ω(cfg).To(ContainSubstring("LEADER_PORT=3888\n"))
 				})
 
-			})
-		})
-	})
-
-	Context("#SyncStatefulSet", func() {
-		var (
-			sts1 *appsv1.StatefulSet
-			err  error
-		)
-
-		Context("with a valid update specs", func() {
-
-			BeforeEach(func() {
-				z := &v1beta1.ZookeeperCluster{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "example",
-						Namespace: "default",
-					},
-				}
-				z.WithDefaults()
-				sts1 = zk.MakeStatefulSet(z)
-				sts2 := zk.MakeStatefulSet(z)
-				reps := int32(4)
-				sts2.Spec.Replicas = &reps
-				sts2.Spec.Template.Spec.Containers[0].Image = "repo/newimage:latest"
-				err = zk.SyncStatefulSet(sts1, sts2)
-			})
-
-			It("should not error", func() {
-				Ω(err).To(BeNil())
-			})
-
-			It("should have the updated fields", func() {
-				Ω(*sts1.Spec.Replicas).To(BeEquivalentTo(4))
-				Ω(sts1.Spec.Template.Spec.Containers[0].Image).
-					To(Equal("repo/newimage:latest"))
-			})
-
-		})
-
-		Context("with invalid update specs", func() {
-
-			BeforeEach(func() {
-				z := &v1beta1.ZookeeperCluster{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "example",
-						Namespace: "default",
-					},
-				}
-				z.WithDefaults()
-				sts1 := zk.MakeStatefulSet(z)
-				sts2 := zk.MakeStatefulSet(z)
-				sts2.Spec.ServiceName = "newservicename"
-				err = zk.SyncStatefulSet(sts1, sts2)
-			})
-
-			It("should return an error", func() {
-				Ω(err).NotTo(BeNil())
-				Ω(err.Error()).To(Equal(zk.InvalidStatefulSetUpdateError))
 			})
 		})
 	})

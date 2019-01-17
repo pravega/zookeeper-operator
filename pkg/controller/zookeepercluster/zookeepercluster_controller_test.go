@@ -9,7 +9,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -156,40 +155,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 
 		})
 
-		Context("With an invalid update to existing sts", func() {
-			var (
-				cl  client.Client
-				err error
-			)
-
-			BeforeEach(func() {
-				z.WithDefaults()
-				st := zk.MakeStatefulSet(z)
-				z.Spec.PersistentVolumeClaimSpec.Resources.Requests =
-					corev1.ResourceList{
-						corev1.ResourceStorage: resource.MustParse("40Gi"),
-					}
-				cl = fake.NewFakeClient([]runtime.Object{st, z}...)
-				r = &ReconcileZookeeperCluster{client: cl, scheme: s}
-				res, err = r.Reconcile(req)
-			})
-
-			It("should raise an error", func() {
-				Ω(err.Error()).To(Equal(zk.InvalidStatefulSetUpdateError))
-			})
-
-			It("stateful-set should remain unchanged", func() {
-				foundSts := &appsv1.StatefulSet{}
-				err = cl.Get(context.TODO(), req.NamespacedName, foundSts)
-				Ω(err).To(BeNil())
-				pvc := foundSts.Spec.VolumeClaimTemplates[0]
-				Ω(pvc.Spec.Resources.Requests[corev1.ResourceStorage]).
-					To(Equal(resource.MustParse("20Gi")))
-			})
-
-		})
-
-		Context("With valid update to sts", func() {
+		Context("With update to sts", func() {
 			var (
 				cl  client.Client
 				err error
@@ -242,6 +208,27 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				Ω(err).To(BeNil())
 			})
 
+		})
+
+		Context("With an update to the client svc", func() {
+			var (
+				cl  client.Client
+				err error
+			)
+
+			BeforeEach(func() {
+				z.WithDefaults()
+				next := z.DeepCopy()
+				next.Spec.Ports[0].ContainerPort = 2182
+				svc := zk.MakeClientService(z)
+				cl = fake.NewFakeClient([]runtime.Object{next, svc}...)
+				r = &ReconcileZookeeperCluster{client: cl, scheme: s}
+				res, err = r.Reconcile(req)
+			})
+
+			It("should not raise an error", func() {
+				Ω(err).ToNot(HaveOccurred())
+			})
 		})
 	})
 })
