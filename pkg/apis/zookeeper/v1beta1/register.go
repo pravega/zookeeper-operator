@@ -8,42 +8,21 @@
  *     http://www.apache.org/licenses/LICENSE-2.0
  */
 
+// Package v1beta1 contains API Schema definitions for the zookeeper v1beta1 API
+// group
+// +k8s:deepcopy-gen=package,register
+// +groupName=zookeeper.pravega.io
 package v1beta1
 
 import (
-	sdkK8sutil "github.com/operator-framework/operator-sdk/pkg/util/k8sutil"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-)
-
-const (
-	version   = "v1beta1"
-	groupName = "zookeeper.pravega.io"
+	"sigs.k8s.io/controller-runtime/pkg/runtime/scheme"
 )
 
 var (
-	// SchemeBuilder registers custom resources with the Kubernetes cluster.
-	SchemeBuilder = runtime.NewSchemeBuilder(addKnownTypes)
+	// SchemeGroupVersion is group version used to register these objects
+	SchemeGroupVersion = schema.GroupVersion{Group: "zookeeper.pravega.io", Version: "v1beta1"}
 
-	// AddToScheme functions to the new scheme being defined.
-	AddToScheme = SchemeBuilder.AddToScheme
-
-	// SchemeGroupVersion is the group version used to register these objects.
-	SchemeGroupVersion = schema.GroupVersion{Group: groupName, Version: version}
+	// SchemeBuilder is used to add go types to the GroupVersionKind scheme
+	SchemeBuilder = &scheme.Builder{GroupVersion: SchemeGroupVersion}
 )
-
-func init() {
-	sdkK8sutil.AddToSDKScheme(AddToScheme)
-}
-
-// addKnownTypes adds the set of types defined in this package to the supplied scheme.
-func addKnownTypes(scheme *runtime.Scheme) error {
-	scheme.AddKnownTypes(SchemeGroupVersion,
-		&ZookeeperCluster{},
-		&ZookeeperClusterList{},
-	)
-	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
-	return nil
-}

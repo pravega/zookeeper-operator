@@ -8,8 +8,17 @@
  *     http://www.apache.org/licenses/LICENSE-2.0
  */
 
-// Package v1beta1 contains API Schema definitions for the zookeeper v1beta1 API
-// group
-// +k8s:deepcopy-gen=package,register
-// +groupName=zookeeper.pravega.io
-package v1beta1
+package apis
+
+import (
+	"k8s.io/apimachinery/pkg/runtime"
+)
+
+// AddToSchemes may be used to add all resources defined in the project to a
+// Scheme
+var AddToSchemes runtime.SchemeBuilder
+
+// AddToScheme adds all Resources to the Scheme
+func AddToScheme(s *runtime.Scheme) error {
+	return AddToSchemes.AddToScheme(s)
+}

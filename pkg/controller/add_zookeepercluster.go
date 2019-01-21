@@ -8,8 +8,16 @@
  *     http://www.apache.org/licenses/LICENSE-2.0
  */
 
-// Package v1beta1 contains API Schema definitions for the zookeeper v1beta1 API
-// group
-// +k8s:deepcopy-gen=package,register
-// +groupName=zookeeper.pravega.io
-package v1beta1
+package controller
+
+import (
+	"github.com/pravega/zookeeper-operator/pkg/controller/zookeepercluster"
+)
+
+func init() {
+	// AddToManagerFuncs is a list of functions to create controllers and add them to a manager.
+	AddToManagerFuncs = append(
+		AddToManagerFuncs,
+		zookeepercluster.AddZookeeperReconciler,
+	)
+}

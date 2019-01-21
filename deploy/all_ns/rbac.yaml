@@ -1,4 +1,11 @@
-kind: Role
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: zookeeper-operator
+
+---
+
+kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: zookeeper-operator
@@ -39,14 +46,14 @@ rules:
 
 ---
 
-kind: RoleBinding
+kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
-  name: default-account-zookeeper-operator
+  name: zookeeper-operator-cluster-role-binding
 subjects:
 - kind: ServiceAccount
-  name: default
+  name: zookeeper-operator
 roleRef:
-  kind: Role
+  kind: ClusterRole
   name: zookeeper-operator
   apiGroup: rbac.authorization.k8s.io

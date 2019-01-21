@@ -1,3 +1,0 @@
-apiVersion: zookeeper.pravega.io/v1beta1
-kind: ZookeeperCluster
-projectName: zookeeper-operator
