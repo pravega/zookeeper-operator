@@ -40,7 +40,7 @@ The operator itself is built with the [Operator framework](https://github.com/op
 Register the `ZookeeperCluster` custom resource definition (CRD).
 
 ```
-$ kubectl create -f deploy/crd.yaml
+$ kubectl create -f deploy/crds/zookeeper_v1beta1_zookeepercluster_crd.yaml
 ```
 
 You can choose to enable Zookeeper operator for all namespaces or just for the a specific namespace. The example is using the `default` namespace, but feel free to edit the Yaml files and use a different namespace.
