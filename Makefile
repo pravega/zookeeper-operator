@@ -30,7 +30,7 @@ build-go:
 	-o bin/$(PROJECT_NAME) cmd/manager/main.go
 
 build-image:
-	docker build -f build/Dockerfile --build-arg VERSION=$(VERSION) --build-arg GIT_SHA=$(GIT_SHA) -t $(REPO):$(VERSION) .
+	docker build --build-arg VERSION=$(VERSION) --build-arg GIT_SHA=$(GIT_SHA) -t $(REPO):$(VERSION) .
 	docker tag $(REPO):$(VERSION) $(REPO):latest
 
 test:
