@@ -10,6 +10,7 @@ SHELL=/bin/bash -o pipefail
 
 PROJECT_NAME=zookeeper-operator
 REPO=pravega/$(PROJECT_NAME)
+ALTREPO=emccorp/$(PROJECT_NAME)
 VERSION=$(shell git describe --always --tags --dirty | sed "s/\(.*\)-g`git rev-parse --short HEAD`/\1/")
 GIT_SHA=$(shell git rev-parse --short HEAD)
 GOOS=linux
@@ -30,7 +31,7 @@ build-go:
 	-o bin/$(PROJECT_NAME) cmd/manager/main.go
 
 build-image:
-	docker build -f build/Dockerfile --build-arg VERSION=$(VERSION) --build-arg GIT_SHA=$(GIT_SHA) -t $(REPO):$(VERSION) .
+	docker build -f Dockerfile --build-arg VERSION=$(VERSION) --build-arg GIT_SHA=$(GIT_SHA) -t $(REPO):$(VERSION) .
 	docker tag $(REPO):$(VERSION) $(REPO):latest
 
 test:
@@ -42,6 +43,8 @@ login:
 push: build-image login
 	docker push $(REPO):latest
 	docker push $(REPO):$(VERSION)
+	docker tag $(REPO):$(VERSION) $(ALTREPO):$(VERSION)
+	docker push $(ALTREPO):$(VERSION)
 
 clean:
 	rm -f bin/$(PROJECT_NAME)
