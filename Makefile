@@ -42,7 +42,7 @@ build-zk-image:
 	docker tag $(APP_REPO):$(VERSION) $(APP_REPO):latest
 
 test:
-	go test $$(go list ./... | grep -v /vendor/)
+	go test $$(go list ./... | grep -v /vendor/) -race -coverprofile=coverage.txt -covermode=atomic
 
 login:
 	@docker login -u "$(DOCKER_USER)" -p "$(DOCKER_PASS)"
