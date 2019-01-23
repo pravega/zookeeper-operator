@@ -23,6 +23,7 @@ import (
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
 	"github.com/pravega/zookeeper-operator/pkg/apis"
 	"github.com/pravega/zookeeper-operator/pkg/controller"
+	"github.com/pravega/zookeeper-operator/pkg/version"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -30,9 +31,18 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
 )
 
-var log = logf.Log.WithName("cmd")
+var (
+	log         = logf.Log.WithName("cmd")
+	versionFlag bool
+)
+
+func init() {
+	flag.BoolVar(&versionFlag, "version", false, "Show version and quit")
+}
 
 func printVersion() {
+	log.Info(fmt.Sprintf("zookeeper-operator Version: %v", version.Version))
+	log.Info(fmt.Sprintf("Git SHA: %s", version.GitSHA))
 	log.Info(fmt.Sprintf("Go Version: %s", runtime.Version()))
 	log.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
 	log.Info(fmt.Sprintf("operator-sdk Version: %v", sdkVersion.Version))
@@ -48,6 +58,10 @@ func main() {
 	logf.SetLogger(logf.ZapLogger(false))
 
 	printVersion()
+
+	if versionFlag {
+		os.Exit(0)
+	}
 
 	namespace, err := k8sutil.GetWatchNamespace()
 	if err != nil {
