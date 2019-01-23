@@ -2,6 +2,7 @@ language: go
 
 go:
 - '1.10'
+- tip
 
 sudo: required
 
@@ -19,6 +20,9 @@ script:
 - make test
 - make build
 - make clean
+
+after_success:
+- bash <(curl -s https://codecov.io/bash)
 
 deploy:
   provider: script
