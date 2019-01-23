@@ -8,6 +8,8 @@ ARG BUILD_PATH=${REPO_PATH}/cmd/manager
 ARG VERSION=0.0.0-localdev
 ARG GIT_SHA=0000000
 
+RUN mkdir -p /go/src/${REPO_PATH}/vendor
+
 COPY pkg /go/src/${REPO_PATH}/pkg
 COPY cmd /go/src/${REPO_PATH}/cmd
 COPY vendor /go/src/${REPO_PATH}/vendor
