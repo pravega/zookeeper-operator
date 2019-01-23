@@ -1,5 +1,5 @@
 # Zookeeper Operator
-
+[![Build Status](https://travis-ci.org/pravega/zookeeper-operator.svg?branch=master)](https://travis-ci.org/pravega/zookeeper-operator)
 ### Project status: alpha
 
 The project is currently alpha. While no breaking API changes are currently planned, we reserve the right to address bugs and change the API before the project is declared stable.
