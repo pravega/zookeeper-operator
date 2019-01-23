@@ -9,8 +9,11 @@
 SHELL=/bin/bash -o pipefail
 
 PROJECT_NAME=zookeeper-operator
+APP_NAME=zookeeper
 REPO=pravega/$(PROJECT_NAME)
+APP_REPO=pravega/$(APP_NAME)
 ALTREPO=emccorp/$(PROJECT_NAME)
+APP_ALTREPO=emccorp/$(PROJECT_NAME)
 VERSION=$(shell git describe --always --tags --dirty | sed "s/\(.*\)-g`git rev-parse --short HEAD`/\1/")
 GIT_SHA=$(shell git rev-parse --short HEAD)
 GOOS=linux
@@ -34,17 +37,24 @@ build-image:
 	docker build --build-arg VERSION=$(VERSION) --build-arg GIT_SHA=$(GIT_SHA) -t $(REPO):$(VERSION) .
 	docker tag $(REPO):$(VERSION) $(REPO):latest
 
+build-zk-image:
+	docker build --build-arg VERSION=$(VERSION) --build-arg GIT_SHA=$(GIT_SHA) -t $(APP_REPO):$(VERSION) ./docker
+	docker tag $(APP_REPO):$(VERSION) $(APP_REPO):latest
+
 test:
 	go test $$(go list ./... | grep -v /vendor/)
 
 login:
 	@docker login -u "$(DOCKER_USER)" -p "$(DOCKER_PASS)"
 
-push: build-image login
+push: build-image build-zk-image login
 	docker push $(REPO):latest
 	docker push $(REPO):$(VERSION)
+	docker push $(APP_REPO):$(VERSION)
 	docker tag $(REPO):$(VERSION) $(ALTREPO):$(VERSION)
+	docker tag $(APP_REPO):$(VERSION) $(APP_ALTREPO):$(VERSION)
 	docker push $(ALTREPO):$(VERSION)
+	docker push $(APP_ALTREPO):$(VERSION)
 
 clean:
 	rm -f bin/$(PROJECT_NAME)
