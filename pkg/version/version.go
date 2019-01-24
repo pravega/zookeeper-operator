@@ -10,6 +10,8 @@
 
 package version
 
-var (
-	Version = "0.0.1"
-)
+// Version represents the software version of the Zookeeper Operator
+var Version string
+
+// GitSHA represents the Git commit hash in short format
+var GitSHA string
