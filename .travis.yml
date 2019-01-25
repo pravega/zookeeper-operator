@@ -25,6 +25,7 @@ after_success:
 - bash <(curl -s https://codecov.io/bash)
 
 deploy:
+  skip_cleanup: true
   provider: script
   script: make push
   on:
