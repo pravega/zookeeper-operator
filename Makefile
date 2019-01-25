@@ -48,13 +48,18 @@ login:
 	@docker login -u "$(DOCKER_USER)" -p "$(DOCKER_PASS)"
 
 push: build-image build-zk-image login
-	docker push $(REPO):latest
 	docker push $(REPO):$(VERSION)
+	docker push $(REPO):latest
 	docker push $(APP_REPO):$(VERSION)
+	docker push $(APP_REPO):latest
 	docker tag $(REPO):$(VERSION) $(ALTREPO):$(VERSION)
+	docker tag $(REPO):$(VERSION) $(ALTREPO):latest
 	docker tag $(APP_REPO):$(VERSION) $(APP_ALTREPO):$(VERSION)
+	docker tag $(APP_REPO):$(VERSION) $(APP_ALTREPO):latest
 	docker push $(ALTREPO):$(VERSION)
+	docker push $(ALTREPO):latest
 	docker push $(APP_ALTREPO):$(VERSION)
+	docker push $(APP_ALTREPO):latest
 
 clean:
 	rm -f bin/$(PROJECT_NAME)
