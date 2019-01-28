@@ -50,7 +50,7 @@ metadata:
   name: zookeeper-operator-role-binding
 subjects:
 - kind: ServiceAccount
-  name: default
+  name: zookeeper-operator
   namespace: default
 roleRef:
   kind: Role
