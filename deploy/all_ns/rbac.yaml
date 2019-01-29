@@ -53,6 +53,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: zookeeper-operator
+  namespace: default
 roleRef:
   kind: ClusterRole
   name: zookeeper-operator
