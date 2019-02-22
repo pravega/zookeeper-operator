@@ -15,6 +15,11 @@ import (
 	"fmt"
 	"time"
 
+	"k8s.io/client-go/kubernetes/scheme"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+
+	"github.com/pravega/zookeeper-operator/pkg/yamlexporter"
+
 	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/go-logr/logr"
@@ -365,4 +370,84 @@ func (r *ReconcileZookeeperCluster) reconcileClusterStatus(instance *zookeeperv1
 		"StatefulSet.Namespace", instance.Namespace,
 		"StatefulSet.Name", instance.Name)
 	return r.client.Status().Update(context.TODO(), instance)
+}
+
+// YAMLExporterReconciler returns a fake Reconciler which is being used for generating YAML files
+func YAMLExporterReconciler(zookeepercluster *zookeeperv1beta1.ZookeeperCluster) *ReconcileZookeeperCluster {
+	var scheme = scheme.Scheme
+	scheme.AddKnownTypes(zookeeperv1beta1.SchemeGroupVersion, zookeepercluster)
+	return &ReconcileZookeeperCluster{
+		client: fake.NewFakeClient(zookeepercluster),
+		scheme: scheme,
+	}
+}
+
+// GenerateYAML generated secondary resource of ZookeeperCluster resources YAML files
+func (r *ReconcileZookeeperCluster) GenerateYAML(inst *zookeeperv1beta1.ZookeeperCluster) error {
+	// Fetch the ECSCluster inst
+	if inst.WithDefaults() {
+		fmt.Println("set default values")
+	}
+	for _, fun := range []reconcileFun{
+		r.yamlConfigMap,
+		r.yamlStatefulSet,
+		r.yamlClientService,
+		r.yamlHeadlessService,
+		r.yamlPodDisruptionBudget,
+	} {
+		if err := fun(inst); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// yamlStatefulSet will generates YAML file for StatefulSet
+func (r *ReconcileZookeeperCluster) yamlStatefulSet(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
+	sts := zk.MakeStatefulSet(instance)
+	if err = controllerutil.SetControllerReference(instance, sts, r.scheme); err != nil {
+		return err
+	}
+	subdir, err := yamlexporter.CreateOutputSubDir(sts.OwnerReferences[0].Kind, sts.Labels["component"])
+	return yamlexporter.GenerateOutputYAMLFile(subdir, sts.Kind, sts)
+}
+
+// yamlClientService will generates YAML file for zookeeper client service
+func (r *ReconcileZookeeperCluster) yamlClientService(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
+	svc := zk.MakeClientService(instance)
+	if err = controllerutil.SetControllerReference(instance, svc, r.scheme); err != nil {
+		return err
+	}
+	subdir, err := yamlexporter.CreateOutputSubDir(svc.OwnerReferences[0].Kind, "client")
+	return yamlexporter.GenerateOutputYAMLFile(subdir, svc.Kind, svc)
+}
+
+// yamlHeadlessService will generates YAML file for zookeeper headless service
+func (r *ReconcileZookeeperCluster) yamlHeadlessService(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
+	svc := zk.MakeHeadlessService(instance)
+	if err = controllerutil.SetControllerReference(instance, svc, r.scheme); err != nil {
+		return err
+	}
+	subdir, err := yamlexporter.CreateOutputSubDir(svc.OwnerReferences[0].Kind, "headless")
+	return yamlexporter.GenerateOutputYAMLFile(subdir, svc.Kind, svc)
+}
+
+// yamlPodDisruptionBudget will generates YAML file for zookeeper PDB
+func (r *ReconcileZookeeperCluster) yamlPodDisruptionBudget(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
+	pdb := zk.MakePodDisruptionBudget(instance)
+	if err = controllerutil.SetControllerReference(instance, pdb, r.scheme); err != nil {
+		return err
+	}
+	subdir, err := yamlexporter.CreateOutputSubDir(pdb.OwnerReferences[0].Kind, "pdb")
+	return yamlexporter.GenerateOutputYAMLFile(subdir, pdb.Kind, pdb)
+}
+
+// yamlConfigMap will generates YAML file for Zookeeper configmap
+func (r *ReconcileZookeeperCluster) yamlConfigMap(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
+	cm := zk.MakeConfigMap(instance)
+	if err = controllerutil.SetControllerReference(instance, cm, r.scheme); err != nil {
+		return err
+	}
+	subdir, err := yamlexporter.CreateOutputSubDir(cm.OwnerReferences[0].Kind, "config")
+	return yamlexporter.GenerateOutputYAMLFile(subdir, cm.Kind, cm)
 }
