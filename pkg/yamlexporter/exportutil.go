@@ -1,3 +1,13 @@
+/**
+ * Copyright (c) 2019 Dell Inc., or its subsidiaries. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ */
+
 package yamlexporter
 
 import (
@@ -22,18 +32,14 @@ func CreateOutputSubDir(clusterName string, compName string) (string, error) {
 
 // GenerateOutputYAMLFile writes YAML output for a resource
 func GenerateOutputYAMLFile(subdir string, depType string, data interface{}) error {
-
 	filename := filepath.Join(subdir, depType+"."+"yaml")
-
 	fileFd, err := os.Create(filename)
 	if err != nil {
 		return err
 	}
-
 	defer func() {
 		_ = fileFd.Close()
 	}()
-
 	yamlWriter := bufio.NewWriter(fileFd)
 	defer yamlWriter.Flush()
 	yamlData, err := yaml.Marshal(data)
@@ -52,7 +58,6 @@ func createDirIfNotExist(dir string) error {
 		err = os.MkdirAll(dir, 0755)
 		if err != nil {
 			return err
-			//panic(err)
 		}
 	}
 	return nil

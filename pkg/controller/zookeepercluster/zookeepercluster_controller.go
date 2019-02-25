@@ -384,7 +384,6 @@ func YAMLExporterReconciler(zookeepercluster *zookeeperv1beta1.ZookeeperCluster)
 
 // GenerateYAML generated secondary resource of ZookeeperCluster resources YAML files
 func (r *ReconcileZookeeperCluster) GenerateYAML(inst *zookeeperv1beta1.ZookeeperCluster) error {
-	// Fetch the ECSCluster inst
 	if inst.WithDefaults() {
 		fmt.Println("set default values")
 	}
@@ -419,6 +418,9 @@ func (r *ReconcileZookeeperCluster) yamlClientService(instance *zookeeperv1beta1
 		return err
 	}
 	subdir, err := yamlexporter.CreateOutputSubDir(svc.OwnerReferences[0].Kind, "client")
+	if err != nil {
+		return err
+	}
 	return yamlexporter.GenerateOutputYAMLFile(subdir, svc.Kind, svc)
 }
 
@@ -429,6 +431,9 @@ func (r *ReconcileZookeeperCluster) yamlHeadlessService(instance *zookeeperv1bet
 		return err
 	}
 	subdir, err := yamlexporter.CreateOutputSubDir(svc.OwnerReferences[0].Kind, "headless")
+	if err != nil {
+		return err
+	}
 	return yamlexporter.GenerateOutputYAMLFile(subdir, svc.Kind, svc)
 }
 
@@ -439,6 +444,9 @@ func (r *ReconcileZookeeperCluster) yamlPodDisruptionBudget(instance *zookeeperv
 		return err
 	}
 	subdir, err := yamlexporter.CreateOutputSubDir(pdb.OwnerReferences[0].Kind, "pdb")
+	if err != nil {
+		return err
+	}
 	return yamlexporter.GenerateOutputYAMLFile(subdir, pdb.Kind, pdb)
 }
 
@@ -449,5 +457,8 @@ func (r *ReconcileZookeeperCluster) yamlConfigMap(instance *zookeeperv1beta1.Zoo
 		return err
 	}
 	subdir, err := yamlexporter.CreateOutputSubDir(cm.OwnerReferences[0].Kind, "config")
+	if err != nil {
+		return err
+	}
 	return yamlexporter.GenerateOutputYAMLFile(subdir, cm.Kind, cm)
 }
