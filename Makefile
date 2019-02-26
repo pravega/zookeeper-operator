@@ -9,6 +9,7 @@
 SHELL=/bin/bash -o pipefail
 
 PROJECT_NAME=zookeeper-operator
+EXPORTER_NAME=zookeeper-exporter
 APP_NAME=zookeeper
 REPO=pravega/$(PROJECT_NAME)
 APP_REPO=pravega/$(APP_NAME)
@@ -32,6 +33,9 @@ build-go:
 	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build \
 	-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
 	-o bin/$(PROJECT_NAME) cmd/manager/main.go
+	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build \
+	-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
+	-o bin/$(EXPORTER_NAME) cmd/exporter/main.go
 
 build-image:
 	docker build --build-arg VERSION=$(VERSION) --build-arg GIT_SHA=$(GIT_SHA) -t $(REPO):$(VERSION) .

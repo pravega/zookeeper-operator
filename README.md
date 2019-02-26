@@ -206,4 +206,30 @@ On GKE, the following command must be run before installing the operator, replac
 
 ```
 $ kubectl create clusterrolebinding your-user-cluster-admin-binding --clusterrole=cluster-admin --user=your.google.cloud.email@example.org
-```
+
+
+#### Zookeeper YAML  Exporter
+
+Zookeeper Exporter is a binary which is used to generate YAML file for all the secondary resources which Zookeeper Operator deploys to the Kubernetes Cluster. It takes ZookeeperCluster resource YAML file as input and generates bunch of secondary resources YAML files. The generated output look like the following:
+
+>tree  ZookeeperCluster/
+ZookeeperCluster/
+├── client
+│   └── Service.yaml
+├── config
+│   └── ConfigMap.yaml
+├── headless
+│   └── Service.yaml
+├── pdb
+│   └── PodDisruptionBudget.yaml
+└── zk
+    └── StatefulSet.yaml
+
+
+#How to build Zookeeper Operator
+When you build Operator, the Exporter is built along with it.
+make build-go - will build both Operator as well as Exporter.
+
+#How to use exporter
+Just run zookeeper-exporter binary with -help option. It will guide you to input ZookeeperCluster YAML file. There are couple of more options to specify.
+Example: ./zookeeper-exporter -i ./ZookeeperCluster.yaml -o .
