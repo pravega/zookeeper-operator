@@ -12,13 +12,13 @@ spec:
     shortNames:
       - zk
   additionalPrinterColumns:
-  - name: Members
+  - name: Replicas
     type: integer
-    description: The number zookeeper members running
+    description: The number of ZooKeeper servers in the ensemble
     JSONPath: .status.replicas
-  - name: Ready Members
+  - name: Ready Replicas
     type: integer
-    description: The number zookeeper members ready
+    description: The number of ZooKeeper servers in the ensemble that are in a Ready state
     JSONPath: .status.readyReplicas
   - name: Internal Endpoint
     type: string
