@@ -27,9 +27,9 @@ deploy:
       tags: true
   - provider: releases
     file:
-    - bin/zookeeper-exporter-linux-amd64
-    - bin/zookeeper-exporter-darwin-amd64
-    - bin/zookeeper-exporter-windows-amd64
+      - bin/zookeeper-exporter-linux-amd64
+      - bin/zookeeper-exporter-darwin-amd64
+      - bin/zookeeper-exporter-windows-amd64
     skip_cleanup: true
     on:
       branch: master
