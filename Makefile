@@ -30,22 +30,22 @@ build: test build-go build-image
 build-go:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
 	-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
-	-o bin/linux_amd64/$(PROJECT_NAME) cmd/manager/main.go
+	-o bin/$(PROJECT_NAME)-linux-amd64 cmd/manager/main.go
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
 	-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
-	-o bin/linux_amd64/$(EXPORTER_NAME) cmd/exporter/main.go
+	-o bin/$(EXPORTER_NAME)-linux-amd64 cmd/exporter/main.go
 	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build \
 	-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
-	-o bin/darwin_amd64/$(PROJECT_NAME) cmd/manager/main.go
+	-o bin/$(PROJECT_NAME)-darwin-amd64 cmd/manager/main.go
 	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build \
 	-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
-	-o bin/darwin_amd64/$(EXPORTER_NAME) cmd/exporter/main.go
+	-o bin/$(EXPORTER_NAME)-darwin-amd64 cmd/exporter/main.go
 	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build \
 	-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
-	-o bin/windows_amd64/$(PROJECT_NAME).exe cmd/manager/main.go
+	-o bin/$(PROJECT_NAME)-windows-amd64.exe cmd/manager/main.go
 	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build \
 	-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
-	-o bin/windows_amd64/$(EXPORTER_NAME).exe cmd/exporter/main.go
+	-o bin/$(EXPORTER_NAME)-windows-amd64.exe cmd/exporter/main.go
 build-image:
 	docker build --build-arg VERSION=$(VERSION) --build-arg GIT_SHA=$(GIT_SHA) -t $(REPO):$(VERSION) .
 	docker tag $(REPO):$(VERSION) $(REPO):latest
