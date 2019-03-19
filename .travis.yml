@@ -28,7 +28,7 @@ deploy:
     file:
       - bin/zookeeper-exporter-linux-amd64
       - bin/zookeeper-exporter-darwin-amd64
-      - bin/zookeeper-exporter-windows-amd64
+      - bin/zookeeper-exporter-windows-amd64.exe
     skip_cleanup: true
     on:
       branch: master
