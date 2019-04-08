@@ -93,7 +93,7 @@ func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) 
 		s.Ports = []v1.ContainerPort{
 			{
 				Name:          "client",
-				ContainerPort: 2181,
+				ContainerPort: 9277,
 			},
 			{
 				Name:          "quorum",

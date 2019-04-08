@@ -238,7 +238,7 @@ func makeService(name string, ports []v1.ServicePort, clusterIP bool, z *v1beta1
 					Kind:    "ZookeeperCluster",
 				}),
 			},
-			Labels: map[string]string{"app": z.GetName()},
+			Labels: map[string]string{"app": name},
 		},
 		Spec: v1.ServiceSpec{
 			Ports:    ports,
