@@ -74,6 +74,11 @@ type ZookeeperClusterSpec struct {
 	// static zookeeper configuration. If no configuration is provided required
 	// default values will be provided, and optional values will be excluded.
 	Conf ZookeeperConfig `json:"config,omitempty"`
+
+	// PersistentVolumeClaimCleanup is a zookeeper operator configuration. If it's set to true,
+	// the corresponding PVCs will be deleted by the operator when zookeeper cluster is deleted.
+	// The default value is true.
+	PersistentVolumeClaimCleanup *bool `json:"cleanUpPVC,omitempty"`
 }
 
 func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) {
@@ -129,6 +134,11 @@ func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) 
 			v1.ResourceStorage: resource.MustParse("20Gi"),
 		}
 		changed = true
+	}
+	if z.Spec.PersistentVolumeClaimCleanup != nil {
+		changed = true
+		boolTrue := true
+		z.Spec.PersistentVolumeClaimCleanup = &boolTrue
 	}
 	return changed
 }

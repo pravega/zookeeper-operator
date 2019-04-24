@@ -18,6 +18,7 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
+	"github.com/pravega/zookeeper-operator/pkg/utils"
 	"github.com/pravega/zookeeper-operator/pkg/yamlexporter"
 
 	"k8s.io/apimachinery/pkg/labels"
@@ -26,6 +27,7 @@ import (
 	"github.com/pravega/zookeeper-operator/pkg/zk"
 	corev1 "k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	zookeeperv1beta1 "github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -145,6 +147,7 @@ func (r *ReconcileZookeeperCluster) Reconcile(request reconcile.Request) (reconc
 		return reconcile.Result{Requeue: true}, nil
 	}
 	for _, fun := range []reconcileFun{
+		r.reconcileFinalizers,
 		r.reconcileConfigMap,
 		r.reconcileStatefulSet,
 		r.reconcileClientService,
@@ -461,4 +464,57 @@ func (r *ReconcileZookeeperCluster) yamlConfigMap(instance *zookeeperv1beta1.Zoo
 		return err
 	}
 	return yamlexporter.GenerateOutputYAMLFile(subdir, cm.Kind, cm)
+}
+
+func (r *ReconcileZookeeperCluster) reconcileFinalizers(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
+	if instance.Spec.PersistentVolumeClaimCleanup != nil && !*instance.Spec.PersistentVolumeClaimCleanup {
+		return nil
+	}
+	if instance.DeletionTimestamp.IsZero() {
+		if !utils.ContainsString(instance.ObjectMeta.Finalizers, utils.ZkFinalizer) {
+			instance.ObjectMeta.Finalizers = append(instance.ObjectMeta.Finalizers, utils.ZkFinalizer)
+			if err = r.client.Update(context.TODO(), instance); err != nil {
+				return err
+			}
+		}
+	} else {
+		if utils.ContainsString(instance.ObjectMeta.Finalizers, utils.ZkFinalizer) {
+			if err = r.cleanUpZookeeperPVC(instance); err != nil {
+				return err
+			}
+			instance.ObjectMeta.Finalizers = utils.RemoveString(instance.ObjectMeta.Finalizers, utils.ZkFinalizer)
+			if err = r.client.Update(context.TODO(), instance); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (r *ReconcileZookeeperCluster) cleanUpZookeeperPVC(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
+	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
+		MatchLabels: map[string]string{"app": instance.GetName()},
+	})
+	pvclistOps := &client.ListOptions{
+		Namespace:     instance.Namespace,
+		LabelSelector: selector,
+	}
+	pvcList := &corev1.PersistentVolumeClaimList{}
+	err = r.client.List(context.TODO(), pvclistOps, pvcList)
+	if err != nil {
+		return err
+	}
+	for _, pvcItem := range pvcList.Items {
+		pvcDelete := &corev1.PersistentVolumeClaim{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      pvcItem.Name,
+				Namespace: pvcItem.Namespace,
+			},
+		}
+		err = r.client.Delete(context.TODO(), pvcDelete)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
