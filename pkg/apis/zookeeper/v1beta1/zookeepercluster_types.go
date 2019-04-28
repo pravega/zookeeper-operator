@@ -75,10 +75,10 @@ type ZookeeperClusterSpec struct {
 	// default values will be provided, and optional values will be excluded.
 	Conf ZookeeperConfig `json:"config,omitempty"`
 
-	// PersistentVolumeClaimCleanup is a zookeeper operator configuration. If it's set to true,
+	// VolumeReclaimPolicy is a zookeeper operator configuration. If it's set to Delete,
 	// the corresponding PVCs will be deleted by the operator when zookeeper cluster is deleted.
-	// The default value is true.
-	PersistentVolumeClaimCleanup *bool `json:"cleanUpPVC,omitempty"`
+	// The default value is Retain.
+	VolumeReclaimPolicy VolumeReclaimPolicy `json:"reclaimPolicy,omitempty"`
 }
 
 func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) {
@@ -135,10 +135,9 @@ func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) 
 		}
 		changed = true
 	}
-	if z.Spec.PersistentVolumeClaimCleanup != nil {
+	if s.VolumeReclaimPolicy == "" {
 		changed = true
-		boolTrue := true
-		z.Spec.PersistentVolumeClaimCleanup = &boolTrue
+		s.VolumeReclaimPolicy = VolumeReclaimPolicyRetain
 	}
 	return changed
 }
@@ -372,6 +371,13 @@ func (c *ZookeeperConfig) withDefaults() (changed bool) {
 	}
 	return changed
 }
+
+type VolumeReclaimPolicy string
+
+const (
+	VolumeReclaimPolicyRetain VolumeReclaimPolicy = "Retain"
+	VolumeReclaimPolicyDelete VolumeReclaimPolicy = "Delete"
+)
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
