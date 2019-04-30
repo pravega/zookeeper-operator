@@ -372,7 +372,7 @@ type Persistence struct {
 }
 
 func (p *Persistence) withDefaults() (changed bool) {
-	if p.VolumeReclaimPolicy == "" {
+	if !p.VolumeReclaimPolicy.isValid() {
 		changed = true
 		p.VolumeReclaimPolicy = VolumeReclaimPolicyRetain
 	}
@@ -388,6 +388,13 @@ func (p *Persistence) withDefaults() (changed bool) {
 		changed = true
 	}
 	return changed
+}
+
+func (v VolumeReclaimPolicy) isValid() bool {
+	if v != VolumeReclaimPolicyDelete && v != VolumeReclaimPolicyRetain {
+		return false
+	}
+	return true
 }
 
 type VolumeReclaimPolicy string
