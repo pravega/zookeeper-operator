@@ -67,6 +67,8 @@ type ZookeeperClusterSpec struct {
 
 	// Persistence is the configuration for zookeeper persistent layer.
 	// PersistentVolumeClaimSpec and VolumeReclaimPolicy can be specified in here.
+    // This field is optional. If no persistence is provided, stateful containers will use
+    // emptyDir as volume.
 	Persistence *Persistence `json:"persistence,omitempty"`
 
 	// Conf is the zookeeper configuration, which will be used to generate the
@@ -120,13 +122,11 @@ func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) 
 	if s.Pod.withDefaults(z) {
 		changed = true
 	}
-	if s.Persistence == nil {
-		s.Persistence = &Persistence{}
+
+	if s.Persistence != nil && s.Persistence.withDefaults() {
 		changed = true
 	}
-	if s.Persistence.withDefaults() {
-		changed = true
-	}
+
 	return changed
 }
 
@@ -366,8 +366,6 @@ type Persistence struct {
 	// The default value is Retain.
 	VolumeReclaimPolicy VolumeReclaimPolicy `json:"reclaimPolicy,omitempty"`
 	// PersistentVolumeClaimSpec is the spec to describe PVC for the container
-	// This field is optional. If no PVC spec, stateful containers will use
-	// emptyDir as volume.
 	PersistentVolumeClaimSpec v1.PersistentVolumeClaimSpec `json:"spec,omitempty"`
 }
 

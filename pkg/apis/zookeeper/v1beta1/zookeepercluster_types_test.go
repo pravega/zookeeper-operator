@@ -36,6 +36,9 @@ var _ = Describe("ZookeeperCluster Types", func() {
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "example",
 			},
+			Spec: v1beta1.ZookeeperClusterSpec{
+				Persistence: &v1beta1.Persistence{},
+			},
 		}
 	})
 
