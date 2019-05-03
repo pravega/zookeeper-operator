@@ -11,6 +11,11 @@ invalidFiles=$(gofmt -l $goFiles)
 
 if [ "$invalidFiles" ]; then
   echo -e "These files did not pass the 'go fmt' check, please run 'go fmt' on them:"
-  echo -e $invalidFiles
+  for file in $invalidFiles
+  do
+    echo ""
+    gofmt -d $file
+  done
+
   exit 1
 fi

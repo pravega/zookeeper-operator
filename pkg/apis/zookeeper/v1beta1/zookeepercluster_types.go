@@ -67,8 +67,8 @@ type ZookeeperClusterSpec struct {
 
 	// Persistence is the configuration for zookeeper persistent layer.
 	// PersistentVolumeClaimSpec and VolumeReclaimPolicy can be specified in here.
-    // This field is optional. If no persistence is provided, stateful containers will use
-    // emptyDir as volume.
+	// This field is optional. If no persistence is provided, stateful containers will use
+	// emptyDir as volume.
 	Persistence *Persistence `json:"persistence,omitempty"`
 
 	// Conf is the zookeeper configuration, which will be used to generate the

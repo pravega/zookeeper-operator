@@ -146,13 +146,13 @@ func makeZkPodSpec(z *v1beta1.ZookeeperCluster, volumes []v1.Volume) v1.PodSpec 
 		Containers: []v1.Container{zkContainer},
 		Affinity:   z.Spec.Pod.Affinity,
 		Volumes:    volumes,
-		TerminationGracePeriodSeconds: &z.Spec.Pod.TerminationGracePeriodSeconds,
 	}
 	if reflect.DeepEqual(v1.PodSecurityContext{}, z.Spec.Pod.SecurityContext) {
 		podSpec.SecurityContext = z.Spec.Pod.SecurityContext
 	}
 	podSpec.NodeSelector = z.Spec.Pod.NodeSelector
 	podSpec.Tolerations = z.Spec.Pod.Tolerations
+	podSpec.TerminationGracePeriodSeconds = &z.Spec.Pod.TerminationGracePeriodSeconds
 
 	return podSpec
 }
