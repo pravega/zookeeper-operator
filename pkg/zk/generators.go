@@ -72,7 +72,7 @@ func MakeStatefulSet(z *v1beta1.ZookeeperCluster) *appsv1.StatefulSet {
 						Name:   "data",
 						Labels: map[string]string{"app": z.GetName()},
 					},
-					Spec: z.Spec.PersistentVolumeClaimSpec,
+					Spec: z.Spec.Persistence.PersistentVolumeClaimSpec,
 				},
 			},
 		},

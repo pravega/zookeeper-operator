@@ -179,7 +179,7 @@ var _ = Describe("ZookeeperCluster Types", func() {
 			var p corev1.PersistentVolumeClaimSpec
 
 			BeforeEach(func() {
-				p = z.Spec.PersistentVolumeClaimSpec
+				p = z.Spec.Persistence.PersistentVolumeClaimSpec
 			})
 
 			It("should be an RWO volume", func() {

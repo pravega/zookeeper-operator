@@ -26,6 +26,7 @@ import (
 	"github.com/pravega/zookeeper-operator/pkg/version"
 	"github.com/pravega/zookeeper-operator/pkg/yamlexporter"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 

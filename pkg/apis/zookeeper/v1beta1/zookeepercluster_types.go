@@ -65,10 +65,9 @@ type ZookeeperClusterSpec struct {
 	// Updating the Pod does not take effect on any existing pods.
 	Pod PodPolicy `json:"pod,omitempty"`
 
-	// PersistentVolumeClaimSpec is the spec to describe PVC for the container
-	// This field is optional. If no PVC spec, stateful containers will use
-	// emptyDir as volume.
-	PersistentVolumeClaimSpec v1.PersistentVolumeClaimSpec `json:"persistence,omitempty"`
+	// Persistence is the configuration for zookeeper persistent layer.
+	// PersistentVolumeClaimSpec and VolumeReclaimPolicy can be specified in here.
+	Persistence *Persistence `json:"persistence,omitempty"`
 
 	// Conf is the zookeeper configuration, which will be used to generate the
 	// static zookeeper configuration. If no configuration is provided required
@@ -121,13 +120,11 @@ func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) 
 	if s.Pod.withDefaults(z) {
 		changed = true
 	}
-	s.PersistentVolumeClaimSpec.AccessModes = []v1.PersistentVolumeAccessMode{
-		v1.ReadWriteOnce,
+	if s.Persistence == nil {
+		s.Persistence = &Persistence{}
+		changed = true
 	}
-	if len(s.PersistentVolumeClaimSpec.Resources.Requests) == 0 {
-		s.PersistentVolumeClaimSpec.Resources.Requests = v1.ResourceList{
-			v1.ResourceStorage: resource.MustParse("20Gi"),
-		}
+	if s.Persistence.withDefaults() {
 		changed = true
 	}
 	return changed
@@ -362,6 +359,50 @@ func (c *ZookeeperConfig) withDefaults() (changed bool) {
 	}
 	return changed
 }
+
+type Persistence struct {
+	// VolumeReclaimPolicy is a zookeeper operator configuration. If it's set to Delete,
+	// the corresponding PVCs will be deleted by the operator when zookeeper cluster is deleted.
+	// The default value is Retain.
+	VolumeReclaimPolicy VolumeReclaimPolicy `json:"reclaimPolicy,omitempty"`
+	// PersistentVolumeClaimSpec is the spec to describe PVC for the container
+	// This field is optional. If no PVC spec, stateful containers will use
+	// emptyDir as volume.
+	PersistentVolumeClaimSpec v1.PersistentVolumeClaimSpec `json:"spec,omitempty"`
+}
+
+func (p *Persistence) withDefaults() (changed bool) {
+	if !p.VolumeReclaimPolicy.isValid() {
+		changed = true
+		p.VolumeReclaimPolicy = VolumeReclaimPolicyRetain
+	}
+
+	p.PersistentVolumeClaimSpec.AccessModes = []v1.PersistentVolumeAccessMode{
+		v1.ReadWriteOnce,
+	}
+
+	if len(p.PersistentVolumeClaimSpec.Resources.Requests) == 0 {
+		p.PersistentVolumeClaimSpec.Resources.Requests = v1.ResourceList{
+			v1.ResourceStorage: resource.MustParse("20Gi"),
+		}
+		changed = true
+	}
+	return changed
+}
+
+func (v VolumeReclaimPolicy) isValid() bool {
+	if v != VolumeReclaimPolicyDelete && v != VolumeReclaimPolicyRetain {
+		return false
+	}
+	return true
+}
+
+type VolumeReclaimPolicy string
+
+const (
+	VolumeReclaimPolicyRetain VolumeReclaimPolicy = "Retain"
+	VolumeReclaimPolicyDelete VolumeReclaimPolicy = "Delete"
+)
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
