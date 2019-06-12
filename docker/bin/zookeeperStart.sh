@@ -20,6 +20,10 @@ MYID_FILE=$DATA_DIR/myid
 LOG4J_CONF=/conf/log4j-quiet.properties
 DYNCONFIG=$DATA_DIR/zoo.cfg.dynamic
 
+# Copy over the zoo.cfg file in the configmap to make it writable
+ZOOCFGDIR=$DATA_DIR
+cp /conf/zoo.cfg /data/zoo.cfg
+
 # Extract resource name and this members ordinal value from pod hostname
 if [[ $HOST =~ (.*)-([0-9]+)$ ]]; then
     NAME=${BASH_REMATCH[1]}
