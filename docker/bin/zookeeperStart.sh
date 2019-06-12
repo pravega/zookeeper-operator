@@ -18,11 +18,16 @@ HOST=`hostname -s`
 DATA_DIR=/data
 MYID_FILE=$DATA_DIR/myid
 LOG4J_CONF=/conf/log4j-quiet.properties
+ZOOCFGDIR=$DATA_DIR/conf
 DYNCONFIG=$DATA_DIR/zoo.cfg.dynamic
 
 # Copy over the zoo.cfg file in the configmap to make it writable
-ZOOCFGDIR=$DATA_DIR
-cp /conf/zoo.cfg /data/zoo.cfg
+if [ -d $ZOOCFGDIR ]; then
+  rm -r $ZOOCFGDIR
+fi
+mkdir $ZOOCFGDIR
+cp /conf/zoo.cfg $ZOOCFGDIR
+cp /conf/log4j.properties $ZOOCFGDIR
 
 # Extract resource name and this members ordinal value from pod hostname
 if [[ $HOST =~ (.*)-([0-9]+)$ ]]; then
