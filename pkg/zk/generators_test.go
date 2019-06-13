@@ -52,8 +52,8 @@ var _ = Describe("Generators Spec", func() {
 					cfg = cm.Data["zoo.cfg"]
 				})
 
-				It("should have a datadir of '/data'", func() {
-					Ω(cfg).To(ContainSubstring("dataDir=/data\n"))
+				It("should have a datadir of '/zookeeper/data'", func() {
+					Ω(cfg).To(ContainSubstring("dataDir=/zookeeper/data\n"))
 				})
 
 				It("should set standaloneEnabled to 'false'", func() {
@@ -83,7 +83,7 @@ var _ = Describe("Generators Spec", func() {
 				It("should have a dynamicConfigFile", func() {
 					Ω(cfg).
 						To(ContainSubstring(
-							"dynamicConfigFile=/data/zoo.cfg.dynamic\n"))
+							"dynamicConfigFile=/zookeeper/data/zoo.cfg.dynamic\n"))
 				})
 			})
 
