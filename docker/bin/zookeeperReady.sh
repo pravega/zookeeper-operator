@@ -15,7 +15,8 @@ source /conf/env.sh
 source /usr/local/bin/zookeeperFunctions.sh
 
 HOST=`hostname -s`
-DATA_DIR=/data
+ZKROOT=/zookeeper
+DATA_DIR=$ZKROOT/data
 MYID_FILE=$DATA_DIR/myid
 LOG4J_CONF=/conf/log4j-quiet.properties
 

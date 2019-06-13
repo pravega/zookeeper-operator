@@ -100,7 +100,7 @@ func makeZkPodSpec(z *v1beta1.ZookeeperCluster) v1.PodSpec {
 			},
 		},
 		VolumeMounts: []v1.VolumeMount{
-			{Name: "data", MountPath: "/data"},
+			{Name: "data", MountPath: "/zookeeper/data"},
 			{Name: "conf", MountPath: "/conf"},
 		},
 		Lifecycle: &v1.Lifecycle{
@@ -184,14 +184,14 @@ func MakeHeadlessService(z *v1beta1.ZookeeperCluster) *v1.Service {
 
 func makeZkConfigString(s v1beta1.ZookeeperClusterSpec) string {
 	return "4lw.commands.whitelist=cons, envi, conf, crst, srvr, stat, mntr, ruok\n" +
-		"dataDir=/data\n" +
+		"dataDir=/zookeeper/data\n" +
 		"standaloneEnabled=false\n" +
 		"reconfigEnabled=true\n" +
 		"skipACL=yes\n" +
 		"initLimit=" + strconv.Itoa(s.Conf.InitLimit) + "\n" +
 		"syncLimit=" + strconv.Itoa(s.Conf.SyncLimit) + "\n" +
 		"tickTime=" + strconv.Itoa(s.Conf.TickTime) + "\n" +
-		"dynamicConfigFile=/data/zoo.cfg.dynamic\n"
+		"dynamicConfigFile=/zookeeper/data/zoo.cfg.dynamic\n"
 }
 
 func makeZkLog4JQuietConfigString() string {
