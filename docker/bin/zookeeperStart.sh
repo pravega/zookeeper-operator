@@ -99,9 +99,32 @@ if [[ "$WRITE_CONFIGURATION" == true ]]; then
 
     echo Registering node and writing local configuration to disk.
     java -Dlog4j.configuration=file:"$LOG4J_CONF" -jar /root/zu.jar add $ZKURL $MYID  $ZKCONFIG $DYNCONFIG
-
   fi
 fi
 
+ZOOCFGDIR=/data/conf
+export ZOOCFGDIR
+
+if [ ! -d "$ZOOCFGDIR" ]
+then
+echo "Creating writable conf directory."
+mkdir $ZOOCFGDIR
+cp -f /conf/zoo.cfg $ZOOCFGDIR
+cp -f /conf/log4j.properties $ZOOCFGDIR
+cp -f /conf/log4j-quiet.properties $ZOOCFGDIR
+cp -f /conf/env.sh $ZOOCFGDIR
+fi
+
+if [[ "$WRITE_CONFIGURATION" == false &&  "$REGISTER_NODE" == false ]]; then
+  # We get here only on server restart...
+  echo Printing bootstrap dynamic config file
+  cat $DYNCONFIG
+  echo Printing Static Config
+  STATIC_CONFIG=`cat $ZOOCFGDIR/zoo.cfg`
+  #Setting dynamicConfigFile=/data/zoo.cfg.dynamic in zoo.cfg
+  sed -i 's/dynamicConfigFile=.*/dynamicConfigFile=\/data\/zoo\.cfg\.dynamic/g' $ZOOCFGDIR/zoo.cfg
+  cat $ZOOCFGDIR/zoo.cfg
+fi
+
 echo "Starting zookeeper service"
-zkServer.sh start-foreground
+zkServer.sh --config $ZOOCFGDIR start-foreground
