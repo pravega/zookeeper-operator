@@ -57,7 +57,6 @@ if [[ $? -eq 1 ]]; then
 else
   set -e
   # An ensemble exists, check to see if this node is already a member.
-
   set +e
   ZKURL=$(zkConnectionString)
   set -e
@@ -121,6 +120,9 @@ if [[ "$WRITE_CONFIGURATION" == false &&  "$REGISTER_NODE" == false ]]; then
   cat $DYNCONFIG
   echo Printing Static Config
   STATIC_CONFIG=`cat $ZOOCFGDIR/zoo.cfg`
+  echo Writing configuration gleaned from zookeeper ensemble
+  echo "$CONFIG" | grep -v "^version="> $DYNCONFIG
+  cat $DYNCONFIG
   #Setting dynamicConfigFile=/data/zoo.cfg.dynamic in zoo.cfg
   sed -i 's/dynamicConfigFile=.*/dynamicConfigFile=\/data\/zoo\.cfg\.dynamic/g' $ZOOCFGDIR/zoo.cfg
   cat $ZOOCFGDIR/zoo.cfg
