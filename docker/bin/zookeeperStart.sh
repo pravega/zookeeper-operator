@@ -25,7 +25,7 @@ if [[ $HOST =~ (.*)-([0-9]+)$ ]]; then
     NAME=${BASH_REMATCH[1]}
     ORD=${BASH_REMATCH[2]}
 else
-    echo "Failed to parse name and ordinal of Pod"
+    echo Failed to parse name and ordinal of Pod
     exit 1
 fi
 
@@ -57,7 +57,6 @@ if [[ $? -eq 1 ]]; then
 else
   set -e
   # An ensemble exists, check to see if this node is already a member.
-
   set +e
   ZKURL=$(zkConnectionString)
   set -e
@@ -99,9 +98,34 @@ if [[ "$WRITE_CONFIGURATION" == true ]]; then
 
     echo Registering node and writing local configuration to disk.
     java -Dlog4j.configuration=file:"$LOG4J_CONF" -jar /root/zu.jar add $ZKURL $MYID  $ZKCONFIG $DYNCONFIG
-
   fi
 fi
 
-echo "Starting zookeeper service"
-zkServer.sh start-foreground
+ZOOCFGDIR=/data/conf
+export ZOOCFGDIR
+
+if [[ ! -d "$ZOOCFGDIR" ]]; then
+  echo Copying /conf contents to writable directory, to support Zookeeper dynamic reconfiguraiton
+  mkdir $ZOOCFGDIR
+  cp -f /conf/zoo.cfg $ZOOCFGDIR
+  cp -f /conf/log4j.properties $ZOOCFGDIR
+  cp -f /conf/log4j-quiet.properties $ZOOCFGDIR
+  cp -f /conf/env.sh $ZOOCFGDIR
+fi
+
+if [[ "$WRITE_CONFIGURATION" == false && "$REGISTER_NODE" == false ]]; then
+  # We get here only on server restart...
+  echo Bootstrap dynamic config file
+  cat $DYNCONFIG
+  echo Static Config file
+  STATIC_CONFIG=`cat $ZOOCFGDIR/zoo.cfg`
+  echo Setting dynamic configuration to cluster configuration fetched from zk-service
+  echo "$CONFIG" | grep -v "^version="> $DYNCONFIG
+  cat $DYNCONFIG
+  #Setting dynamicConfigFile=/data/zoo.cfg.dynamic in zoo.cfg
+  sed -i 's/dynamicConfigFile=.*/dynamicConfigFile=\/data\/zoo\.cfg\.dynamic/g' $ZOOCFGDIR/zoo.cfg
+  cat $ZOOCFGDIR/zoo.cfg
+fi
+
+echo Starting zookeeper service
+zkServer.sh --config $ZOOCFGDIR start-foreground
