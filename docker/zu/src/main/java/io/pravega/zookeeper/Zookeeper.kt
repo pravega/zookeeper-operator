@@ -17,7 +17,7 @@ import org.apache.zookeeper.admin.ZooKeeperAdmin
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 
-const val ZK_CONNECTION_TIMEOUT_MINS: Long  = 10
+const val ZK_CONNECTION_TIMEOUT_MINS: Long  = 1
 
 /**
  * Creates a new Zookeeper client and waits until it's in a connected state
