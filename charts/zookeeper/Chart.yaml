@@ -1,0 +1,12 @@
+name: zookeeper
+version: 0.2.2
+appVersion: 0.2.2
+description: zookeeper Helm chart for Kubernetes
+keywords:
+- zookeeper
+- storage
+home: https://github.com/pravega/zookeeper
+icon: https://avatars3.githubusercontent.com/u/25698199
+sources:
+- https://github.com/pravega/zookeeper
+engine: gotpl

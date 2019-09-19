@@ -1,0 +1,13 @@
+{{- if .Values.rbac.create }}
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ template "zookeeper-operator.fullname" . }}
+subjects:
+- kind: ServiceAccount
+  name: {{ .Values.serviceAccount.name }}
+roleRef:
+  kind: Role
+  name: {{ template "zookeeper-operator.fullname" . }}
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}

@@ -1,0 +1,21 @@
+# Default values for zookeeper-operator.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+image:
+  repository: pravega/zookeeper-operator
+  tag: 0.2.2
+  pullPolicy: IfNotPresent
+
+## Install RBAC roles and bindings
+rbac:
+  create: true
+
+## Service account names and whether to create them
+serviceAccount:
+  create: true
+  name: zookeeper-operator
+
+# Whether to create custom resource
+crd:
+  create: true
