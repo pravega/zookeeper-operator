@@ -1,0 +1,12 @@
+name: zookeeper-operator
+version: 0.2.2
+appVersion: 0.2.2
+description: zookeeper operator Helm chart for Kubernetes
+keywords:
+- zookeeper
+- storage
+home: https://github.com/pravega/zookeeper-operator/blob/master/charts/zookeeper-operator
+icon: https://zookeeper.apache.org/images/zookeeper_small.gif
+sources:
+- https://github.com/pravega/zookeeper-operator/blob/master/charts/zookeeper-operator
+engine: gotpl

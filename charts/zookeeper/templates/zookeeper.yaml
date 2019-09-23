@@ -1,0 +1,6 @@
+apiVersion: "zookeeper.pravega.io/v1beta1"
+kind: "ZookeeperCluster"
+metadata:
+  name: {{ template "zookeeper.fullname" . }}
+spec:
+  size: 3
