@@ -21,11 +21,11 @@ import (
 const (
 	// DefaultZkContainerRepository is the default docker repo for the zookeeper
 	// container
-	DefaultZkContainerRepository = "emccorp/zookeeper"
+	DefaultZkContainerRepository = "pravega/zookeeper"
 
 	// DefaultZkContainerVersion is the default tag used for for the zookeeper
 	// container
-	DefaultZkContainerVersion = "3.5.4-beta-operator"
+	DefaultZkContainerVersion = "0.2.3"
 
 	// DefaultZkContainerPolicy is the default container pull policy used
 	DefaultZkContainerPolicy = "Always"

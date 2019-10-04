@@ -1,4 +1,4 @@
-ext.zookeeper_version = '3.5.4-beta'
+ext.zookeeper_version = '3.5.5'
 ext.kotlin_version = '1.2.51'
 
 buildscript {
