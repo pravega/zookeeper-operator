@@ -1,4 +1,4 @@
-FROM golang:1.10.1-alpine3.7 as go-builder
+FROM golang:1.12.10-alpine3.10 as go-builder
 
 ARG PROJECT_NAME=zookeeper-operator
 ARG REPO_PATH=github.com/pravega/$PROJECT_NAME
