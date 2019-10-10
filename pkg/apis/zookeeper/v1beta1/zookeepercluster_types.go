@@ -13,7 +13,7 @@ package v1beta1
 import (
 	"fmt"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -25,7 +25,7 @@ const (
 
 	// DefaultZkContainerVersion is the default tag used for for the zookeeper
 	// container
-	DefaultZkContainerVersion = "0.2.3"
+	DefaultZkContainerVersion = "latest"
 
 	// DefaultZkContainerPolicy is the default container pull policy used
 	DefaultZkContainerPolicy = "Always"

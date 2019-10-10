@@ -136,7 +136,7 @@ $ kubectl delete -f deploy/all_ns
 ### Build the operator image
 
 Requirements:
-  - Go 1.10+
+  - Go 1.12+
 
 Use the `make` command to build the Zookeeper operator image.
 
@@ -157,7 +157,7 @@ REPOSITORY                    TAG              IMAGE ID        CREATED         S
 
 pravega/zookeeper-operator    0.1.1-3-dirty    2b2d5bcbedf5    10 minutes ago  41.7MB
 
-pravega/zookeeper-operator    latest           2b2d5bcbedf5    10 minutes ago  41.7MB 
+pravega/zookeeper-operator    latest           2b2d5bcbedf5    10 minutes ago  41.7MB
 
 ```
 Optionally push it to a Docker registry.
