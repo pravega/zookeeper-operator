@@ -24,9 +24,6 @@ ZKURL=$(zkConnectionString)
 set -e
 MYID=`cat $MYID_FILE`
 
-# Remove server from zk configuration
-java -Dlog4j.configuration=file:"$LOG4J_CONF" -jar /root/zu.jar remove $ZKURL $MYID
-
 # Wait for client connections to drain. Kubernetes will wait until the confiugred
 # "terminationGracePeriodSeconds" before focibly killing the container
 CONN_COUNT=`echo cons | nc localhost 2181 | grep -v "^$" |grep -v "/127.0.0.1:" | wc -l`
