@@ -13,6 +13,8 @@ package zookeepercluster
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"k8s.io/client-go/kubernetes/scheme"
@@ -109,9 +111,10 @@ var _ reconcile.Reconciler = &ReconcileZookeeperCluster{}
 type ReconcileZookeeperCluster struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	client client.Client
-	scheme *runtime.Scheme
-	log    logr.Logger
+	client           client.Client
+	scheme           *runtime.Scheme
+	log              logr.Logger
+	skipSTSReconcile int
 }
 
 type reconcileFun func(cluster *zookeeperv1beta1.ZookeeperCluster) error
@@ -185,18 +188,69 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 	} else if err != nil {
 		return err
 	} else {
-		r.log.Info("Updating StatefulSet",
-			"StatefulSet.Namespace", foundSts.Namespace,
-			"StatefulSet.Name", foundSts.Name)
-		zk.SyncStatefulSet(foundSts, sts)
-		err = r.client.Update(context.TODO(), foundSts)
-		if err != nil {
-			return err
+		foundSTSSize := *foundSts.Spec.Replicas
+		newSTSSize := *sts.Spec.Replicas
+		if newSTSSize < foundSTSSize {
+			// We're dealing with STS scale down
+			if !r.isConfigMapInSync(instance) {
+				r.log.Info("Skipping StatefulSet reconcile as ConfigMap not updated yet.")
+				return nil
+			}
+			//https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#mounted-configmaps-are-updated-automatically
+			r.skipSTSReconcile++
+			if r.skipSTSReconcile < 6 {
+				r.log.Info("Waiting for Config Map update to sync...Skipping STS Reconcile")
+				return nil
+			}
 		}
-		instance.Status.Replicas = foundSts.Status.Replicas
-		instance.Status.ReadyReplicas = foundSts.Status.ReadyReplicas
+		return r.updateStatefulSet(instance, foundSts, sts)
 	}
 	return nil
+}
+
+func (r *ReconcileZookeeperCluster) updateStatefulSet(instance *zookeeperv1beta1.ZookeeperCluster, foundSts *appsv1.StatefulSet, sts *appsv1.StatefulSet) (err error) {
+	r.log.Info("Updating StatefulSet",
+		"StatefulSet.Namespace", foundSts.Namespace,
+		"StatefulSet.Name", foundSts.Name)
+	zk.SyncStatefulSet(foundSts, sts)
+	err = r.client.Update(context.TODO(), foundSts)
+	if err != nil {
+		return err
+	}
+	instance.Status.Replicas = foundSts.Status.Replicas
+	instance.Status.ReadyReplicas = foundSts.Status.ReadyReplicas
+	r.skipSTSReconcile = 0
+	return nil
+}
+
+func (r *ReconcileZookeeperCluster) isConfigMapInSync(instance *zookeeperv1beta1.ZookeeperCluster) bool {
+	cm := zk.MakeConfigMap(instance)
+	foundCm := &corev1.ConfigMap{}
+	err := r.client.Get(context.TODO(), types.NamespacedName{
+		Name:      cm.Name,
+		Namespace: cm.Namespace,
+	}, foundCm)
+	if err != nil {
+		r.log.Error(err, "Error getting config map.")
+		return false
+	} else {
+		// found config map, now check numer of replicas in configMap
+		envStr := foundCm.Data["env.sh"]
+		r.log.Info("---ENV.SH---", "String", envStr)
+		splitSlice := strings.Split(envStr, "CLUSTER_SIZE=")
+		if len(splitSlice) < 2 {
+			r.log.Error(err, "Error: Could not find cluster size in configmap.")
+			return false
+		}
+		r.log.Info("---SIZE VALUE---", "SplitString", splitSlice[1])
+		cs := strings.TrimSpace(splitSlice[1])
+		r.log.Info("---CS---", "CSKEY", cs)
+		clusterSize, _ := strconv.Atoi(cs)
+		r.log.Info("--CLUSTER_SIZE---", "CLUSTER_SIZE:", clusterSize)
+		r.log.Info("---REPLICAS---", "Spec.Replicas", instance.Spec.Replicas)
+		return (int32(clusterSize) == instance.Spec.Replicas)
+	}
+	return false
 }
 
 func (r *ReconcileZookeeperCluster) reconcileClientService(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {

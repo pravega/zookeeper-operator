@@ -54,15 +54,20 @@ if [[ "$OK" == "imok" ]]; then
           ONDISK_CONFIG=true
           DYN_CFG_FILE_LINE=`cat $STATIC_CONFIG|grep "dynamicConfigFile\="`
           DYN_CFG_FILE=${DYN_CFG_FILE_LINE##dynamicConfigFile=}
-          SERVER_LINE=`cat $DYN_CFG_FILE | grep "server.${MYID}="`
-          if [[ $SERVER_LINE == *"participant"* ]]; then
+          SERVER_FOUND=`cat $DYN_CFG_FILE | grep "server.${MYID}=" | wc -l`
+          if [[ "$SERVER_FOUND" == "0" ]]; then
+            echo "Server not found in ensemble. Exiting ..."
+            exit 0
+          fi
+          SERVER=`cat $DYN_CFG_FILE | grep "server.${MYID}="`
+          if [[ $SERVER == *"participant"* ]]; then
               ROLE=participant
           else
               ROLE=observer
           fi
       fi
     fi
-    
+
     if [[ "$ROLE" == "participant" ]]; then
       echo "Zookeeper service is available and an active participant"
     exit 0
