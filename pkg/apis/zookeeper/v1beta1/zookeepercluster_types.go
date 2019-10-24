@@ -39,7 +39,7 @@ const (
 // ZookeeperClusterSpec defines the desired state of ZookeeperCluster
 type ZookeeperClusterSpec struct {
 	// Image is the  container image. default is zookeeper:latest
-	Image ContainerImage `json:"image"`
+	Image ContainerImage `json:"image,omitempty"`
 
 	// Labels specifies the labels to attach to pods the operator creates for
 	// the zookeeper cluster.
@@ -49,7 +49,7 @@ type ZookeeperClusterSpec struct {
 	// has been replaced with "Replicas"
 	//
 	// The valid range of size is from 1 to 7.
-	Size int32 `json:"size"`
+	Size int32 `json:"size,omitempty"`
 
 	// Replicas is the expected size of the zookeeper cluster.
 	// The pravega-operator will eventually make the size of the running cluster
