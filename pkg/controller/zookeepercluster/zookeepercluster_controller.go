@@ -196,7 +196,13 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 				r.log.Info("Skipping StatefulSet reconcile as ConfigMap not updated yet.")
 				return nil
 			}
-			//https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#mounted-configmaps-are-updated-automatically
+			/*
+				After updating ConfigMap we need to wait for changes to sync to the volume,
+				failing which `zookeeperTeardown.sh` won't get invoked for the pods that are being scaled down
+				and these will stay in the ensemble config forever.
+				For details see:
+				//https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#mounted-configmaps-are-updated-automatically
+			*/
 			r.skipSTSReconcile++
 			if r.skipSTSReconcile < 6 {
 				r.log.Info("Waiting for Config Map update to sync...Skipping STS Reconcile")
@@ -234,20 +240,15 @@ func (r *ReconcileZookeeperCluster) isConfigMapInSync(instance *zookeeperv1beta1
 		r.log.Error(err, "Error getting config map.")
 		return false
 	} else {
-		// found config map, now check numer of replicas in configMap
+		// found config map, now check number of replicas in configMap
 		envStr := foundCm.Data["env.sh"]
-		r.log.Info("---ENV.SH---", "String", envStr)
 		splitSlice := strings.Split(envStr, "CLUSTER_SIZE=")
 		if len(splitSlice) < 2 {
 			r.log.Error(err, "Error: Could not find cluster size in configmap.")
 			return false
 		}
-		r.log.Info("---SIZE VALUE---", "SplitString", splitSlice[1])
 		cs := strings.TrimSpace(splitSlice[1])
-		r.log.Info("---CS---", "CSKEY", cs)
 		clusterSize, _ := strconv.Atoi(cs)
-		r.log.Info("--CLUSTER_SIZE---", "CLUSTER_SIZE:", clusterSize)
-		r.log.Info("---REPLICAS---", "Spec.Replicas", instance.Spec.Replicas)
 		return (int32(clusterSize) == instance.Spec.Replicas)
 	}
 	return false

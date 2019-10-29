@@ -24,7 +24,6 @@ OK=$(echo ruok | nc 127.0.0.1 $CLIENT_PORT)
 
 # Check to see if zookeeper service answers
 if [[ "$OK" == "imok" ]]; then
-
   set +e
   nslookup $DOMAIN
   if [[ $? -eq 1 ]]; then
@@ -36,7 +35,7 @@ if [[ "$OK" == "imok" ]]; then
     # An ensemble exists, check to see if this node is already a member.
     # Check to see if zookeeper service for this node is a participant
     set +e
-    # Extract resource name and this members ordinal value from pod hostname
+    # Extract resource name and this members' ordinal value from pod hostname
     HOST=`hostname -s`
     if [[ $HOST =~ (.*)-([0-9]+)$ ]]; then
         NAME=${BASH_REMATCH[1]}
@@ -50,19 +49,19 @@ if [[ "$OK" == "imok" ]]; then
     if [ -f $MYID_FILE ]; then
       EXISTING_ID="`cat $DATA_DIR/myid`"
       if [[ "$EXISTING_ID" == "$MYID" && -f $STATIC_CONFIG ]]; then
-        # If Id is correct and configuration is present under `/data/conf`
+      #If Id is correct and configuration is present under `/data/conf`
           ONDISK_CONFIG=true
           DYN_CFG_FILE_LINE=`cat $STATIC_CONFIG|grep "dynamicConfigFile\="`
           DYN_CFG_FILE=${DYN_CFG_FILE_LINE##dynamicConfigFile=}
           SERVER_FOUND=`cat $DYN_CFG_FILE | grep "server.${MYID}=" | wc -l`
           if [[ "$SERVER_FOUND" == "0" ]]; then
             echo "Server not found in ensemble. Exiting ..."
-            exit 0
+            exit 1
           fi
           SERVER=`cat $DYN_CFG_FILE | grep "server.${MYID}="`
-          if [[ $SERVER == *"participant"* ]]; then
+          if [[ ""$SERVER" == *"participant"* ]]; then
               ROLE=participant
-          else
+          elif [[ "$SERVER" == *"observer"* ]]; then
               ROLE=observer
           fi
       fi

@@ -68,7 +68,6 @@ if [[ "$ACTIVE_ENSEMBLE" == false ]]; then
   # This is the first node being added to the cluster
   REGISTER_NODE=false
 else
-  # ACTIVE_ENSEMBLE == true
   # An ensemble exists, check to see if this node is already a member.
   if [[ "$ONDISK_CONFIG" == false ]]; then
     REGISTER_NODE=true
