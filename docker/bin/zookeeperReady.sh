@@ -59,7 +59,7 @@ if [[ "$OK" == "imok" ]]; then
             exit 1
           fi
           SERVER=`cat $DYN_CFG_FILE | grep "server.${MYID}="`
-          if [[ ""$SERVER" == *"participant"* ]]; then
+          if [[ "$SERVER" == *"participant"* ]]; then
               ROLE=participant
           elif [[ "$SERVER" == *"observer"* ]]; then
               ROLE=observer
@@ -69,7 +69,7 @@ if [[ "$OK" == "imok" ]]; then
 
     if [[ "$ROLE" == "participant" ]]; then
       echo "Zookeeper service is available and an active participant"
-    exit 0
+      exit 0
     elif [[ "$ROLE" == "observer" ]]; then
       echo "Zookeeper service is ready to be upgraded from observer to participant."
       ROLE=participant
