@@ -201,7 +201,7 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 				failing which `zookeeperTeardown.sh` won't get invoked for the pods that are being scaled down
 				and these will stay in the ensemble config forever.
 				For details see:
-				//https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#mounted-configmaps-are-updated-automatically
+				https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#mounted-configmaps-are-updated-automatically
 			*/
 			r.skipSTSReconcile++
 			if r.skipSTSReconcile < 6 {
@@ -532,9 +532,10 @@ func (r *ReconcileZookeeperCluster) reconcileFinalizers(instance *zookeeperv1bet
 				return err
 			}
 		}
+		return r.cleanupOrphanPVCs(instance)
 	} else {
 		if utils.ContainsString(instance.ObjectMeta.Finalizers, utils.ZkFinalizer) {
-			if err = r.cleanUpZookeeperPVC(instance); err != nil {
+			if err = r.cleanUpZookeeperPVC(instance, true); err != nil {
 				return err
 			}
 			instance.ObjectMeta.Finalizers = utils.RemoveString(instance.ObjectMeta.Finalizers, utils.ZkFinalizer)
@@ -546,7 +547,39 @@ func (r *ReconcileZookeeperCluster) reconcileFinalizers(instance *zookeeperv1bet
 	return nil
 }
 
-func (r *ReconcileZookeeperCluster) cleanUpZookeeperPVC(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
+func (r *ReconcileZookeeperCluster) cleanupOrphanPVCs(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
+	// this check should make sure we do not delete the PVCs before the STS has scaled down
+	if instance.Status.ReadyReplicas == instance.Spec.Replicas {
+		pvcCount, err := r.getPVCCount(instance)
+		if err != nil {
+			return err
+		}
+		r.log.Info("cleanupOrphanPVCs", "PVC Count", pvcCount, "ReadyReplicas Count", instance.Status.ReadyReplicas)
+		if pvcCount > int(instance.Spec.Replicas) {
+			return r.cleanUpZookeeperPVC(instance, false)
+		}
+	}
+	return nil
+}
+
+func (r *ReconcileZookeeperCluster) getPVCCount(instance *zookeeperv1beta1.ZookeeperCluster) (pvcCount int, err error) {
+	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
+		MatchLabels: map[string]string{"app": instance.GetName()},
+	})
+	pvclistOps := &client.ListOptions{
+		Namespace:     instance.Namespace,
+		LabelSelector: selector,
+	}
+	pvcList := &corev1.PersistentVolumeClaimList{}
+	err = r.client.List(context.TODO(), pvclistOps, pvcList)
+	if err != nil {
+		return -1, err
+	}
+	pvcCount = len(pvcList.Items)
+	return pvcCount, nil
+}
+
+func (r *ReconcileZookeeperCluster) cleanUpZookeeperPVC(instance *zookeeperv1beta1.ZookeeperCluster, all bool) (err error) {
 	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
 		MatchLabels: map[string]string{"app": instance.GetName()},
 	})
@@ -559,17 +592,30 @@ func (r *ReconcileZookeeperCluster) cleanUpZookeeperPVC(instance *zookeeperv1bet
 	if err != nil {
 		return err
 	}
+
 	for _, pvcItem := range pvcList.Items {
-		pvcDelete := &corev1.PersistentVolumeClaim{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      pvcItem.Name,
-				Namespace: pvcItem.Namespace,
-			},
-		}
-		err = r.client.Delete(context.TODO(), pvcDelete)
-		if err != nil {
-			return err
+		if all {
+			r.deletePVC(pvcItem)
+		} else {
+			// delete only Orphan PVCs
+			if utils.IsPvcOrphan(pvcItem.Name, instance.Spec.Replicas) {
+				r.deletePVC(pvcItem)
+			}
 		}
 	}
 	return nil
+}
+
+func (r *ReconcileZookeeperCluster) deletePVC(pvcItem corev1.PersistentVolumeClaim) {
+	pvcDelete := &corev1.PersistentVolumeClaim{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      pvcItem.Name,
+			Namespace: pvcItem.Namespace,
+		},
+	}
+	r.log.Info("Deleting PVC", "With Name", pvcItem.Name)
+	err := r.client.Delete(context.TODO(), pvcDelete)
+	if err != nil {
+		r.log.Error(err, "Error deleteing PVC.", "Name", pvcDelete.Name)
+	}
 }
