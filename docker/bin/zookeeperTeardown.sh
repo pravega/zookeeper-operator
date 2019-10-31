@@ -24,9 +24,12 @@ ZKURL=$(zkConnectionString)
 set -e
 MYID=`cat $MYID_FILE`
 
-# Remove server from zk configuration
-java -Dlog4j.configuration=file:"$LOG4J_CONF" -jar /root/zu.jar remove $ZKURL $MYID
-
+echo "Cluster size=$CLUSTER_SIZE, MyId=$MYID"
+if [[ "$CLUSTER_SIZE" -lt "$MYID" ]]; then
+  # If ClusterSize < MyId, this server is being permanantly removed.
+  java -Dlog4j.configuration=file:"$LOG4J_CONF" -jar /root/zu.jar remove $ZKURL $MYID
+  echo $?
+fi
 # Wait for client connections to drain. Kubernetes will wait until the confiugred
 # "terminationGracePeriodSeconds" before focibly killing the container
 CONN_COUNT=`echo cons | nc localhost 2181 | grep -v "^$" |grep -v "/127.0.0.1:" | wc -l`

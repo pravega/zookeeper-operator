@@ -17,21 +17,7 @@ import org.apache.zookeeper.admin.ZooKeeperAdmin
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 
-const val ZK_CONNECTION_TIMEOUT_MINS: Long  = 10
-
-/**
- * Creates a new Zookeeper client and waits until it's in a connected state
-
-fun newZookeeperClient(zkUrl: String) : ZooKeeper {
-    System.err.println("Connecting to Zookeeper $zkUrl")
-    val connectionWatcher = ConnectionWatcher()
-    val zk = ZooKeeper(zkUrl, 3000, connectionWatcher)
-
-    connectionWatcher.waitUntilConnected()
-
-    return zk
-}
- */
+const val ZK_CONNECTION_TIMEOUT_MINS: Long  = 3
 
 /**
  * Creates a new Zookeeper Admin client and waits until it's in a connected state
@@ -62,4 +48,3 @@ class ConnectionWatcher : Watcher {
         connected.get(ZK_CONNECTION_TIMEOUT_MINS, TimeUnit.MINUTES)
     }
 }
-

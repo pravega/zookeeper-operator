@@ -19,6 +19,7 @@ DATA_DIR=/data
 MYID_FILE=$DATA_DIR/myid
 LOG4J_CONF=/conf/log4j-quiet.properties
 DYNCONFIG=$DATA_DIR/zoo.cfg.dynamic
+STATIC_CONFIG=/data/conf/zoo.cfg
 
 # Extract resource name and this members ordinal value from pod hostname
 if [[ $HOST =~ (.*)-([0-9]+)$ ]]; then
@@ -31,100 +32,84 @@ fi
 
 MYID=$((ORD+1))
 
+# Values for first startup
 WRITE_CONFIGURATION=true
 REGISTER_NODE=true
+ONDISK_CONFIG=false
 
 # Check validity of on-disk configuration
 if [ -f $MYID_FILE ]; then
   EXISTING_ID="`cat $DATA_DIR/myid`"
-  if [[ "$EXISTING_ID" == "$MYID" || -f $DYNCONFIG ]]; then
-      WRITE_CONFIGURATION=false
+  if [[ "$EXISTING_ID" == "$MYID" && -f $STATIC_CONFIG ]]; then
+    # If Id is correct and configuration is present under `/data/conf`
+      ONDISK_CONFIG=true
   fi
-
 fi
 
 # Determine if there is a ensemble available to join by checking the service domain
-
 set +e
 nslookup $DOMAIN
 if [[ $? -eq 1 ]]; then
-  set -e
   # If an nslookup of the headless service domain fails, then there is no
   # active ensemble
-  WRITE_CONFIGURATION=true
-  REGISTER_NODE=false
-
+  ACTIVE_ENSEMBLE=false
 else
-  set -e
-  # An ensemble exists, check to see if this node is already a member.
-  set +e
-  ZKURL=$(zkConnectionString)
-  set -e
-  CONFIG=`java -Dlog4j.configuration=file:"$LOG4J_CONF" -jar /root/zu.jar get-all $ZKURL`
-  REGISTERED=`echo "$CONFIG" | grep "server.${MYID}=" | wc -l`
+  ACTIVE_ENSEMBLE=true
+fi
 
-  if [[ $REGISTERED -eq 1 ]]; then
-    REGISTER_NODE=false
-
-  else
-    # When registering the node to the ensemble, always [re]write the config
-    REGISTER_NODE=true
+if [[ "$ONDISK_CONFIG" == true ]]; then
+  # If Configuration is present, we assume, there is no need to write configuration.
+    WRITE_CONFIGURATION=false
+else
     WRITE_CONFIGURATION=true
+fi
 
+if [[ "$ACTIVE_ENSEMBLE" == false ]]; then
+  # This is the first node being added to the cluster
+  REGISTER_NODE=false
+else
+  # An ensemble exists, check to see if this node is already a member.
+  if [[ "$ONDISK_CONFIG" == false ]]; then
+    REGISTER_NODE=true
+  else
+    REGISTER_NODE=false
   fi
 fi
 
 if [[ "$WRITE_CONFIGURATION" == true ]]; then
   echo "Writing myid: $MYID to: $MYID_FILE."
   echo $MYID > $MYID_FILE
-
-  if [[ $MYID -eq 1 && "$REGISTER_NODE" == false ]]; then
+  if [[ $MYID -eq 1 ]]; then
     ROLE=participant
     echo Initial initialization of ordinal 0 pod, creating new config.
     ZKCONFIG=$(zkConfig)
-
     echo Writing bootstrap configuration with the following config:
     echo $ZKCONFIG
     echo $MYID > $MYID_FILE
     echo "server.${MYID}=${ZKCONFIG}" > $DYNCONFIG
-
-  elif [[ $MYID -ne 1 && "$REGISTER_NODE" == false ]]; then
+  else
     echo Writing configuration gleaned from zookeeper ensemble
     echo "$CONFIG" | grep -v "^version="> $DYNCONFIG
+  fi
+fi
 
-  elif [[ "$REGISTER_NODE" == true ]]; then
+if [[ "$REGISTER_NODE" == true ]]; then
     ROLE=observer
+    ZKURL=$(zkConnectionString)
     ZKCONFIG=$(zkConfig)
-
     echo Registering node and writing local configuration to disk.
     java -Dlog4j.configuration=file:"$LOG4J_CONF" -jar /root/zu.jar add $ZKURL $MYID  $ZKCONFIG $DYNCONFIG
-  fi
 fi
 
 ZOOCFGDIR=/data/conf
 export ZOOCFGDIR
-
 if [[ ! -d "$ZOOCFGDIR" ]]; then
-  echo Copying /conf contents to writable directory, to support Zookeeper dynamic reconfiguraiton
+  echo Copying /conf contents to writable directory, to support Zookeeper dynamic reconfiguration
   mkdir $ZOOCFGDIR
   cp -f /conf/zoo.cfg $ZOOCFGDIR
   cp -f /conf/log4j.properties $ZOOCFGDIR
   cp -f /conf/log4j-quiet.properties $ZOOCFGDIR
   cp -f /conf/env.sh $ZOOCFGDIR
-fi
-
-if [[ "$WRITE_CONFIGURATION" == false && "$REGISTER_NODE" == false ]]; then
-  # We get here only on server restart...
-  echo Bootstrap dynamic config file
-  cat $DYNCONFIG
-  echo Static Config file
-  STATIC_CONFIG=`cat $ZOOCFGDIR/zoo.cfg`
-  echo Setting dynamic configuration to cluster configuration fetched from zk-service
-  echo "$CONFIG" | grep -v "^version="> $DYNCONFIG
-  cat $DYNCONFIG
-  #Setting dynamicConfigFile=/data/zoo.cfg.dynamic in zoo.cfg
-  sed -i 's/dynamicConfigFile=.*/dynamicConfigFile=\/data\/zoo\.cfg\.dynamic/g' $ZOOCFGDIR/zoo.cfg
-  cat $ZOOCFGDIR/zoo.cfg
 fi
 
 echo Starting zookeeper service
