@@ -20,10 +20,7 @@ GIT_SHA=$(shell git rev-parse --short HEAD)
 
 .PHONY: all build check clean test
 
-all: dep check build
-
-dep:
-	 dep ensure -v
+all: check build
 
 build: test build-go build-image
 
