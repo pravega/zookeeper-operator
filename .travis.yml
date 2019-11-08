@@ -1,6 +1,6 @@
 language: go
 go:
-- '1.12'
+- '1.13'
 - tip
 sudo: required
 env:
@@ -9,9 +9,7 @@ env:
 services:
 - docker
 script:
-- go get -u github.com/golang/dep/...
 - make check
-- make dep
 - make test
 - make build
 - make clean
