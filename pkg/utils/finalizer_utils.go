@@ -38,7 +38,7 @@ func RemoveString(slice []string, str string) (result []string) {
 	return result
 }
 
-func IsPvcOrphan(zkPvcName string, replicas int32) bool {
+func IsPVCOrphan(zkPvcName string, replicas int32) bool {
 	index := strings.LastIndexAny(zkPvcName, "-")
 	if index == -1 {
 		return false

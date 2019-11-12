@@ -374,8 +374,7 @@ type Persistence struct {
 func (p *Persistence) withDefaults() (changed bool) {
 	if !p.VolumeReclaimPolicy.isValid() {
 		changed = true
-		// Default volume reclaim policy should be delete
-		p.VolumeReclaimPolicy = VolumeReclaimPolicyDelete
+		p.VolumeReclaimPolicy = VolumeReclaimPolicyRetain
 	}
 
 	p.PersistentVolumeClaimSpec.AccessModes = []v1.PersistentVolumeAccessMode{

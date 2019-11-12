@@ -598,7 +598,7 @@ func (r *ReconcileZookeeperCluster) cleanUpZookeeperPVC(instance *zookeeperv1bet
 			r.deletePVC(pvcItem)
 		} else {
 			// delete only Orphan PVCs
-			if utils.IsPvcOrphan(pvcItem.Name, instance.Spec.Replicas) {
+			if utils.IsPVCOrphan(pvcItem.Name, instance.Spec.Replicas) {
 				r.deletePVC(pvcItem)
 			}
 		}
