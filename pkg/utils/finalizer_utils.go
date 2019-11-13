@@ -10,6 +10,11 @@
 
 package utils
 
+import (
+	"strconv"
+	"strings"
+)
+
 const (
 	ZkFinalizer = "cleanUpZookeeperPVC"
 )
@@ -31,4 +36,18 @@ func RemoveString(slice []string, str string) (result []string) {
 		result = append(result, item)
 	}
 	return result
+}
+
+func IsPVCOrphan(zkPvcName string, replicas int32) bool {
+	index := strings.LastIndexAny(zkPvcName, "-")
+	if index == -1 {
+		return false
+	}
+
+	ordinal, err := strconv.Atoi(zkPvcName[index+1:])
+	if err != nil {
+		return false
+	}
+
+	return int32(ordinal) >= replicas
 }
