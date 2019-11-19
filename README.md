@@ -11,6 +11,7 @@ The project is currently alpha. While no breaking API changes are currently plan
  * [Usage](#usage)    
     * [Installation of the Operator](#install-the-operator)
     * [Deploy a sample Zookeeper Cluster](#deploy-a-sample-zookeeper-cluster)
+    * [Upgrade a Zookeeper Cluster](#upgrade-a-zookeeper-cluster)
     * [Uninstall the Zookeeper Cluster](#uninstall-the-zookeeper-cluster)
     * [Uninstall the Operator](#uninstall-the-operator)
  * [Development](#development)
@@ -112,6 +113,31 @@ NAME                   TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)        
 svc/example-client     ClusterIP   10.31.243.173   <none>        2181/TCP            2m
 svc/example-headless   ClusterIP   None            <none>        2888/TCP,3888/TCP   2m
 ```
+
+### Upgrade a Zookeeper cluster
+
+To initiate an upgrade process, a user has to update the `spec.image.tag` field of the `ZookeeperCluster` custom resource. This can be done in three different ways using the `kubectl` command.
+1. `kubectl edit zk <name>`, modify the `tag` value in the YAML resource, save, and exit.
+2. If you have the custom resource defined in a local YAML file, e.g. `zk.yaml`, you can modify the `tag` value, and reapply the resource with `kubectl apply -f zk.yaml`.
+3. `kubectl patch zk <name> --type='json' -p='[{"op": "replace", "path": "/spec/image/tag", "value": "X.Y.Z"}]'`.
+
+After the `tag` field is updated, the StatefulSet will detect the version change and it will trigger the upgrade process.
+
+However, the value of this `tag` field should not be modified field while an upgrade is already in progress.
+To detect whether a `ZookeeperCluster` upgrade is in progress or not, check the output of the command `kubectl get sts <name> -o yaml`. The output of this command contains the following entries
+
+```
+status:
+  collisionCount: 0
+  currentReplicas: 2
+  currentRevision: example-75d4b645c8
+  observedGeneration: 4
+  readyReplicas: 3
+  replicas: 3
+  updateRevision: example-5d9dfdb787
+```
+
+If the values of the fields `currentRevision` and `updateRevision` are different, it indicates that the `ZookeeperCluster` is currently undergoing an upgrade. The value of `currentRevision` is set to the value of `updateRevision` when the upgrade is complete.
 
 ### Uninstall the Zookeeper cluster
 
