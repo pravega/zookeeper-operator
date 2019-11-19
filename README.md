@@ -139,7 +139,7 @@ status:
 If the values of the fields `currentRevision` and `updateRevision` are different, it indicates that the `ZookeeperCluster` is currently undergoing an upgrade. The value of `currentRevision` is set to the value of `updateRevision` when the upgrade is complete.
 
 ```
-Note: The value of the tag field should not be modified field while an upgrade is already in progress.
+Note: The value of the tag field should not be modified while an upgrade is already in progress.
 ```
 
 ### Uninstall the Zookeeper cluster
