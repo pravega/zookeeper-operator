@@ -123,7 +123,6 @@ To initiate an upgrade process, a user has to update the `spec.image.tag` field 
 
 After the `tag` field is updated, the StatefulSet will detect the version change and it will trigger the upgrade process.
 
-However, the value of this `tag` field should not be modified field while an upgrade is already in progress.
 To detect whether a `ZookeeperCluster` upgrade is in progress or not, check the output of the command `kubectl get sts <name> -o yaml`. The output of this command contains the following entries
 
 ```
@@ -138,6 +137,10 @@ status:
 ```
 
 If the values of the fields `currentRevision` and `updateRevision` are different, it indicates that the `ZookeeperCluster` is currently undergoing an upgrade. The value of `currentRevision` is set to the value of `updateRevision` when the upgrade is complete.
+
+```
+Note: The value of the tag field should not be modified field while an upgrade is already in progress.
+```
 
 ### Uninstall the Zookeeper cluster
 
