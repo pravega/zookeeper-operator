@@ -111,10 +111,9 @@ var _ reconcile.Reconciler = &ReconcileZookeeperCluster{}
 type ReconcileZookeeperCluster struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	client           client.Client
-	scheme           *runtime.Scheme
-	log              logr.Logger
-	skipSTSReconcile int
+	client client.Client
+	scheme *runtime.Scheme
+	log    logr.Logger
 }
 
 type reconcileFun func(cluster *zookeeperv1beta1.ZookeeperCluster) error
@@ -203,15 +202,13 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 				For details see:
 				https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#mounted-configmaps-are-updated-automatically
 			*/
-			r.skipSTSReconcile++
-			if r.skipSTSReconcile < 6 {
-				r.log.Info("Waiting for Config Map update to sync...Skipping STS Reconcile")
-				return nil
+			for i := 0; i < 4; i++ {
+				time.Sleep(30 * time.Second)
+				r.log.Info("Waiting for Config Map update to sync before STS Reconcile")
 			}
 		}
 		return r.updateStatefulSet(instance, foundSts, sts)
 	}
-	return nil
 }
 
 func (r *ReconcileZookeeperCluster) updateStatefulSet(instance *zookeeperv1beta1.ZookeeperCluster, foundSts *appsv1.StatefulSet, sts *appsv1.StatefulSet) (err error) {
@@ -225,7 +222,6 @@ func (r *ReconcileZookeeperCluster) updateStatefulSet(instance *zookeeperv1beta1
 	}
 	instance.Status.Replicas = foundSts.Status.Replicas
 	instance.Status.ReadyReplicas = foundSts.Status.ReadyReplicas
-	r.skipSTSReconcile = 0
 	return nil
 }
 
