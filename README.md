@@ -84,7 +84,7 @@ kind: "ZookeeperCluster"
 metadata:
   name: "example"
 spec:
-  size: 3
+  replicas: 3
 ```
 
 ```
