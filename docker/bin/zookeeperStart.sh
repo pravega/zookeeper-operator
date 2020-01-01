@@ -51,6 +51,22 @@ if [ -f $DYNCONFIG ]; then
   ONDISK_DYN_CONFIG=true
 fi
 
+# Check if envoy is up and running
+if [[ "$IS_ISTIO_ENABLED" == true ]]; then
+  COUNT=0
+  MAXCOUNT=${1:-30}
+  HEALTHYSTATUSCODE="200"
+  while true; do
+    COUNT=`expr $COUNT + 1`
+    SC=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:15000/ready)
+    echo "waiting for envoy proxy to come up";
+    sleep 1;
+    if (( "$SC" == "$HEALTHYSTATUSCODE" || "$MAXCOUNT" == "$COUNT" )); then
+      break
+    fi
+  done
+fi
+
 # Determine if there is a ensemble available to join by checking the service domain
 set +e
 nslookup $DOMAIN

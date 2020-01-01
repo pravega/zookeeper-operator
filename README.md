@@ -11,6 +11,7 @@ The project is currently alpha. While no breaking API changes are currently plan
  * [Usage](#usage)    
     * [Installation of the Operator](#install-the-operator)
     * [Deploy a sample Zookeeper Cluster](#deploy-a-sample-zookeeper-cluster)
+    * [Deploy a sample Zookeeper Cluster to a cluster using Istio](#deploy-a-sample-zookeeper-cluster-with-istio)
     * [Upgrade a Zookeeper Cluster](#upgrade-a-zookeeper-cluster)
     * [Uninstall the Zookeeper Cluster](#uninstall-the-zookeeper-cluster)
     * [Uninstall the Operator](#uninstall-the-operator)
@@ -128,6 +129,28 @@ po/example-2   1/1       Running   0          1m
 NAME                   TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)             AGE
 svc/example-client     ClusterIP   10.31.243.173   <none>        2181/TCP            2m
 svc/example-headless   ClusterIP   None            <none>        2888/TCP,3888/TCP   2m
+```
+
+### Deploy a sample Zookeeper cluster with Istio
+Create a Yaml file called `zk-with-istio.yaml` with the following content to install a 3-node Zookeeper cluster.
+
+```yaml
+apiVersion: zookeeper.pravega.io/v1beta1
+kind: ZookeeperCluster
+metadata:
+  name: zk-with-istio
+spec:
+  replicas: 3
+  isIstioEnabled: true
+  config:
+    initLimit: 10
+    tickTime: 2000
+    syncLimit: 5
+    quorumListenOnAllIPs: true
+```
+
+```
+$ kubectl create -f zk-with-istio.yaml
 ```
 
 ### Upgrade a Zookeeper cluster

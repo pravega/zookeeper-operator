@@ -198,6 +198,7 @@ func makeZkConfigString(s v1beta1.ZookeeperClusterSpec) string {
 		"initLimit=" + strconv.Itoa(s.Conf.InitLimit) + "\n" +
 		"syncLimit=" + strconv.Itoa(s.Conf.SyncLimit) + "\n" +
 		"tickTime=" + strconv.Itoa(s.Conf.TickTime) + "\n" +
+		"quorumListenOnAllIPs=" + strconv.FormatBool(s.Conf.QuorumListenOnAllIPs) + "\n" +
 		"dynamicConfigFile=/data/zoo.cfg.dynamic\n"
 }
 
