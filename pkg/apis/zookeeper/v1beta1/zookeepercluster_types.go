@@ -45,12 +45,6 @@ type ZookeeperClusterSpec struct {
 	// the zookeeper cluster.
 	Labels map[string]string `json:"labels,omitempty"`
 
-	// Size (DEPRECATED) is the expected size of the zookeeper cluster. This
-	// has been replaced with "Replicas"
-	//
-	// The valid range of size is from 1 to 7.
-	Size int32 `json:"size,omitempty"`
-
 	// Replicas is the expected size of the zookeeper cluster.
 	// The pravega-operator will eventually make the size of the running cluster
 	// equal to the expected size.
@@ -81,11 +75,7 @@ func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) 
 		changed = true
 	}
 	if s.Replicas == 0 {
-		if s.Size != 0 {
-			s.Replicas = s.Size
-		} else {
-			s.Replicas = 3
-		}
+		s.Replicas = 3
 		changed = true
 	}
 	if s.Ports == nil {
