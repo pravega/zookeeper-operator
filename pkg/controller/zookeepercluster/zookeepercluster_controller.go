@@ -462,20 +462,14 @@ func (r *ReconcileZookeeperCluster) GenerateYAML(inst *zookeeperv1beta1.Zookeepe
 // yamlStatefulSet will generates YAML file for StatefulSet
 func (r *ReconcileZookeeperCluster) yamlStatefulSet(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
 	sts := zk.MakeStatefulSet(instance)
-	if err = controllerutil.SetControllerReference(instance, sts, r.scheme); err != nil {
-		return err
-	}
-	subdir, err := yamlexporter.CreateOutputSubDir(sts.OwnerReferences[0].Kind, sts.Labels["component"])
+	subdir, err := yamlexporter.CreateOutputSubDir("ZookeeperCluster", sts.Labels["component"])
 	return yamlexporter.GenerateOutputYAMLFile(subdir, sts.Kind, sts)
 }
 
 // yamlClientService will generates YAML file for zookeeper client service
 func (r *ReconcileZookeeperCluster) yamlClientService(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
 	svc := zk.MakeClientService(instance)
-	if err = controllerutil.SetControllerReference(instance, svc, r.scheme); err != nil {
-		return err
-	}
-	subdir, err := yamlexporter.CreateOutputSubDir(svc.OwnerReferences[0].Kind, "client")
+	subdir, err := yamlexporter.CreateOutputSubDir("ZookeeperCluster", "client")
 	if err != nil {
 		return err
 	}
@@ -485,10 +479,7 @@ func (r *ReconcileZookeeperCluster) yamlClientService(instance *zookeeperv1beta1
 // yamlHeadlessService will generates YAML file for zookeeper headless service
 func (r *ReconcileZookeeperCluster) yamlHeadlessService(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
 	svc := zk.MakeHeadlessService(instance)
-	if err = controllerutil.SetControllerReference(instance, svc, r.scheme); err != nil {
-		return err
-	}
-	subdir, err := yamlexporter.CreateOutputSubDir(svc.OwnerReferences[0].Kind, "headless")
+	subdir, err := yamlexporter.CreateOutputSubDir("ZookeeperCluster", "headless")
 	if err != nil {
 		return err
 	}
@@ -498,10 +489,7 @@ func (r *ReconcileZookeeperCluster) yamlHeadlessService(instance *zookeeperv1bet
 // yamlPodDisruptionBudget will generates YAML file for zookeeper PDB
 func (r *ReconcileZookeeperCluster) yamlPodDisruptionBudget(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
 	pdb := zk.MakePodDisruptionBudget(instance)
-	if err = controllerutil.SetControllerReference(instance, pdb, r.scheme); err != nil {
-		return err
-	}
-	subdir, err := yamlexporter.CreateOutputSubDir(pdb.OwnerReferences[0].Kind, "pdb")
+	subdir, err := yamlexporter.CreateOutputSubDir("ZookeeperCluster", "pdb")
 	if err != nil {
 		return err
 	}
@@ -511,10 +499,7 @@ func (r *ReconcileZookeeperCluster) yamlPodDisruptionBudget(instance *zookeeperv
 // yamlConfigMap will generates YAML file for Zookeeper configmap
 func (r *ReconcileZookeeperCluster) yamlConfigMap(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
 	cm := zk.MakeConfigMap(instance)
-	if err = controllerutil.SetControllerReference(instance, cm, r.scheme); err != nil {
-		return err
-	}
-	subdir, err := yamlexporter.CreateOutputSubDir(cm.OwnerReferences[0].Kind, "config")
+	subdir, err := yamlexporter.CreateOutputSubDir("ZookeeperCluster", "config")
 	if err != nil {
 		return err
 	}
