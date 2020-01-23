@@ -120,12 +120,17 @@ var _ = Describe("Generators Spec", func() {
 
 	Context("#MakeClientService", func() {
 		var s *v1.Service
+		var domainName string
 
 		BeforeEach(func() {
+			domainName = "zk.com."
 			z := &v1beta1.ZookeeperCluster{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "example",
 					Namespace: "default",
+				},
+				Spec: v1beta1.ZookeeperClusterSpec{
+					DomainName: domainName,
 				},
 			}
 			z.WithDefaults()
@@ -145,16 +150,27 @@ var _ = Describe("Generators Spec", func() {
 		It("should have a the client svc name", func() {
 			Ω(s.Spec.Selector["app"]).To(Equal("example"))
 		})
+
+		It("should set the dns annotation", func() {
+			Expect(s.GetAnnotations()).To(HaveKeyWithValue(
+				"external-dns.alpha.kubernetes.io/hostname",
+				"example-client.zk.com."))
+		})
 	})
 
 	Context("#MakeHeadlessService", func() {
 		var s *v1.Service
+		var domainName string
 
 		BeforeEach(func() {
+			domainName = "zk.com."
 			z := &v1beta1.ZookeeperCluster{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "example",
 					Namespace: "default",
+				},
+				Spec: v1beta1.ZookeeperClusterSpec{
+					DomainName: domainName,
 				},
 			}
 			z.WithDefaults()
@@ -179,6 +195,11 @@ var _ = Describe("Generators Spec", func() {
 
 		It("should have a the client svc name", func() {
 			Ω(s.Spec.Selector["app"]).To(Equal("example"))
+		})
+
+		It("should not set any annotations", func() {
+			mapLength := len(s.GetAnnotations())
+			Ω(mapLength).To(Equal(0))
 		})
 	})
 })
