@@ -31,9 +31,36 @@ fun main(args: Array<String>) {
         "get" == args[0] -> runGet(args)
         "remove" == args[0] -> runRemove(args)
         "get-role" == args[0] -> runGetRole(args)
+        "sync" == args[0] -> runSync(args)
         else -> help(message)
     }
+}
 
+fun runSync(args: Array<String>, suppressOutput: Boolean = false): String? {
+if (args.size != 2) {
+    help("Usage: zu sync <zk-url> <path>")
+}
+var (zkUrl, path) = args
+try {
+    val zk = newZookeeperAdminClient(zkUrl)
+    AsyncCallback.VoidCallback callback = new AsyncCallback.VoidCallback()
+        {
+            @Override
+            public void processResult(int rc, String path, Object ctx)
+            {
+                if rc == KeeperException.Code.OK {
+                  System.err.println("Sync call succeeded")
+                } else {
+                  System.err.println("Sync call failed")
+                }
+            }
+        };
+        zk.sync(path, callback, null)
+} catch (e: Exception) {
+    System.err.println("Error performing zookeeper sync operation:")
+    e.printStackTrace(System.err)
+    System.exit(1)
+}
 }
 
 fun runGetAll(args: Array<String>, suppressOutput: Boolean = false): String {

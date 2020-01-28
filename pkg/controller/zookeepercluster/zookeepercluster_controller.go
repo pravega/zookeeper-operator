@@ -13,8 +13,6 @@ package zookeepercluster
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"strings"
 	"time"
 
 	"k8s.io/client-go/kubernetes/scheme"
@@ -190,24 +188,26 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 	} else {
 		foundSTSSize := *foundSts.Spec.Replicas
 		newSTSSize := *sts.Spec.Replicas
-		if newSTSSize < foundSTSSize {
-			// We're dealing with STS scale down
-			if !r.isConfigMapInSync(instance) {
-				r.log.Info("Skipping StatefulSet reconcile as ConfigMap not updated yet.")
-				return nil
-			}
+		if newSTSSize != foundSTSSize {
 			/*
-				After updating ConfigMap we need to wait for changes to sync to the volume,
-				failing which `zookeeperTeardown.sh` won't get invoked for the pods that are being scaled down
-				and these will stay in the ensemble config forever.
-				For details see:
-				https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#mounted-configmaps-are-updated-automatically
+				  // We're dealing with STS scale down
+					if !r.isConfigMapInSync(instance) {
+						r.log.Info("Skipping StatefulSet reconcile as ConfigMap not updated yet.")
+						return nil
+					}
+
+					r.skipSTSReconcile++
+					if r.skipSTSReconcile < 6 {
+						r.log.Info("Waiting for Config Map update to sync...Skipping STS Reconcile")
+						return nil
+					}
 			*/
-			r.skipSTSReconcile++
-			if r.skipSTSReconcile < 6 {
-				r.log.Info("Waiting for Config Map update to sync...Skipping STS Reconcile")
-				return nil
+			conn, err := utils.GetZkConnection(instance)
+			if err != nil {
+				return fmt.Errorf("Error storing cluster size %v", err)
 			}
+			utils.UpdateZkMetaNode(instance, conn, newSTSSize)
+			r.log.Info("Updated Cluster Size to", "CLUSTER_SIZE=", newSTSSize)
 		}
 		return r.updateStatefulSet(instance, foundSts, sts)
 	}
@@ -229,6 +229,7 @@ func (r *ReconcileZookeeperCluster) updateStatefulSet(instance *zookeeperv1beta1
 	return nil
 }
 
+/*
 func (r *ReconcileZookeeperCluster) isConfigMapInSync(instance *zookeeperv1beta1.ZookeeperCluster) bool {
 	cm := zk.MakeConfigMap(instance)
 	foundCm := &corev1.ConfigMap{}
@@ -253,7 +254,7 @@ func (r *ReconcileZookeeperCluster) isConfigMapInSync(instance *zookeeperv1beta1
 	}
 	return false
 }
-
+*/
 func (r *ReconcileZookeeperCluster) reconcileClientService(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
 	svc := zk.MakeClientService(instance)
 	if err = controllerutil.SetControllerReference(instance, svc, r.scheme); err != nil {
@@ -427,6 +428,18 @@ func (r *ReconcileZookeeperCluster) reconcileClusterStatus(instance *zookeeperv1
 	r.log.Info("Updating zookeeper status",
 		"StatefulSet.Namespace", instance.Namespace,
 		"StatefulSet.Name", instance.Name)
+
+	if !instance.Status.MetaRootCreated {
+		conn, err := utils.GetZkConnection(instance)
+		if err != nil {
+			return fmt.Errorf("Error creating cluster metaroot. Connect to zk failed %v", err)
+		}
+		instance.Status.MetadataVersion = 0
+		if err := utils.CreateZkMetaNode(instance, conn); err != nil {
+			return fmt.Errorf("Error creating cluster metaroot. znode create failed %v", err)
+		}
+		instance.Status.MetaRootCreated = true
+	}
 	return r.client.Status().Update(context.TODO(), instance)
 }
 

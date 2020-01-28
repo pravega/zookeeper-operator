@@ -24,6 +24,8 @@ ZKURL=$(zkConnectionString)
 set -e
 MYID=`cat $MYID_FILE`
 
+PATH = "/zookeeper-operator/"+ $CLUSTER_NAME + "/cluster"
+CLUSTER_SIZE= java -Dlog4j.configuration=file:"$LOG4J_CONF" -jar /root/zu.jar sync $ZKURL $PATH
 echo "Cluster size=$CLUSTER_SIZE, MyId=$MYID"
 if [[ "$CLUSTER_SIZE" -lt "$MYID" ]]; then
   # If ClusterSize < MyId, this server is being permanantly removed.
