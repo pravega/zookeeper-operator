@@ -151,10 +151,9 @@ var _ = Describe("Generators Spec", func() {
 			Ω(s.Spec.Selector["app"]).To(Equal("example"))
 		})
 
-		It("should set the dns annotation", func() {
-			Expect(s.GetAnnotations()).To(HaveKeyWithValue(
-				"external-dns.alpha.kubernetes.io/hostname",
-				"example-client.zk.com."))
+		It("should not set the dns annotation", func() {
+			mapLength := len(s.GetAnnotations())
+			Ω(mapLength).To(Equal(0))
 		})
 	})
 
@@ -197,9 +196,10 @@ var _ = Describe("Generators Spec", func() {
 			Ω(s.Spec.Selector["app"]).To(Equal("example"))
 		})
 
-		It("should not set any annotations", func() {
-			mapLength := len(s.GetAnnotations())
-			Ω(mapLength).To(Equal(0))
+		It("should set the dns annotation", func() {
+			Expect(s.GetAnnotations()).To(HaveKeyWithValue(
+				"external-dns.alpha.kubernetes.io/hostname",
+				"example-headless.zk.com."))
 		})
 	})
 })

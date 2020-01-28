@@ -231,10 +231,8 @@ func makeZkEnvConfigString(z *v1beta1.ZookeeperCluster) string {
 
 func makeService(name string, ports []v1.ServicePort, clusterIP bool, z *v1beta1.ZookeeperCluster) *v1.Service {
 	var dnsName string
-	var dnsEnabled bool
 	var annotationMap map[string]string
-	if clusterIP && z.Spec.DomainName != "" {
-		dnsEnabled = true
+	if !clusterIP && z.Spec.DomainName != "" {
 		domainName := strings.TrimSpace(z.Spec.DomainName)
 		if strings.HasSuffix(domainName, dot) {
 			dnsName = name + dot + domainName
@@ -243,7 +241,6 @@ func makeService(name string, ports []v1.ServicePort, clusterIP bool, z *v1beta1
 		}
 		annotationMap = map[string]string{externalDNSAnnotationKey: dnsName}
 	} else {
-		dnsEnabled = false
 		annotationMap = map[string]string{}
 	}
 	service := v1.Service{
@@ -269,7 +266,7 @@ func makeService(name string, ports []v1.ServicePort, clusterIP bool, z *v1beta1
 			Selector: map[string]string{"app": z.GetName()},
 		},
 	}
-	if dnsEnabled || clusterIP == false {
+	if !clusterIP {
 		service.Spec.ClusterIP = v1.ClusterIPNone
 	}
 	return &service
