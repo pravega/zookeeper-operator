@@ -67,6 +67,9 @@ type ZookeeperClusterSpec struct {
 	// static zookeeper configuration. If no configuration is provided required
 	// default values will be provided, and optional values will be excluded.
 	Conf ZookeeperConfig `json:"config,omitempty"`
+
+	// Domain Name to be used for DNS
+	DomainName string `json:"domainName,omitempty"`
 }
 
 func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) {
