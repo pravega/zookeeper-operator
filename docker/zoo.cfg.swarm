@@ -1,0 +1,12 @@
+dataDir=/data
+dataLogDir=/datalog
+tickTime=2000
+initLimit=5
+syncLimit=2
+autopurge.snapRetainCount=3
+autopurge.purgeInterval=0
+maxClientCnxns=60
+standaloneEnabled=true
+admin.enableServer=true
+server.1=localhost:2888:3888;2181
+4lw.commands.whitelist=cons, envi, conf, crst, srvr, stat, mntr, ruok
