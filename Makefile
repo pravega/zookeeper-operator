@@ -54,17 +54,21 @@ build-zk-image:
 	docker build --build-arg VERSION=$(VERSION) --build-arg GIT_SHA=$(GIT_SHA) -t $(APP_REPO):$(VERSION) ./docker
 	docker tag $(APP_REPO):$(VERSION) $(APP_REPO):latest
 
+build-zk-image-swarm:
+	docker build --build-arg VERSION=$(VERSION)-swarm --build-arg GIT_SHA=$(GIT_SHA) -f ./docker/Dockerfile-swarm  -t $(APP_REPO):$(VERSION)-swarm  ./docker
+        
 test:
 	go test $$(go list ./... | grep -v /vendor/) -race -coverprofile=coverage.txt -covermode=atomic
 
 login:
 	@docker login -u "$(DOCKER_USER)" -p "$(DOCKER_PASS)"
 
-push: build-image build-zk-image login
+push: build-image build-zk-image  build-zk-image-swarm login
 	docker push $(REPO):$(VERSION)
 	docker push $(REPO):latest
 	docker push $(APP_REPO):$(VERSION)
 	docker push $(APP_REPO):latest
+	docker push $(APP_REPO):$(VERSION)-swarm         
 	docker tag $(REPO):$(VERSION) $(ALTREPO):$(VERSION)
 	docker tag $(REPO):$(VERSION) $(ALTREPO):latest
 	docker tag $(APP_REPO):$(VERSION) $(APP_ALTREPO):$(VERSION)
