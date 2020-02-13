@@ -35,15 +35,20 @@ MYID=$((ORD+1))
 # Values for first startup
 WRITE_CONFIGURATION=true
 REGISTER_NODE=true
-ONDISK_CONFIG=false
+ONDISK_MYID_CONFIG=false
+ONDISK_DYN_CONFIG=false
 
 # Check validity of on-disk configuration
 if [ -f $MYID_FILE ]; then
   EXISTING_ID="`cat $DATA_DIR/myid`"
   if [[ "$EXISTING_ID" == "$MYID" && -f $STATIC_CONFIG ]]; then
     # If Id is correct and configuration is present under `/data/conf`
-      ONDISK_CONFIG=true
+      ONDISK_MYID_CONFIG=true
   fi
+fi
+
+if [ -f $DYNCONFIG ]; then
+  ONDISK_DYN_CONFIG=true
 fi
 
 # Determine if there is a ensemble available to join by checking the service domain
@@ -51,13 +56,13 @@ set +e
 nslookup $DOMAIN
 if [[ $? -eq 1 ]]; then
   # If an nslookup of the headless service domain fails, then there is no
-  # active ensemble
+  # active ensemble yet
   ACTIVE_ENSEMBLE=false
 else
   ACTIVE_ENSEMBLE=true
 fi
 
-if [[ "$ONDISK_CONFIG" == true ]]; then
+if [[ "$ONDISK_MYID_CONFIG" == true && "$ONDISK_DYN_CONFIG" == true ]]; then
   # If Configuration is present, we assume, there is no need to write configuration.
     WRITE_CONFIGURATION=false
 else
@@ -65,11 +70,11 @@ else
 fi
 
 if [[ "$ACTIVE_ENSEMBLE" == false ]]; then
-  # This is the first node being added to the cluster
+  # This is the first node being added to the cluster or headless service not yet available
   REGISTER_NODE=false
 else
   # An ensemble exists, check to see if this node is already a member.
-  if [[ "$ONDISK_CONFIG" == false ]]; then
+  if [[ "$ONDISK_MYID_CONFIG" == false || "$ONDISK_DYN_CONFIG" == false ]]; then
     REGISTER_NODE=true
   else
     REGISTER_NODE=false
@@ -118,5 +123,11 @@ if [[ ! -d "$ZOOCFGDIR" ]]; then
   cp -f /conf/env.sh $ZOOCFGDIR
 fi
 
-echo Starting zookeeper service
-zkServer.sh --config $ZOOCFGDIR start-foreground
+if [ -f $DYNCONFIG ]; then
+  # Node registered, start server
+  echo Starting zookeeper service
+  zkServer.sh --config $ZOOCFGDIR start-foreground
+else
+  echo "Node failed to register!"
+  exit 1
+fi
