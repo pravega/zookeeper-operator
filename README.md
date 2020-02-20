@@ -241,6 +241,7 @@ $ kubectl create clusterrolebinding your-user-cluster-admin-binding --clusterrol
 
 Zookeeper Exporter is a binary which is used to generate YAML file for all the secondary resources which Zookeeper Operator deploys to the Kubernetes Cluster. It takes ZookeeperCluster resource YAML file as input and generates bunch of secondary resources YAML files. The generated output look like the following:
 
+```
 >tree  ZookeeperCluster/
 ZookeeperCluster/
 ├── client
@@ -253,7 +254,7 @@ ZookeeperCluster/
 │   └── PodDisruptionBudget.yaml
 └── zk
     └── StatefulSet.yaml
-
+```
 
 #How to build Zookeeper Operator
 When you build Operator, the Exporter is built along with it.
