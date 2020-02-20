@@ -256,10 +256,12 @@ ZookeeperCluster/
     └── StatefulSet.yaml
 ```
 
-#How to build Zookeeper Operator
-When you build Operator, the Exporter is built along with it.
-make build-go - will build both Operator as well as Exporter.
+##### How to build Zookeeper Operator
 
-#How to use exporter
+When you build Operator, the Exporter is built along with it.
+`make build-go` - will build both Operator as well as Exporter.
+
+##### How to use exporter
+
 Just run zookeeper-exporter binary with -help option. It will guide you to input ZookeeperCluster YAML file. There are couple of more options to specify.
-Example: ./zookeeper-exporter -i ./ZookeeperCluster.yaml -o .
+Example: `./zookeeper-exporter -i ./ZookeeperCluster.yaml -o .`
