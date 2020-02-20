@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -22,6 +23,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
+)
+
+const (
+	externalDNSAnnotationKey = "external-dns.alpha.kubernetes.io/hostname"
+	dot                      = "."
 )
 
 func headlessDomain(z *v1beta1.ZookeeperCluster) string {
@@ -224,6 +230,19 @@ func makeZkEnvConfigString(z *v1beta1.ZookeeperCluster) string {
 }
 
 func makeService(name string, ports []v1.ServicePort, clusterIP bool, z *v1beta1.ZookeeperCluster) *v1.Service {
+	var dnsName string
+	var annotationMap map[string]string
+	if !clusterIP && z.Spec.DomainName != "" {
+		domainName := strings.TrimSpace(z.Spec.DomainName)
+		if strings.HasSuffix(domainName, dot) {
+			dnsName = name + dot + domainName
+		} else {
+			dnsName = name + dot + domainName + dot
+		}
+		annotationMap = map[string]string{externalDNSAnnotationKey: dnsName}
+	} else {
+		annotationMap = map[string]string{}
+	}
 	service := v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
@@ -239,14 +258,15 @@ func makeService(name string, ports []v1.ServicePort, clusterIP bool, z *v1beta1
 					Kind:    "ZookeeperCluster",
 				}),
 			},
-			Labels: map[string]string{"app": z.GetName()},
+			Labels:      map[string]string{"app": z.GetName()},
+			Annotations: annotationMap,
 		},
 		Spec: v1.ServiceSpec{
 			Ports:    ports,
 			Selector: map[string]string{"app": z.GetName()},
 		},
 	}
-	if clusterIP == false {
+	if !clusterIP {
 		service.Spec.ClusterIP = v1.ClusterIPNone
 	}
 	return &service
