@@ -11,6 +11,7 @@
 package io.pravega.zookeeper
 
 import org.apache.zookeeper.data.Stat
+import org.apache.zookeeper.AsyncCallback.VoidCallback
 import java.io.File
 
 const val OBSERVER = "observer"
@@ -20,7 +21,7 @@ const val PARTICIPANT= "participant"
  * Utility to Register a server with the Zookeeper Ensemble
  */
 fun main(args: Array<String>) {
-    val message = "Usage: zu <add | get-all | get | remove | get-role> [options...]"
+    val message = "Usage: zu <add | get-all | get | remove | get-role | sync> [options...]"
     if (args.isEmpty()) {
         help(message)
     }
@@ -36,31 +37,26 @@ fun main(args: Array<String>) {
     }
 }
 
-fun runSync(args: Array<String>, suppressOutput: Boolean = false): String? {
-if (args.size != 2) {
+fun runSync(args: Array<String>, suppressOutput: Boolean = false): String {
+  if (args.size < 3) {
     help("Usage: zu sync <zk-url> <path>")
-}
-var (zkUrl, path) = args
-try {
-    val zk = newZookeeperAdminClient(zkUrl)
-    AsyncCallback.VoidCallback callback = new AsyncCallback.VoidCallback()
-        {
-            @Override
-            public void processResult(int rc, String path, Object ctx)
-            {
-                if rc == KeeperException.Code.OK {
-                  System.err.println("Sync call succeeded")
-                } else {
-                  System.err.println("Sync call failed")
-                }
-            }
-        };
-        zk.sync(path, callback, null)
-} catch (e: Exception) {
-    System.err.println("Error performing zookeeper sync operation:")
-    e.printStackTrace(System.err)
-    System.exit(1)
-}
+    }
+    var (_, zkUrl, path) = args
+    return try {
+      val zk = newZookeeperAdminClient(zkUrl)
+      zk.sync(path, null, null)
+      val dataArr = zk.getData(path, null, null)
+      val clusterSize = String(dataArr).substringAfter("=").trim()
+      if (! suppressOutput) {
+          print(clusterSize)
+      }
+      clusterSize
+    } catch (e: Exception) {
+      System.err.println("Error performing zookeeper sync operation:")
+      e.printStackTrace(System.err)
+      System.exit(1)
+      ""
+    }
 }
 
 fun runGetAll(args: Array<String>, suppressOutput: Boolean = false): String {

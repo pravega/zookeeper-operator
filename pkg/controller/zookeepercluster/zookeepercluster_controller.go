@@ -13,6 +13,7 @@ package zookeepercluster
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"k8s.io/client-go/kubernetes/scheme"
@@ -189,25 +190,21 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 		foundSTSSize := *foundSts.Spec.Replicas
 		newSTSSize := *sts.Spec.Replicas
 		if newSTSSize != foundSTSSize {
-			/*
-				  // We're dealing with STS scale down
-					if !r.isConfigMapInSync(instance) {
-						r.log.Info("Skipping StatefulSet reconcile as ConfigMap not updated yet.")
-						return nil
-					}
-
-					r.skipSTSReconcile++
-					if r.skipSTSReconcile < 6 {
-						r.log.Info("Waiting for Config Map update to sync...Skipping STS Reconcile")
-						return nil
-					}
-			*/
 			conn, err := utils.GetZkConnection(instance)
 			if err != nil {
 				return fmt.Errorf("Error storing cluster size %v", err)
 			}
-			utils.UpdateZkMetaNode(instance, conn, newSTSSize)
-			r.log.Info("Updated Cluster Size to", "CLUSTER_SIZE=", newSTSSize)
+			defer conn.Close()
+			r.log.Info("Connected to ZK", "ZKURI", utils.GetZkServiceUri(instance))
+			data := "CLUSTER_SIZE=" + strconv.Itoa(int(newSTSSize))
+			path := utils.GetMetaPath(instance)
+			exists, zNodeStat, err := conn.Exists(path)
+			if err != nil || !exists {
+				return fmt.Errorf("znode path exists check failed: %v", err)
+			}
+			version := zNodeStat.Version
+			r.log.Info("Updating Cluster Size.", "New CLUSTER_SIZE =", newSTSSize, "Version", version)
+			utils.UpdateZkMetaNode(instance, conn, path, data, version)
 		}
 		return r.updateStatefulSet(instance, foundSts, sts)
 	}
@@ -229,32 +226,6 @@ func (r *ReconcileZookeeperCluster) updateStatefulSet(instance *zookeeperv1beta1
 	return nil
 }
 
-/*
-func (r *ReconcileZookeeperCluster) isConfigMapInSync(instance *zookeeperv1beta1.ZookeeperCluster) bool {
-	cm := zk.MakeConfigMap(instance)
-	foundCm := &corev1.ConfigMap{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{
-		Name:      cm.Name,
-		Namespace: cm.Namespace,
-	}, foundCm)
-	if err != nil {
-		r.log.Error(err, "Error getting config map.")
-		return false
-	} else {
-		// found config map, now check number of replicas in configMap
-		envStr := foundCm.Data["env.sh"]
-		splitSlice := strings.Split(envStr, "CLUSTER_SIZE=")
-		if len(splitSlice) < 2 {
-			r.log.Error(err, "Error: Could not find cluster size in configmap.")
-			return false
-		}
-		cs := strings.TrimSpace(splitSlice[1])
-		clusterSize, _ := strconv.Atoi(cs)
-		return (int32(clusterSize) == instance.Spec.Replicas)
-	}
-	return false
-}
-*/
 func (r *ReconcileZookeeperCluster) reconcileClientService(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
 	svc := zk.MakeClientService(instance)
 	if err = controllerutil.SetControllerReference(instance, svc, r.scheme); err != nil {
@@ -425,21 +396,25 @@ func (r *ReconcileZookeeperCluster) reconcileClusterStatus(instance *zookeeperv1
 	}
 	instance.Status.Members.Ready = readyMembers
 	instance.Status.Members.Unready = unreadyMembers
-	r.log.Info("Updating zookeeper status",
-		"StatefulSet.Namespace", instance.Namespace,
-		"StatefulSet.Name", instance.Name)
 
-	if !instance.Status.MetaRootCreated {
+	//If Cluster is in a ready state...
+	if instance.Spec.Replicas == instance.Status.ReadyReplicas && (!instance.Status.MetaRootCreated) {
 		conn, err := utils.GetZkConnection(instance)
 		if err != nil {
 			return fmt.Errorf("Error creating cluster metaroot. Connect to zk failed %v", err)
 		}
-		instance.Status.MetadataVersion = 0
+		defer conn.Close()
+		r.log.Info("Connected to zookeeper:", "ZKUri", utils.GetZkServiceUri(instance))
+		//instance.Status.MetadataVersion = 0
 		if err := utils.CreateZkMetaNode(instance, conn); err != nil {
-			return fmt.Errorf("Error creating cluster metaroot. znode create failed %v", err)
+			return fmt.Errorf("Error creating cluster metadata path. znode create failed %v", err)
 		}
+		r.log.Info("Metadata znode created.")
 		instance.Status.MetaRootCreated = true
 	}
+	r.log.Info("Updating zookeeper status",
+		"StatefulSet.Namespace", instance.Namespace,
+		"StatefulSet.Name", instance.Name)
 	return r.client.Status().Update(context.TODO(), instance)
 }
 
