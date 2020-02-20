@@ -235,7 +235,7 @@ On GKE, the following command must be run before installing the operator, replac
 
 ```
 $ kubectl create clusterrolebinding your-user-cluster-admin-binding --clusterrole=cluster-admin --user=your.google.cloud.email@example.org
-
+```
 
 #### Zookeeper YAML  Exporter
 
