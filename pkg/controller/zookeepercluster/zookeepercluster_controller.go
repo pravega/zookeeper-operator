@@ -59,7 +59,7 @@ func AddZookeeperReconciler(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newZookeeperClusterReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileZookeeperCluster{client: mgr.GetClient(), scheme: mgr.GetScheme()}
+	return &ReconcileZookeeperCluster{client: mgr.GetClient(), scheme: mgr.GetScheme(), zkClient: new(zk.DefaultZookeeperClient)}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
@@ -110,10 +110,10 @@ var _ reconcile.Reconciler = &ReconcileZookeeperCluster{}
 type ReconcileZookeeperCluster struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	client           client.Client
-	scheme           *runtime.Scheme
-	log              logr.Logger
-	skipSTSReconcile int
+	client   client.Client
+	scheme   *runtime.Scheme
+	log      logr.Logger
+	zkClient zk.ZookeeperClient
 }
 
 type reconcileFun func(cluster *zookeeperv1beta1.ZookeeperCluster) error
@@ -190,21 +190,23 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 		foundSTSSize := *foundSts.Spec.Replicas
 		newSTSSize := *sts.Spec.Replicas
 		if newSTSSize != foundSTSSize {
-			conn, err := utils.GetZkConnection(instance)
+			zkUri := utils.GetZkServiceUri(instance)
+			err = r.zkClient.Connect(zkUri)
 			if err != nil {
 				return fmt.Errorf("Error storing cluster size %v", err)
 			}
-			defer conn.Close()
-			r.log.Info("Connected to ZK", "ZKURI", utils.GetZkServiceUri(instance))
-			data := "CLUSTER_SIZE=" + strconv.Itoa(int(newSTSSize))
+			defer r.zkClient.Close()
+			r.log.Info("Connected to ZK", "ZKURI", zkUri)
+
 			path := utils.GetMetaPath(instance)
-			exists, zNodeStat, err := conn.Exists(path)
-			if err != nil || !exists {
-				return fmt.Errorf("znode path exists check failed: %v", err)
+			zNodeStat, err := r.zkClient.NodeExists(path)
+			if zNodeStat == nil {
+				return fmt.Errorf("Error doing exists check for znode %s: %v", path, err)
 			}
 			version := zNodeStat.Version
-			r.log.Info("Updating Cluster Size.", "New CLUSTER_SIZE =", newSTSSize, "Version", version)
-			utils.UpdateZkMetaNode(instance, conn, path, data, version)
+			data := "CLUSTER_SIZE=" + strconv.Itoa(int(newSTSSize))
+			r.log.Info("Updating Cluster Size.", "New Data:", data, "Version", version)
+			r.zkClient.UpdateNode(path, data, version)
 		}
 		return r.updateStatefulSet(instance, foundSts, sts)
 	}
@@ -222,7 +224,6 @@ func (r *ReconcileZookeeperCluster) updateStatefulSet(instance *zookeeperv1beta1
 	}
 	instance.Status.Replicas = foundSts.Status.Replicas
 	instance.Status.ReadyReplicas = foundSts.Status.ReadyReplicas
-	r.skipSTSReconcile = 0
 	return nil
 }
 
@@ -399,15 +400,17 @@ func (r *ReconcileZookeeperCluster) reconcileClusterStatus(instance *zookeeperv1
 
 	//If Cluster is in a ready state...
 	if instance.Spec.Replicas == instance.Status.ReadyReplicas && (!instance.Status.MetaRootCreated) {
-		conn, err := utils.GetZkConnection(instance)
+		r.log.Info("Cluster is Ready, Creating ZK Metadata...")
+		zkUri := utils.GetZkServiceUri(instance)
+		err := r.zkClient.Connect(zkUri)
 		if err != nil {
 			return fmt.Errorf("Error creating cluster metaroot. Connect to zk failed %v", err)
 		}
-		defer conn.Close()
-		r.log.Info("Connected to zookeeper:", "ZKUri", utils.GetZkServiceUri(instance))
-		//instance.Status.MetadataVersion = 0
-		if err := utils.CreateZkMetaNode(instance, conn); err != nil {
-			return fmt.Errorf("Error creating cluster metadata path. znode create failed %v", err)
+		defer r.zkClient.Close()
+		metaPath := utils.GetMetaPath(instance)
+		r.log.Info("Connected to zookeeper:", "ZKUri", zkUri, "Creating Path", metaPath)
+		if err := r.zkClient.CreateNode(instance, metaPath); err != nil {
+			return fmt.Errorf("Error creating cluster metadata path %s, %v", metaPath, err)
 		}
 		r.log.Info("Metadata znode created.")
 		instance.Status.MetaRootCreated = true
