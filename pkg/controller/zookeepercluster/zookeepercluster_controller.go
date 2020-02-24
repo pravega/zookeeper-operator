@@ -199,11 +199,11 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 			r.log.Info("Connected to ZK", "ZKURI", zkUri)
 
 			path := utils.GetMetaPath(instance)
-			zNodeStat, err := r.zkClient.NodeExists(path)
-			if zNodeStat == nil {
+			version, err := r.zkClient.NodeExists(path)
+			if err != nil {
 				return fmt.Errorf("Error doing exists check for znode %s: %v", path, err)
 			}
-			version := zNodeStat.Version
+
 			data := "CLUSTER_SIZE=" + strconv.Itoa(int(newSTSSize))
 			r.log.Info("Updating Cluster Size.", "New Data:", data, "Version", version)
 			r.zkClient.UpdateNode(path, data, version)
@@ -426,8 +426,9 @@ func YAMLExporterReconciler(zookeepercluster *zookeeperv1beta1.ZookeeperCluster)
 	var scheme = scheme.Scheme
 	scheme.AddKnownTypes(zookeeperv1beta1.SchemeGroupVersion, zookeepercluster)
 	return &ReconcileZookeeperCluster{
-		client: fake.NewFakeClient(zookeepercluster),
-		scheme: scheme,
+		client:   fake.NewFakeClient(zookeepercluster),
+		scheme:   scheme,
+		zkClient: new(zk.DefaultZookeeperClient),
 	}
 }
 

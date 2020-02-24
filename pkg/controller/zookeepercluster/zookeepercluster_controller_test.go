@@ -36,6 +36,31 @@ func TestZookeepercluster(t *testing.T) {
 	RunSpecs(t, "ZookeeperCluster Controller Spec")
 }
 
+type MockZookeeperClient struct {
+	// dummy struct
+}
+
+func (client *MockZookeeperClient) Connect(zkUri string) (err error) {
+	// do nothing
+	return nil
+}
+
+func (client *MockZookeeperClient) CreateNode(zoo *v1beta1.ZookeeperCluster, zNodePath string) (err error) {
+	return nil
+}
+
+func (client *MockZookeeperClient) UpdateNode(path string, data string, version int32) (err error) {
+	return nil
+}
+
+func (client *MockZookeeperClient) NodeExists(zNodePath string) (version int32, err error) {
+	return 0, nil
+}
+
+func (client *MockZookeeperClient) Close() {
+	return
+}
+
 var _ = Describe("ZookeeperCluster Controller", func() {
 	const (
 		Name      = "example"
@@ -43,8 +68,9 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 	)
 
 	var (
-		s = scheme.Scheme
-		r *ReconcileZookeeperCluster
+		s            = scheme.Scheme
+		mockZkClient = new(MockZookeeperClient)
+		r            *ReconcileZookeeperCluster
 	)
 
 	Context("Reconcile", func() {
@@ -78,7 +104,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 
 			BeforeEach(func() {
 				cl = fake.NewFakeClient(z)
-				r = &ReconcileZookeeperCluster{client: cl, scheme: s}
+				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
 				res, err = r.Reconcile(req)
 			})
 
@@ -108,7 +134,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 			BeforeEach(func() {
 				z.WithDefaults()
 				cl = fake.NewFakeClient(z)
-				r = &ReconcileZookeeperCluster{client: cl, scheme: s}
+				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
 				res, err = r.Reconcile(req)
 			})
 
@@ -116,7 +142,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				Ω(err).To(BeNil())
 			})
 
-			It("should requeue after ReconfileTime delay", func() {
+			It("should requeue after ReconcileTime delay", func() {
 				Ω(res.RequeueAfter).To(Equal(ReconcileTime))
 			})
 
@@ -177,7 +203,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				st := zk.MakeStatefulSet(z)
 				next.Spec.Replicas = 6
 				cl = fake.NewFakeClient([]runtime.Object{next, st}...)
-				r = &ReconcileZookeeperCluster{client: cl, scheme: s}
+				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
 				res, err = r.Reconcile(req)
 			})
 
@@ -204,7 +230,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				next := z.DeepCopy()
 				st := zk.MakeStatefulSet(z)
 				cl = fake.NewFakeClient([]runtime.Object{next, st}...)
-				r = &ReconcileZookeeperCluster{client: cl, scheme: s}
+				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
 				res, err = r.Reconcile(req)
 			})
 
@@ -232,7 +258,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				next.Spec.Ports[0].ContainerPort = 2182
 				svc := zk.MakeClientService(z)
 				cl = fake.NewFakeClient([]runtime.Object{next, svc}...)
-				r = &ReconcileZookeeperCluster{client: cl, scheme: s}
+				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
 				res, err = r.Reconcile(req)
 			})
 

@@ -13,7 +13,7 @@ import (
 type ZookeeperClient interface {
 	Connect(string) error
 	CreateNode(*v1beta1.ZookeeperCluster, string) error
-	NodeExists(string) (*zk.Stat, error)
+	NodeExists(string) (int32, error)
 	UpdateNode(string, string, int32) error
 	Close()
 }
@@ -57,12 +57,12 @@ func (client *DefaultZookeeperClient) UpdateNode(path string, data string, versi
 	return nil
 }
 
-func (client *DefaultZookeeperClient) NodeExists(zNodePath string) (nodeStat *zk.Stat, err error) {
+func (client *DefaultZookeeperClient) NodeExists(zNodePath string) (version int32, err error) {
 	exists, zNodeStat, err := client.conn.Exists(zNodePath)
 	if err != nil || !exists {
-		return nil, fmt.Errorf("Znode exists check failed for path %s: %v", zNodePath, err)
+		return -1, fmt.Errorf("Znode exists check failed for path %s: %v", zNodePath, err)
 	}
-	return zNodeStat, err
+	return zNodeStat.Version, err
 }
 
 func (client *DefaultZookeeperClient) Close() {
