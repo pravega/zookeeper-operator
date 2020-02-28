@@ -4,3 +4,6 @@ metadata:
   name: {{ template "zookeeper.fullname" . }}
 spec:
   replicas: 3
+  image:
+    repository: {{ with .Values.image }}{{ .repository }}{{ end }}
+    tag: {{ with .Values.image }}{{ .tag }}{{ end }}
