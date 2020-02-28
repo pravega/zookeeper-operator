@@ -139,6 +139,8 @@ type ZookeeperClusterStatus struct {
 
 	// ExternalClientEndpoint is the internal client IP and port
 	ExternalClientEndpoint string `json:"externalClientEndpoint"`
+
+	MetaRootCreated bool `json:"metaRootCreated"`
 }
 
 // MembersStatus is the status of the members of the cluster with both

@@ -226,7 +226,7 @@ func makeZkEnvConfigString(z *v1beta1.ZookeeperCluster) string {
 		"LEADER_PORT=" + strconv.Itoa(int(ports.Leader)) + "\n" +
 		"CLIENT_HOST=" + z.GetClientServiceName() + "\n" +
 		"CLIENT_PORT=" + strconv.Itoa(int(ports.Client)) + "\n" +
-		"CLUSTER_SIZE=" + fmt.Sprint(z.Spec.Replicas) + "\n"
+		"CLUSTER_NAME=" + z.GetName() + "\n"
 }
 
 func makeService(name string, ports []v1.ServicePort, clusterIP bool, z *v1beta1.ZookeeperCluster) *v1.Service {
