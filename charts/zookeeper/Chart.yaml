@@ -1,6 +1,6 @@
 name: zookeeper
-version: 0.2.2
-appVersion: 0.2.2
+version: latest
+appVersion: latest
 description: zookeeper Helm chart for Kubernetes
 keywords:
 - zookeeper

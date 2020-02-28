@@ -15,7 +15,7 @@ spec:
   - name: Replicas
     type: integer
     description: The number of ZooKeeper servers in the ensemble
-    JSONPath: .status.replicas
+    JSONPath: .spec.replicas
   - name: Ready Replicas
     type: integer
     description: The number of ZooKeeper servers in the ensemble that are in a Ready state
