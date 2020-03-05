@@ -88,9 +88,19 @@ func MakeStatefulSet(z *v1beta1.ZookeeperCluster) *appsv1.StatefulSet {
 
 func makeZkPodSpec(z *v1beta1.ZookeeperCluster) v1.PodSpec {
 	zkContainer := v1.Container{
-		Name:            "zookeeper",
-		Image:           z.Spec.Image.ToString(),
-		Ports:           z.Spec.Ports,
+		Name:  "zookeeper",
+		Image: z.Spec.Image.ToString(),
+		Ports: z.Spec.Ports,
+		Env: []v1.EnvVar{
+			{
+				Name: "ENVOY_SIDECAR_STATUS",
+				ValueFrom: &v1.EnvVarSource{
+					FieldRef: &v1.ObjectFieldSelector{
+						FieldPath: `metadata.annotations['sidecar.istio.io/status']`,
+					},
+				},
+			},
+		},
 		ImagePullPolicy: z.Spec.Image.PullPolicy,
 		ReadinessProbe: &v1.Probe{
 			InitialDelaySeconds: 10,
@@ -122,7 +132,7 @@ func makeZkPodSpec(z *v1beta1.ZookeeperCluster) v1.PodSpec {
 	if z.Spec.Pod.Resources.Limits != nil || z.Spec.Pod.Resources.Requests != nil {
 		zkContainer.Resources = z.Spec.Pod.Resources
 	}
-	zkContainer.Env = z.Spec.Pod.Env
+	zkContainer.Env = append(zkContainer.Env, z.Spec.Pod.Env...)
 	podSpec := v1.PodSpec{
 		Containers: []v1.Container{zkContainer},
 		Affinity:   z.Spec.Pod.Affinity,

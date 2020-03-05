@@ -52,12 +52,12 @@ if [ -f $DYNCONFIG ]; then
 fi
 
 # Check if envoy is up and running
-if [[ "$IS_ISTIO_ENABLED" == true ]]; then
+if [[ -n "$ENVOY_SIDECAR_STATUS" ]]; then
   COUNT=0
   MAXCOUNT=${1:-30}
   HEALTHYSTATUSCODE="200"
   while true; do
-    COUNT=`expr $COUNT + 1`
+    COUNT=$(expr $COUNT + 1)
     SC=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:15000/ready)
     echo "waiting for envoy proxy to come up";
     sleep 1;

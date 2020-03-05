@@ -141,7 +141,6 @@ metadata:
   name: zk-with-istio
 spec:
   replicas: 3
-  isIstioEnabled: true
   config:
     initLimit: 10
     tickTime: 2000
