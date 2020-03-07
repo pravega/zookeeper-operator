@@ -125,13 +125,6 @@ if [[ "$WRITE_CONFIGURATION" == true ]]; then
     echo $ZKCONFIG
     echo $MYID > $MYID_FILE
     echo "server.${MYID}=${ZKCONFIG}" > $DYNCONFIG
-  else
-    set -e
-    ZKURL=$(zkConnectionString)
-    CONFIG=`java -Dlog4j.configuration=file:"$LOG4J_CONF" -jar /root/zu.jar get-all $ZKURL`
-    echo Writing configuration gleaned from zookeeper ensemble
-    echo "$CONFIG" | grep -v "^version="> $DYNCONFIG
-    set +e
   fi
 fi
 
