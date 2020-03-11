@@ -18,7 +18,7 @@ import (
 
 	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -226,7 +226,8 @@ func makeZkEnvConfigString(z *v1beta1.ZookeeperCluster) string {
 		"LEADER_PORT=" + strconv.Itoa(int(ports.Leader)) + "\n" +
 		"CLIENT_HOST=" + z.GetClientServiceName() + "\n" +
 		"CLIENT_PORT=" + strconv.Itoa(int(ports.Client)) + "\n" +
-		"CLUSTER_NAME=" + z.GetName() + "\n"
+		"CLUSTER_NAME=" + z.GetName() + "\n" +
+		"CLUSTER_SIZE=" + fmt.Sprint(z.Spec.Replicas) + "\n"
 }
 
 func makeService(name string, ports []v1.ServicePort, clusterIP bool, z *v1beta1.ZookeeperCluster) *v1.Service {
