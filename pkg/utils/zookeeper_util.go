@@ -25,7 +25,7 @@ const (
 
 func GetZkServiceUri(zoo *v1beta1.ZookeeperCluster) (zkUri string) {
 	zkClientPort, _ := ContainerPortByName(zoo.Spec.Ports, "client")
-	zkUri = zoo.GetClientServiceName() + ":" + strconv.Itoa(int(zkClientPort))
+	zkUri = zoo.GetClientServiceName() + "." + zoo.GetNamespace() + ".svc.cluster.local:" + strconv.Itoa(int(zkClientPort))
 	return zkUri
 }
 
