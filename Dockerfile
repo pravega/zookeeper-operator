@@ -26,7 +26,7 @@ FROM alpine:${ALPINE_VERSION} AS final
 
 ARG PROJECT_NAME=zookeeper-operator
 
-COPY --from=go-builder src/${PROJECT_NAME} /usr/local/bin/${PROJECT_NAME}
+COPY --from=go-builder /src/${PROJECT_NAME} /usr/local/bin/${PROJECT_NAME}
 
 RUN adduser -D ${PROJECT_NAME}
 USER ${PROJECT_NAME}
