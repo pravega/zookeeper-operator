@@ -56,8 +56,20 @@ set +e
 nslookup $DOMAIN
 if [[ $? -eq 1 ]]; then
   # If an nslookup of the headless service domain fails, then there is no
-  # active ensemble yet
+  # active ensemble yet, but in certain cases nslookup of headless service
+  # takes a while to come up even if there is active ensemble
   ACTIVE_ENSEMBLE=false
+  declare -i count=20
+  while [[ $count -ge 0 && $MYID -ne 1 ]]
+  do
+    sleep 2
+    ((count=count-1))
+    nslookup $DOMAIN
+    if [[ $? -eq 0 ]]; then
+      ACTIVE_ENSEMBLE=true
+      break
+    fi
+  done
 else
   ACTIVE_ENSEMBLE=true
 fi
