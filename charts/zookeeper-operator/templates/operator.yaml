@@ -25,13 +25,7 @@ spec:
         - zookeeper-operator
         env:
         - name: WATCH_NAMESPACE
-          {{- if .Values.watchNamespace }}
           value: {{ .Values.watchNamespace }}
-          {{- else }}
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
-          {{- end }}
         - name: POD_NAME
           valueFrom:
             fieldRef:
