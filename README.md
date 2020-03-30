@@ -165,7 +165,7 @@ $ kubectl delete -f deploy/all_ns
 ### Build the operator image
 
 Requirements:
-  - Go 1.12+
+  - Go 1.13+
 
 Use the `make` command to build the Zookeeper operator image.
 

@@ -19,7 +19,6 @@ import (
 
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"github.com/operator-framework/operator-sdk/pkg/leader"
-	"github.com/operator-framework/operator-sdk/pkg/ready"
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
 	"github.com/pravega/zookeeper-operator/pkg/apis"
 	"github.com/pravega/zookeeper-operator/pkg/controller"
@@ -79,14 +78,6 @@ func main() {
 
 	// Become the leader before proceeding
 	leader.Become(context.TODO(), "zookeeper-operator-lock")
-
-	r := ready.NewFileReady()
-	err = r.Set()
-	if err != nil {
-		log.Error(err, "")
-		os.Exit(1)
-	}
-	defer r.Unset()
 
 	// Create a new Cmd to provide shared dependencies and start components
 	mgr, err := manager.New(cfg, manager.Options{Namespace: namespace})
