@@ -4,7 +4,7 @@
 
 image:
   repository: pravega/zookeeper-operator
-  tag: latest
+  tag: 0.2.5
   pullPolicy: IfNotPresent
 
 ## Install RBAC roles and bindings

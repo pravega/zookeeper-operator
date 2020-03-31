@@ -1,4 +1,4 @@
 image:
   repository: pravega/zookeeper
-  tag: latest
+  tag: 0.2.5
   pullPolicy: IfNotPresent
