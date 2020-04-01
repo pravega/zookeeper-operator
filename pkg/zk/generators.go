@@ -30,8 +30,12 @@ const (
 	dot                      = "."
 )
 
+var (
+	TopLevelDomain string
+)
+
 func headlessDomain(z *v1beta1.ZookeeperCluster) string {
-	return fmt.Sprintf("%s.%s.svc.cluster.local", headlessSvcName(z), z.GetNamespace())
+	return fmt.Sprintf("%s.%s.svc.cluster."+TopLevelDomain, headlessSvcName(z), z.GetNamespace())
 }
 
 func headlessSvcName(z *v1beta1.ZookeeperCluster) string {

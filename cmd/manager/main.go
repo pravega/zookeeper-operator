@@ -14,6 +14,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/pravega/zookeeper-operator/pkg/utils"
+	"github.com/pravega/zookeeper-operator/pkg/zk"
 	"os"
 	"runtime"
 
@@ -32,12 +34,14 @@ import (
 )
 
 var (
-	log         = logf.Log.WithName("cmd")
-	versionFlag bool
+	log            = logf.Log.WithName("cmd")
+	versionFlag    bool
+	topLevelDomain string
 )
 
 func init() {
 	flag.BoolVar(&versionFlag, "version", false, "Show version and quit")
+	flag.StringVar(&topLevelDomain, "top-domain", "local", "Set top level domain")
 }
 
 func printVersion() {
@@ -50,6 +54,9 @@ func printVersion() {
 
 func main() {
 	flag.Parse()
+
+	zk.TopLevelDomain = topLevelDomain
+	utils.TopLevelDomain = topLevelDomain
 
 	// The logger instantiated here can be changed to any logger
 	// implementing the logr.Logger interface. This logger will

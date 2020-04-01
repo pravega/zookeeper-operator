@@ -12,10 +12,9 @@ package utils
 
 import (
 	"fmt"
-	"strconv"
-
 	v1beta1 "github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	corev1 "k8s.io/api/core/v1"
+	"strconv"
 )
 
 const (
@@ -23,9 +22,13 @@ const (
 	ZKMetaRoot = "/zookeeper-operator"
 )
 
+var (
+	TopLevelDomain string
+)
+
 func GetZkServiceUri(zoo *v1beta1.ZookeeperCluster) (zkUri string) {
 	zkClientPort, _ := ContainerPortByName(zoo.Spec.Ports, "client")
-	zkUri = zoo.GetClientServiceName() + "." + zoo.GetNamespace() + ".svc.cluster.local:" + strconv.Itoa(int(zkClientPort))
+	zkUri = zoo.GetClientServiceName() + "." + zoo.GetNamespace() + ".svc.cluster." + TopLevelDomain + ":" + strconv.Itoa(int(zkClientPort))
 	return zkUri
 }
 

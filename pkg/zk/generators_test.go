@@ -95,7 +95,7 @@ var _ = Describe("Generators Spec", func() {
 				It("should set the DOMAIN to the headless domain", func() {
 					Ω(cfg).
 						To(ContainSubstring(
-							"DOMAIN=example-headless.default.svc.cluster.local\n"))
+							"DOMAIN=example-headless.default.svc.cluster." + zk.TopLevelDomain + "\n"))
 				})
 
 				It("should set the QUORUM_PORT", func() {
