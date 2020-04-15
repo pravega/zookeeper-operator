@@ -77,6 +77,10 @@ var _ = Describe("ZookeeperCluster Types", func() {
 				Ω(i.Tag).To(Equal(v1beta1.DefaultZkContainerVersion))
 			})
 
+			It("should have the default full image name", func() {
+                Ω(i.Image).To(Equal(v1beta1.DefaultZkContainerRepository + ":" + v1beta1.DefaultZkContainerVersion))
+			})
+
 			It("should have the default policy", func() {
 				Ω(i.PullPolicy).To(BeEquivalentTo(v1beta1.DefaultZkContainerPolicy))
 			})
