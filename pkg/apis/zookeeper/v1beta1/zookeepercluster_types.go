@@ -204,6 +204,7 @@ type Ports struct {
 type ContainerImage struct {
 	Repository string        `json:"repository"`
 	Tag        string        `json:"tag"`
+    Image      string        `json:"image"`
 	PullPolicy v1.PullPolicy `json:"pullPolicy"`
 }
 
@@ -216,6 +217,10 @@ func (c *ContainerImage) withDefaults() (changed bool) {
 		changed = true
 		c.Tag = DefaultZkContainerVersion
 	}
+    if c.Image == "" {
+        changed = true 
+        c.Image = c.Repository + ":" + c.Tag
+    }
 	if c.PullPolicy == "" {
 		changed = true
 		c.PullPolicy = DefaultZkContainerPolicy
@@ -226,7 +231,8 @@ func (c *ContainerImage) withDefaults() (changed bool) {
 // ToString formats a container image struct as a docker compatible repository
 // string.
 func (c *ContainerImage) ToString() string {
-	return fmt.Sprintf("%s:%s", c.Repository, c.Tag)
+    // return fmt.Sprintf("%s:%s", c.Repository, c.Tag)
+    return fmt.Sprintf("%s", c.Image)
 }
 
 // PodPolicy defines the common pod configuration for Pods, including when used
