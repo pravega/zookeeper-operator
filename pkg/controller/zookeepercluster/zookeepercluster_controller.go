@@ -418,7 +418,34 @@ func (r *ReconcileZookeeperCluster) reconcileClusterStatus(instance *zookeeperv1
 	r.log.Info("Updating zookeeper status",
 		"StatefulSet.Namespace", instance.Namespace,
 		"StatefulSet.Name", instance.Name)
+
+	foundSts := &appsv1.StatefulSet{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{
+		Name:      instance.GetName(),
+		Namespace: instance.GetNamespace(),
+	}, foundSts)
+
+	if err != nil {
+		return err
+	}
+	//setting the updateflag is case of update of zookeepercluster
+	if instance.Status.CurrentVersion != instance.Spec.Image.Tag && foundSts.Status.UpdatedReplicas == 0 {
+		instance.Status.UpdateFlag = true
+	}
+	//setting the currentVersion
+	if (IsCurrentVersionEmpty(instance.Status.CurrentVersion) || instance.Status.UpdateFlag) && foundSts.Status.UpdatedReplicas == *foundSts.Spec.Replicas && foundSts.Status.ReadyReplicas == *foundSts.Spec.Replicas {
+		instance.Status.CurrentVersion = instance.Spec.Image.Tag
+		instance.Status.UpdateFlag = false
+	}
 	return r.client.Status().Update(context.TODO(), instance)
+}
+
+func IsCurrentVersionEmpty(currentVersion string) bool {
+	if currentVersion == "" {
+		return true
+	} else {
+		return false
+	}
 }
 
 // YAMLExporterReconciler returns a fake Reconciler which is being used for generating YAML files

@@ -141,6 +141,12 @@ type ZookeeperClusterStatus struct {
 	ExternalClientEndpoint string `json:"externalClientEndpoint"`
 
 	MetaRootCreated bool `json:"metaRootCreated"`
+
+	// CurrentVersion is the current cluster version
+	CurrentVersion string `json:"currentVersion"`
+
+	//UpdateFlag indicate status of update
+	UpdateFlag bool `json:"updateFlag"`
 }
 
 // MembersStatus is the status of the members of the cluster with both
