@@ -145,7 +145,7 @@ type ZookeeperClusterStatus struct {
 	// CurrentVersion is the current cluster version
 	CurrentVersion string `json:"currentVersion"`
 
-	//UpdateFlag indicate status of update
+	// UpdateFlag indicate if update of the cluster is in progress or not
 	UpdateFlag bool `json:"updateFlag"`
 }
 
