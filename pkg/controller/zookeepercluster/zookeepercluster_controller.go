@@ -429,7 +429,7 @@ func (r *ReconcileZookeeperCluster) reconcileClusterStatus(instance *zookeeperv1
 		return err
 	}
 	//setting the updateflag is case of update of zookeepercluster
-	if instance.Status.CurrentVersion != instance.Spec.Image.Tag && foundSts.Status.UpdatedReplicas == 0 {
+	if !IsCurrentVersionEmpty(instance.Status.CurrentVersion) && instance.Status.CurrentVersion != instance.Spec.Image.Tag && foundSts.Status.UpdatedReplicas != *foundSts.Spec.Replicas {
 		instance.Status.UpdateFlag = true
 	}
 	//setting the currentVersion
