@@ -216,6 +216,10 @@ var _ = Describe("ZookeeperCluster Types", func() {
 		It("should have a leader port", func() {
 			Ω(p.Leader).To(BeEquivalentTo(3888))
 		})
+
+		It("should have a metrics port", func() {
+			Ω(p.Metrics).To(BeEquivalentTo(7000))
+		})
 	})
 
 })
