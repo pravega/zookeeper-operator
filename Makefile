@@ -55,7 +55,7 @@ build-zk-image-swarm:
 	docker build --build-arg VERSION=$(VERSION)-swarm --build-arg GIT_SHA=$(GIT_SHA) -f ./docker/Dockerfile-swarm  -t $(APP_REPO):$(VERSION)-swarm  ./docker
         
 test:
-	go test $$(go list ./... | grep -v /vendor/) -race -coverprofile=coverage.txt -covermode=atomic
+	go test $$(go list ./... | grep -v /vendor/ | grep -v /test/e2e) -race -coverprofile=coverage.txt -covermode=atomic
 
 login:
 	@docker login -u "$(DOCKER_USER)" -p "$(DOCKER_PASS)"

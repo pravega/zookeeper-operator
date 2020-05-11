@@ -24,7 +24,6 @@ import (
 
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	api "github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
-	"github.com/pravega/pravega-operator/pkg/util"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
@@ -156,7 +155,8 @@ func WaitForClusterToTerminate(t *testing.T, f *framework.Framework, ctx *framew
 	t.Logf("waiting for pravega cluster to terminate: %s", z.Name)
 
 	listOptions := metav1.ListOptions{
-		LabelSelector: labels.SelectorFromSet(util.LabelsForZookeeperCluster(p)).String(),
+		//LabelSelector: labels.SelectorFromSet(util.LabelsForZookeeperCluster(p)).String(),
+                labelSelector : labels.SelectorFromSet(map[string]string{"app": z.GetName()}),
 	}
 
 	// Wait for Pods to terminate
