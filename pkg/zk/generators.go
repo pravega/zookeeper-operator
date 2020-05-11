@@ -76,6 +76,7 @@ func MakeStatefulSet(z *v1beta1.ZookeeperCluster) *appsv1.StatefulSet {
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:   "data",
+						Namespace: z.Namespace,
 						Labels: map[string]string{"app": z.GetName()},
 					},
 					Spec: z.Spec.Persistence.PersistentVolumeClaimSpec,
