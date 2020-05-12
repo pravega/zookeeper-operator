@@ -140,6 +140,7 @@ func (r *ReconcileZookeeperCluster) Reconcile(request reconcile.Request) (reconc
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
+	instance.Status.init()
 	changed := instance.WithDefaults()
 	if changed {
 		r.log.Info("Setting default settings for zookeeper-cluster")
@@ -298,7 +299,7 @@ func checkSyncTimeout(p *zookeeperv1beta1.ZookeeperCluster, reason string, updat
 		// then check if it reaches the timeout.
 		logs.Printf("jasmeet singh value of lastcondition.message = %s", lastCondition.Message)
 		parsedTime, _ := time.Parse(time.RFC3339, lastCondition.LastUpdateTime)
-		if time.Now().After(parsedTime.Add(time.Duration(3 * time.Minute))) {
+		if time.Now().After(parsedTime.Add(time.Duration(10 * time.Minute))) {
 			// timeout
 			return fmt.Errorf("progress deadline exceeded")
 		}
