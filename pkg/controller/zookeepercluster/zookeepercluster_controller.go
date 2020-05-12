@@ -25,14 +25,14 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/go-logr/logr"
+	zookeeperv1beta1 "github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	"github.com/pravega/zookeeper-operator/pkg/zk"
+	logs "github.com/sirupsen/logrus"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	zookeeperv1beta1 "github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
-	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -218,12 +218,93 @@ func (r *ReconcileZookeeperCluster) updateStatefulSet(instance *zookeeperv1beta1
 		"StatefulSet.Namespace", foundSts.Namespace,
 		"StatefulSet.Name", foundSts.Name)
 	zk.SyncStatefulSet(foundSts, sts)
+	// we cannot upgrade if cluster is in UpgradeFailed or Rollback state
+	if instance.Status.IsClusterInUpgradeFailedState() {
+		return nil
+	}
+	_, upgradeCondition := instance.Status.GetClusterCondition(zookeeperv1beta1.ClusterConditionUpgrading)
+
+	if upgradeCondition.Status != corev1.ConditionTrue && instance.Status.CurrentVersion != "" && foundSts.Status.CurrentRevision != foundSts.Status.UpdateRevision && instance.Spec.Image.Tag != instance.Status.CurrentVersion {
+		instance.Status.TargetVersion = instance.Spec.Image.Tag
+		instance.Status.SetPodsReadyConditionFalse()
+		instance.Status.SetUpgradingConditionTrue("", "")
+	}
+
+	if upgradeCondition.Status == corev1.ConditionTrue {
+		// Upgrade process already in progress
+		if instance.Status.TargetVersion == "" {
+			logs.Println("syncing to an unknown version: cancelling upgrade process")
+			return r.clearUpgradeStatus(instance)
+		}
+
+		if foundSts.Status.CurrentRevision == foundSts.Status.UpdateRevision {
+			instance.Status.CurrentVersion = instance.Status.TargetVersion
+			logs.Printf("upgrade completed")
+			return r.clearUpgradeStatus(instance)
+		}
+		if foundSts.Status.CurrentRevision != foundSts.Status.UpdateRevision {
+			logs.Printf("update in progress")
+			if fmt.Sprint(foundSts.Status.UpdatedReplicas) != upgradeCondition.Message {
+				instance.Status.UpdateProgress(zookeeperv1beta1.UpdatingZookeeperReason, fmt.Sprint(foundSts.Status.UpdatedReplicas))
+			} else {
+				err = checkSyncTimeout(instance, zookeeperv1beta1.UpdatingZookeeperReason, foundSts.Status.UpdatedReplicas)
+				if err != nil {
+					instance.Status.SetErrorConditionTrue("UpgradeFailed", err.Error())
+					return r.client.Status().Update(context.TODO(), instance)
+				} else {
+					return nil
+				}
+			}
+		}
+	}
+	err = r.client.Status().Update(context.TODO(), instance)
+	if err != nil {
+		return err
+	}
 	err = r.client.Update(context.TODO(), foundSts)
 	if err != nil {
 		return err
 	}
 	instance.Status.Replicas = foundSts.Status.Replicas
 	instance.Status.ReadyReplicas = foundSts.Status.ReadyReplicas
+	return nil
+}
+
+func (r *ReconcileZookeeperCluster) clearUpgradeStatus(p *zookeeperv1beta1.ZookeeperCluster) (err error) {
+	p.Status.SetUpgradingConditionFalse()
+	p.Status.TargetVersion = ""
+	// need to deep copy the status struct, otherwise it will be overwritten
+	// when updating the CR below
+	status := p.Status.DeepCopy()
+
+	err = r.client.Status().Update(context.TODO(), p)
+	logs.Printf("prabhu came till here value of err = " + fmt.Sprintf("%v", err))
+
+	if err != nil {
+		return err
+	}
+
+	p.Status = *status
+	return nil
+}
+
+func checkSyncTimeout(p *zookeeperv1beta1.ZookeeperCluster, reason string, updatedReplicas int32) error {
+	lastCondition := p.Status.GetLastCondition()
+	if lastCondition == nil {
+		return nil
+	}
+	if lastCondition.Reason == reason && lastCondition.Message == fmt.Sprint(updatedReplicas) {
+		// if reason and message are the same as before, which means there is no progress since the last reconciling,
+		// then check if it reaches the timeout.
+		logs.Printf("jasmeet singh value of lastcondition.message = %s", lastCondition.Message)
+		parsedTime, _ := time.Parse(time.RFC3339, lastCondition.LastUpdateTime)
+		if time.Now().After(parsedTime.Add(time.Duration(3 * time.Minute))) {
+			// timeout
+			return fmt.Errorf("progress deadline exceeded")
+		}
+		// it hasn't reached timeout
+		return nil
+	}
 	return nil
 }
 
@@ -368,6 +449,9 @@ func (r *ReconcileZookeeperCluster) reconcileConfigMap(instance *zookeeperv1beta
 }
 
 func (r *ReconcileZookeeperCluster) reconcileClusterStatus(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
+	if instance.Status.IsClusterInUpgradingState() || instance.Status.IsClusterInUpgradeFailedState() {
+		return nil
+	}
 	foundPods := &corev1.PodList{}
 	labelSelector := labels.SelectorFromSet(map[string]string{"app": instance.GetName()})
 	listOps := &client.ListOptions{
@@ -418,6 +502,14 @@ func (r *ReconcileZookeeperCluster) reconcileClusterStatus(instance *zookeeperv1
 	r.log.Info("Updating zookeeper status",
 		"StatefulSet.Namespace", instance.Namespace,
 		"StatefulSet.Name", instance.Name)
+	if instance.Status.ReadyReplicas == instance.Spec.Replicas {
+		instance.Status.SetPodsReadyConditionTrue()
+	} else {
+		instance.Status.SetPodsReadyConditionFalse()
+	}
+	if instance.Status.CurrentVersion == "" && instance.Status.IsClusterInReadyState() {
+		instance.Status.CurrentVersion = instance.Spec.Image.Tag
+	}
 	return r.client.Status().Update(context.TODO(), instance)
 }
 
