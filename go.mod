@@ -6,6 +6,7 @@ require (
 	cloud.google.com/go v0.55.0
 	github.com/PuerkitoBio/purell v1.1.1
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578
+	github.com/alecthomas/gocyclo v0.0.0-20150208221726-aa8f8b160214 // indirect
 	github.com/beorn7/perks v1.0.1
 	github.com/davecgh/go-spew v1.1.1
 	github.com/emicklei/go-restful v2.12.0+incompatible
@@ -29,6 +30,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/hpcloud/tail v1.0.0
 	github.com/imdario/mergo v0.3.8
+	github.com/jgautheron/goconst v0.0.0-20200227150835-cda7ea3bf591 // indirect
 	github.com/json-iterator/go v1.1.9
 	github.com/mailru/easyjson v0.7.1
 	github.com/mattbaird/jsonpatch v0.0.0-20171005235357-81af80346b1a

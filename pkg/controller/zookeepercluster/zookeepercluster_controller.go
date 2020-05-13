@@ -27,7 +27,6 @@ import (
 	"github.com/go-logr/logr"
 	zookeeperv1beta1 "github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	"github.com/pravega/zookeeper-operator/pkg/zk"
-	logs "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
@@ -140,7 +139,7 @@ func (r *ReconcileZookeeperCluster) Reconcile(request reconcile.Request) (reconc
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
-	instance.Status.init()
+	instance.Status.Init()
 	changed := instance.WithDefaults()
 	if changed {
 		r.log.Info("Setting default settings for zookeeper-cluster")
@@ -167,6 +166,12 @@ func (r *ReconcileZookeeperCluster) Reconcile(request reconcile.Request) (reconc
 }
 
 func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
+
+	// we cannot upgrade if cluster is in UpgradeFailed
+	if instance.Status.IsClusterInUpgradeFailedState() {
+		return nil
+	}
+
 	sts := zk.MakeStatefulSet(instance)
 	if err = controllerutil.SetControllerReference(instance, sts, r.scheme); err != nil {
 		return err
@@ -211,7 +216,6 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 		}
 		return r.updateStatefulSet(instance, foundSts, sts)
 	}
-	return nil
 }
 
 func (r *ReconcileZookeeperCluster) updateStatefulSet(instance *zookeeperv1beta1.ZookeeperCluster, foundSts *appsv1.StatefulSet, sts *appsv1.StatefulSet) (err error) {
@@ -219,10 +223,7 @@ func (r *ReconcileZookeeperCluster) updateStatefulSet(instance *zookeeperv1beta1
 		"StatefulSet.Namespace", foundSts.Namespace,
 		"StatefulSet.Name", foundSts.Name)
 	zk.SyncStatefulSet(foundSts, sts)
-	// we cannot upgrade if cluster is in UpgradeFailed or Rollback state
-	if instance.Status.IsClusterInUpgradeFailedState() {
-		return nil
-	}
+
 	_, upgradeCondition := instance.Status.GetClusterCondition(zookeeperv1beta1.ClusterConditionUpgrading)
 
 	if upgradeCondition.Status != corev1.ConditionTrue && instance.Status.CurrentVersion != "" && foundSts.Status.CurrentRevision != foundSts.Status.UpdateRevision && instance.Spec.Image.Tag != instance.Status.CurrentVersion {
@@ -234,17 +235,17 @@ func (r *ReconcileZookeeperCluster) updateStatefulSet(instance *zookeeperv1beta1
 	if upgradeCondition.Status == corev1.ConditionTrue {
 		// Upgrade process already in progress
 		if instance.Status.TargetVersion == "" {
-			logs.Println("syncing to an unknown version: cancelling upgrade process")
+			r.log.Info("upgrading to an unknown version: cancelling upgrade process")
 			return r.clearUpgradeStatus(instance)
 		}
 
 		if foundSts.Status.CurrentRevision == foundSts.Status.UpdateRevision {
 			instance.Status.CurrentVersion = instance.Status.TargetVersion
-			logs.Printf("upgrade completed")
+			r.log.Info("upgrade completed")
 			return r.clearUpgradeStatus(instance)
 		}
 		if foundSts.Status.CurrentRevision != foundSts.Status.UpdateRevision {
-			logs.Printf("update in progress")
+			r.log.Info("upgrade in progress")
 			if fmt.Sprint(foundSts.Status.UpdatedReplicas) != upgradeCondition.Message {
 				instance.Status.UpdateProgress(zookeeperv1beta1.UpdatingZookeeperReason, fmt.Sprint(foundSts.Status.UpdatedReplicas))
 			} else {
@@ -279,8 +280,6 @@ func (r *ReconcileZookeeperCluster) clearUpgradeStatus(p *zookeeperv1beta1.Zooke
 	status := p.Status.DeepCopy()
 
 	err = r.client.Status().Update(context.TODO(), p)
-	logs.Printf("prabhu came till here value of err = " + fmt.Sprintf("%v", err))
-
 	if err != nil {
 		return err
 	}
@@ -297,14 +296,11 @@ func checkSyncTimeout(p *zookeeperv1beta1.ZookeeperCluster, reason string, updat
 	if lastCondition.Reason == reason && lastCondition.Message == fmt.Sprint(updatedReplicas) {
 		// if reason and message are the same as before, which means there is no progress since the last reconciling,
 		// then check if it reaches the timeout.
-		logs.Printf("jasmeet singh value of lastcondition.message = %s", lastCondition.Message)
 		parsedTime, _ := time.Parse(time.RFC3339, lastCondition.LastUpdateTime)
 		if time.Now().After(parsedTime.Add(time.Duration(10 * time.Minute))) {
 			// timeout
 			return fmt.Errorf("progress deadline exceeded")
 		}
-		// it hasn't reached timeout
-		return nil
 	}
 	return nil
 }
