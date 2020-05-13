@@ -75,8 +75,9 @@ func MakeStatefulSet(z *v1beta1.ZookeeperCluster) *appsv1.StatefulSet {
 			VolumeClaimTemplates: []v1.PersistentVolumeClaim{
 				{
 					ObjectMeta: metav1.ObjectMeta{
-						Name:   "data",
-						Labels: map[string]string{"app": z.GetName()},
+						Name:      "data",
+						Namespace: z.Namespace,
+						Labels:    map[string]string{"app": z.GetName()},
 					},
 					Spec: z.Spec.Persistence.PersistentVolumeClaimSpec,
 				},
