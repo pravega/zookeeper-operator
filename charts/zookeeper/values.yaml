@@ -8,6 +8,6 @@ image:
 storage:
   className: standard
   # specifying reclaim policy for PersistentVolumes
-  # accepted values - Delete / Recycle / Reclaim
+  # accepted values - Delete / Reclaim
   reclaimPolicy: Delete
   cacheVolumeRequest: 10Gi
