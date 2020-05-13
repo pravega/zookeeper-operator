@@ -5,13 +5,13 @@ metadata:
 spec:
   replicas: {{ .Values.replicas }}
   image:
-    repository: {{ with .Values.image }}{{ .repository }}{{ end }}
-    tag: {{ with .Values.image }}{{ .tag }}{{ end }}
-    pullPolicy: {{ with .Values.image }}{{ .pullPolicy }}{{ end }}
+    repository: {{ .Values.image.repository }}
+    tag: {{ .Values.image.tag }}
+    pullPolicy: {{ .Values.image.pullPolicy }}
   persistence:
     accessModes: [ "ReadWriteOnce" ]
     storageClassName: {{ .Values.storage.className }}
-    reclaimPolicy: Delete
+    reclaimPolicy: {{ .Values.storage.reclaimPolicy }}
     resources:
       requests:
         storage: {{ .Values.storage.cacheVolumeRequest }}
