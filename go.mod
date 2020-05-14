@@ -3,6 +3,7 @@ module github.com/pravega/zookeeper-operator
 go 1.13
 
 require (
+	4d63.com/gochecknoglobals v0.0.0-20190306162314-7c3491d2b6ec // indirect
 	cloud.google.com/go v0.55.0
 	github.com/PuerkitoBio/purell v1.1.1
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578
@@ -26,6 +27,7 @@ require (
 	github.com/google/gofuzz v1.1.0
 	github.com/google/uuid v1.1.1
 	github.com/googleapis/gnostic v0.4.0
+	github.com/gordonklaus/ineffassign v0.0.0-20200309095847-7953dde2c7bf // indirect
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/hpcloud/tail v1.0.0
@@ -35,6 +37,7 @@ require (
 	github.com/mailru/easyjson v0.7.1
 	github.com/mattbaird/jsonpatch v0.0.0-20171005235357-81af80346b1a
 	github.com/matttproud/golang_protobuf_extensions v1.0.1
+	github.com/mdempsky/unconvert v0.0.0-20200228143138-95ecdbfc0b5f // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd
 	github.com/modern-go/reflect2 v1.0.1
 	github.com/onsi/ginkgo v1.12.0
