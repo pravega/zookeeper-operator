@@ -18,8 +18,7 @@ import (
 	zk_e2eutil "github.com/pravega/zookeeper-operator/pkg/test/e2e/e2eutil"
 )
 
-// Test create and recreate a Pravega cluster with the same name
-func testCreateRecreateCluster(t *testing.T) {
+func testScaleCluster(t *testing.T) {
 	g := NewGomegaWithT(t)
 
 	doCleanup := true
@@ -33,38 +32,52 @@ func testCreateRecreateCluster(t *testing.T) {
 	namespace, err := ctx.GetNamespace()
 	g.Expect(err).NotTo(HaveOccurred())
 	f := framework.Global
-
 	defaultCluster := zk_e2eutil.NewDefaultCluster(namespace)
 
 	defaultCluster.WithDefaults()
+
 	defaultCluster.Status.Init()
 	defaultCluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
 
 	zk, err := zk_e2eutil.CreateCluster(t, f, ctx, defaultCluster)
+
 	g.Expect(err).NotTo(HaveOccurred())
 
-	// A default Pravega cluster should have 2 pods: 1 controller, 1 segment store
+	// A default zk cluster should have 2 pods: 1 controller, 1 segment store
 	podSize := 3
 	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
 	g.Expect(err).NotTo(HaveOccurred())
 
-	err = zk_e2eutil.DeleteCluster(t, f, ctx, zk)
+	// This is to get the latest zk cluster object
+	zk, err = zk_e2eutil.GetCluster(t, f, ctx, zk)
 	g.Expect(err).NotTo(HaveOccurred())
 
-	err = zk_e2eutil.WaitForClusterToTerminate(t, f, ctx, zk)
-	g.Expect(err).NotTo(HaveOccurred())
+	// Scale up zk cluster, increase replicas to 5
 
-	defaultCluster = zk_e2eutil.NewDefaultCluster(namespace)
-	defaultCluster.WithDefaults()
-	defaultCluster.Status.Init()
-	defaultCluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
+	zk.Spec.Replicas = 5
+	podSize = 5
 
-	zk, err = zk_e2eutil.CreateCluster(t, f, ctx, defaultCluster)
+	err = zk_e2eutil.UpdateCluster(t, f, ctx, zk)
 	g.Expect(err).NotTo(HaveOccurred())
 
 	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
 	g.Expect(err).NotTo(HaveOccurred())
 
+	// This is to get the latest zk cluster object
+	zk, err = zk_e2eutil.GetCluster(t, f, ctx, zk)
+	g.Expect(err).NotTo(HaveOccurred())
+
+	// Scale down zk cluster back to default
+	zk.Spec.Replicas = 3
+	podSize = 3
+
+	err = zk_e2eutil.UpdateCluster(t, f, ctx, zk)
+	g.Expect(err).NotTo(HaveOccurred())
+
+	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
+	g.Expect(err).NotTo(HaveOccurred())
+
+	// Delete cluster
 	err = zk_e2eutil.DeleteCluster(t, f, ctx, zk)
 	g.Expect(err).NotTo(HaveOccurred())
 

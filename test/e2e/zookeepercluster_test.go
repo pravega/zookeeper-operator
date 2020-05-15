@@ -17,11 +17,11 @@ import (
 	"github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
 	apis "github.com/pravega/zookeeper-operator/pkg/apis"
 	operator "github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
-	pravega_e2eutil "github.com/pravega/zookeeper-operator/pkg/test/e2e/e2eutil"
+	zk_e2eutil "github.com/pravega/zookeeper-operator/pkg/test/e2e/e2eutil"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func TestPravegaCluster(t *testing.T) {
+func TestZookeeperCluster(t *testing.T) {
 	pravegaClusterList := &operator.ZookeeperClusterList{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ZookeeperCluster",
@@ -39,7 +39,7 @@ func TestPravegaCluster(t *testing.T) {
 func testZookeeperCluster(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup()
-	err := ctx.InitializeClusterResources(&framework.CleanupOptions{TestContext: ctx, Timeout: pravega_e2eutil.CleanupTimeout, RetryInterval: pravega_e2eutil.CleanupRetryInterval})
+	err := ctx.InitializeClusterResources(&framework.CleanupOptions{TestContext: ctx, Timeout: zk_e2eutil.CleanupTimeout, RetryInterval: zk_e2eutil.CleanupRetryInterval})
 	if err != nil {
 		t.Fatalf("failed to initialize cluster resources: %v", err)
 	}
@@ -51,15 +51,15 @@ func testZookeeperCluster(t *testing.T) {
 	// get global framework variables
 	f := framework.Global
 	// wait for pravega-operator to be ready
-	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "zookeeper-operator", 1, pravega_e2eutil.RetryInterval, pravega_e2eutil.Timeout)
+	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "zookeeper-operator", 1, zk_e2eutil.RetryInterval, zk_e2eutil.Timeout)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	testFuncs := map[string]func(t *testing.T){
+		"testUpgradeCluster":        testUpgradeCluster,
 		"testCreateRecreateCluster": testCreateRecreateCluster,
-		//"testScaleCluster":          testScaleCluster,
-		//"testUpgradeCluster":        testUpgradeCluster,
+		"testScaleCluster":          testScaleCluster,
 	}
 
 	for name, f := range testFuncs {

@@ -24,7 +24,7 @@ import (
 
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	api "github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	//apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 var (
@@ -52,7 +52,7 @@ func CreateCluster(t *testing.T, f *framework.Framework, ctx *framework.TestCtx,
 		return nil, fmt.Errorf("failed to obtain created CR: %v", err)
 	}
 	t.Logf("created zookeeper cluster: %s", zk.Name)
-	return pravega, nil
+	return z, nil
 }
 
 // DeleteCluster deletes the PravegaCluster CR specified by cluster spec
@@ -86,7 +86,8 @@ func GetCluster(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z 
 	if err != nil {
 		return nil, fmt.Errorf("failed to obtain created CR: %v", err)
 	}
-	return pravega, nil
+	t.Logf("zk cluster is %v", zk.Status.ReadyReplicas)
+	return zk, nil
 }
 
 // WaitForClusterToBecomeReady will wait until all cluster pods are ready
@@ -95,7 +96,7 @@ func WaitForClusterToBecomeReady(t *testing.T, f *framework.Framework, ctx *fram
 
 	err := wait.Poll(RetryInterval, ReadyTimeout, func() (done bool, err error) {
 		cluster, err := GetCluster(t, f, ctx, z)
-		if err != nil {
+			if err != nil {
 			return false, err
 		}
 
@@ -110,14 +111,13 @@ func WaitForClusterToBecomeReady(t *testing.T, f *framework.Framework, ctx *fram
 
 	if err != nil {
 		return err
-	}
-
+}
 	t.Logf("zookeeper cluster ready: %s", z.Name)
 	return nil
-}
 
+}
 // WaitForClusterToUpgrade will wait until all pods are upgraded
-func WaitForClusterToUpgrade(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z *api.PravegaCluster, targetVersion string) error {
+func WaitForClusterToUpgrade(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z *api.ZookeeperCluster, targetVersion string) error {
 	t.Logf("waiting for cluster to upgrade: %s", z.Name)
 
 	err := wait.Poll(RetryInterval, UpgradeTimeout, func() (done bool, err error) {
@@ -156,12 +156,12 @@ func WaitForClusterToTerminate(t *testing.T, f *framework.Framework, ctx *framew
 
 	listOptions := metav1.ListOptions{
 		//LabelSelector: labels.SelectorFromSet(util.LabelsForZookeeperCluster(p)).String(),
-                labelSelector : labels.SelectorFromSet(map[string]string{"app": z.GetName()}),
+		LabelSelector: labels.SelectorFromSet(map[string]string{"app": z.GetName()}).String(),
 	}
 
 	// Wait for Pods to terminate
 	err := wait.Poll(RetryInterval, TerminateTimeout, func() (done bool, err error) {
-		podList, err := f.KubeClient.Core().Pods(p.Namespace).List(listOptions)
+		podList, err := f.KubeClient.Core().Pods(z.Namespace).List(listOptions)
 		if err != nil {
 			return false, err
 		}
@@ -199,6 +199,7 @@ func WaitForClusterToTerminate(t *testing.T, f *framework.Framework, ctx *framew
 			return false, nil
 		}
 		return true, nil
+
 	})
 
 	if err != nil {

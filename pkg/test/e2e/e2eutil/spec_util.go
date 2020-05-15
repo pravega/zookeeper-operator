@@ -27,13 +27,16 @@ func NewDefaultCluster(namespace string) *api.ZookeeperCluster {
 			Name:      "zk",
 			Namespace: namespace,
 		},
+		Spec: api.ZookeeperClusterSpec{},
 	}
 }
 
 func NewClusterWithVersion(namespace, version string) *api.ZookeeperCluster {
 	cluster := NewDefaultCluster(namespace)
-	cluster.Spec = api.ClusterSpec{
-		Version: version,
+	cluster.Spec = api.ZookeeperClusterSpec{
+		Image: api.ContainerImage{
+			Tag: version,
+		},
 	}
 	return cluster
 }

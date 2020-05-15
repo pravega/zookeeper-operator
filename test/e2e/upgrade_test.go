@@ -15,11 +15,11 @@ import (
 
 	. "github.com/onsi/gomega"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
+	api "github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	zk_e2eutil "github.com/pravega/zookeeper-operator/pkg/test/e2e/e2eutil"
 )
 
-// Test create and recreate a Pravega cluster with the same name
-func testCreateRecreateCluster(t *testing.T) {
+func testUpgradeCluster(t *testing.T) {
 	g := NewGomegaWithT(t)
 
 	doCleanup := true
@@ -34,37 +34,49 @@ func testCreateRecreateCluster(t *testing.T) {
 	g.Expect(err).NotTo(HaveOccurred())
 	f := framework.Global
 
-	defaultCluster := zk_e2eutil.NewDefaultCluster(namespace)
+	cluster := zk_e2eutil.NewDefaultCluster(namespace)
 
-	defaultCluster.WithDefaults()
-	defaultCluster.Status.Init()
-	defaultCluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
+	cluster.WithDefaults()
+	cluster.Status.Init()
+	cluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
+	initialVersion := "0.2.5"
+	upgradeVersion := "0.2.7"
+	cluster.Spec.Image = api.ContainerImage{
+		Repository: "pravega/zookeeper",
+		Tag:        initialVersion,
+	}
 
-	zk, err := zk_e2eutil.CreateCluster(t, f, ctx, defaultCluster)
+	zk, err := zk_e2eutil.CreateCluster(t, f, ctx, cluster)
 	g.Expect(err).NotTo(HaveOccurred())
 
-	// A default Pravega cluster should have 2 pods: 1 controller, 1 segment store
+	// A default Pravega cluster should have 2 pods:  1 controller, 1 segment store
 	podSize := 3
 	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
 	g.Expect(err).NotTo(HaveOccurred())
 
-	err = zk_e2eutil.DeleteCluster(t, f, ctx, zk)
+	// This is to get the latest Pravega cluster object
+	zk, err = zk_e2eutil.GetCluster(t, f, ctx, zk)
 	g.Expect(err).NotTo(HaveOccurred())
 
-	err = zk_e2eutil.WaitForClusterToTerminate(t, f, ctx, zk)
+	g.Expect(zk.Status.CurrentVersion).To(Equal(initialVersion))
+
+	zk.Spec.Image.Tag = upgradeVersion
+
+	err = zk_e2eutil.UpdateCluster(t, f, ctx, zk)
 	g.Expect(err).NotTo(HaveOccurred())
 
-	defaultCluster = zk_e2eutil.NewDefaultCluster(namespace)
-	defaultCluster.WithDefaults()
-	defaultCluster.Status.Init()
-	defaultCluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
-
-	zk, err = zk_e2eutil.CreateCluster(t, f, ctx, defaultCluster)
+	err = zk_e2eutil.WaitForClusterToUpgrade(t, f, ctx, zk, upgradeVersion)
 	g.Expect(err).NotTo(HaveOccurred())
 
-	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
+	// This is to get the latest Pravega cluster object
+	zk, err = zk_e2eutil.GetCluster(t, f, ctx, zk)
 	g.Expect(err).NotTo(HaveOccurred())
 
+	g.Expect(zk.Spec.Image.Tag).To(Equal(upgradeVersion))
+	g.Expect(zk.Status.CurrentVersion).To(Equal(upgradeVersion))
+	g.Expect(zk.Status.TargetVersion).To(Equal(""))
+
+	// Delete cluster
 	err = zk_e2eutil.DeleteCluster(t, f, ctx, zk)
 	g.Expect(err).NotTo(HaveOccurred())
 
