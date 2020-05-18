@@ -100,6 +100,29 @@ example   15s
 ```
 
 ```
+After a couple of minutes, all cluster members should become ready.
+
+$ kubectl get zookeepercluster
+
+NAME      REPLICAS   READY REPLICAS   VERSION   DESIRED VERSION   INTERNAL ENDPOINT    EXTERNAL ENDPOINT   AGE
+example   3          3                latest                      10.100.200.18:2181   N/A                 94s
+
+Note = when the Version field is set as well as Ready Replicas are equal to Replicas that signifies our cluster is in Ready state
+```
+```
+Additionally check the output of describecommand should show the following cluster condition:-
+
+$ kubectl describe zookeepercluster
+
+Conditions:
+  Last Transition Time:    2020-05-18T10:17:03Z
+  Last Update Time:        2020-05-18T10:17:03Z
+  Status:                  True
+  Type:                    PodsReady
+
+Note = User should wait for the Pods Ready condition to be True for the Zookeeper Cluster
+```
+```
 $ kubectl get all -l app=example
 NAME                   DESIRED   CURRENT   AGE
 statefulsets/example   3         3         2m
@@ -123,20 +146,58 @@ To initiate an upgrade process, a user has to update the `spec.image.tag` field 
 
 After the `tag` field is updated, the StatefulSet will detect the version change and it will trigger the upgrade process.
 
-To detect whether a `ZookeeperCluster` upgrade is in progress or not, check the output of the command `kubectl get sts <name> -o yaml`. The output of this command contains the following entries
+To detect whether a `ZookeeperCluster` upgrade is in progress or not, check the output of the command `kubectl describe zookeepercluster`. The output of this command contains the following entries
 
 ```
+$ kubectl describe zookeepercluster
+
 status:
-  collisionCount: 0
-  currentReplicas: 2
-  currentRevision: example-75d4b645c8
-  observedGeneration: 4
-  readyReplicas: 3
-  replicas: 3
-  updateRevision: example-5d9dfdb787
+Last Transition Time:    2020-05-18T10:25:12Z
+Last Update Time:        2020-05-18T10:25:12Z
+Message:                 0
+Reason:                  Updating Zookeeper
+Status:                  True
+Type:                    Upgrading
 ```
 
-If the values of the fields `currentRevision` and `updateRevision` are different, it indicates that the `ZookeeperCluster` is currently undergoing an upgrade. The value of `currentRevision` is set to the value of `updateRevision` when the upgrade is complete.
+If the values of the fields `Status` field for clustercondition type `Upgrading` is True it signifies that the cluster is in Upgrading state
+
+Additionally, The output for the `$ kubectl get zookeepercluster ` will also have the Desired version set to the version the zookeepercluster is to be upgraded to.
+
+```
+$ kubectl get zookeepercluster
+
+NAME         REPLICAS   READY REPLICAS   VERSION   DESIRED VERSION   INTERNAL ENDPOINT     EXTERNAL ENDPOINT   AGE
+example        3          3                0.2.6     0.2.5             10.100.200.126:2181   N/A                 11m
+
+```
+Once, the Upgrade completes, The output for the `$ kubectl get zookeepercluster` will have the Version as the Image tag it's suppose to upgrade to and Desired Version will be empty
+
+```
+$ kubectl get zookeepercluster
+
+NAME         REPLICAS   READY REPLICAS   VERSION   DESIRED VERSION   INTERNAL ENDPOINT     EXTERNAL ENDPOINT   AGE
+example        3          3                0.2.5                       10.100.200.126:2181   N/A                 11m
+
+
+```
+
+Additionally output of the Describe command will have the upgrade condition set to false and Pods Ready condition set to True
+
+```
+$ kubectl describe zookeepercluster
+
+Status:
+  Conditions:
+    Last Transition Time:    2020-05-18T10:28:22Z
+    Last Update Time:        2020-05-18T10:28:22Z
+    Status:                  True
+    Type:                    PodsReady
+    Last Transition Time:    2020-05-18T10:28:22Z
+    Last Update Time:        2020-05-18T10:28:22Z
+    Status:                  False
+    Type:                    Upgrading
+```
 
 ```
 Note: The value of the tag field should not be modified while an upgrade is already in progress.
