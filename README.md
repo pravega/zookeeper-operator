@@ -99,19 +99,19 @@ NAME      AGE
 example   15s
 ```
 
-```
 After a couple of minutes, all cluster members should become ready.
 
+```
 $ kubectl get zookeepercluster
 
 NAME      REPLICAS   READY REPLICAS   VERSION   DESIRED VERSION   INTERNAL ENDPOINT    EXTERNAL ENDPOINT   AGE
 example   3          3                latest                      10.100.200.18:2181   N/A                 94s
-
+```
 Note: when the Version field is set as well as Ready Replicas are equal to Replicas that signifies our cluster is in Ready state
-```
-```
+
 Additionally, check the output of describe command which should show the following cluster condition:-
 
+```
 $ kubectl describe zookeepercluster
 
 Conditions:
@@ -120,8 +120,8 @@ Conditions:
   Status:                  True
   Type:                    PodsReady
 
-Note: User should wait for the Pods Ready condition to be True
 ```
+Note: User should wait for the Pods Ready condition to be True
 
 ```
 $ kubectl get all -l app=example
@@ -147,7 +147,7 @@ To initiate an upgrade process, a user has to update the `spec.image.tag` field 
 
 After the `tag` field is updated, the StatefulSet will detect the version change and it will trigger the upgrade process.
 
-To detect whether a `ZookeeperCluster` upgrade is in progress or not, check the output of the command `kubectl describe zookeepercluster`. The output of this command contains the following entries
+To detect whether a `ZookeeperCluster` upgrade is in progress or not, check the output of the command `kubectl describe zookeepercluster`. Output of this command should contain the following entries:-
 
 ```
 $ kubectl describe zookeepercluster
@@ -161,9 +161,9 @@ Status:                  True
 Type:                    Upgrading
 ```
 
-If the values of the fields `Status` field for clustercondition type `Upgrading` is True it signifies that the cluster is in Upgrading state
+If the Status value for clustercondition type `Upgrading` is True, it signifies that the cluster is in Upgrading state.
 
-Additionally, The output for the `$ kubectl get zookeepercluster ` will also have the Desired version set to the version the zookeepercluster is to be upgraded to.
+Additionally, The output for the `$ kubectl get zookeepercluster ` will also have the Desired version set to the Image Tag the zookeepercluster is trying to Upgrade to.
 
 ```
 $ kubectl get zookeepercluster
@@ -172,7 +172,7 @@ NAME         REPLICAS   READY REPLICAS   VERSION   DESIRED VERSION   INTERNAL EN
 example        3          3                0.2.6     0.2.5             10.100.200.126:2181   N/A                 11m
 
 ```
-Once, the Upgrade completes, The output for the `$ kubectl get zookeepercluster` will have the Version as the Image tag it's suppose to upgrade to and Desired Version will be empty
+Once, the Upgrade completes, The output for the `$ kubectl get zookeepercluster` will have the Version as the Image tag it's suppose to upgrade to and Desired Version will be empty. As shown Below:-
 
 ```
 $ kubectl get zookeepercluster
@@ -183,7 +183,7 @@ example        3          3                0.2.5                       10.100.20
 
 ```
 
-Additionally, output of the Describe command will have the upgrade condition set to false and Pods Ready condition set to True
+Additionally, output of the Describe command will have the `Upgrading` Status set to False and `PodsReady` status set to True. Which signifies upgrade is completed. As shown Below :-
 
 ```
 $ kubectl describe zookeepercluster
