@@ -37,11 +37,13 @@ require (
 	github.com/mailru/easyjson v0.7.1
 	github.com/mattbaird/jsonpatch v0.0.0-20171005235357-81af80346b1a
 	github.com/matttproud/golang_protobuf_extensions v1.0.1
+	github.com/mdempsky/maligned v0.0.0-20180708014732-6e39bd26a8c8 // indirect
 	github.com/mdempsky/unconvert v0.0.0-20200228143138-95ecdbfc0b5f // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd
 	github.com/modern-go/reflect2 v1.0.1
 	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.9.0
+	github.com/opennota/check v0.0.0-20180911053232-0c771f5545ff // indirect
 	github.com/operator-framework/operator-sdk v0.3.0
 	github.com/pborman/uuid v0.0.0-20180906182336-adf5a7427709
 	github.com/petar/GoLLRB v0.0.0-20190514000832-33fb24c13b99
@@ -54,6 +56,7 @@ require (
 	github.com/samuel/go-zookeeper v0.0.0-20190923202752-2cc03de413da
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/pflag v1.0.5
+	github.com/tsenart/deadcode v0.0.0-20160724212837-210d2dc333e9 // indirect
 	go.uber.org/atomic v1.6.0
 	go.uber.org/multierr v1.5.0
 	go.uber.org/zap v1.14.1
@@ -64,7 +67,7 @@ require (
 	golang.org/x/sys v0.0.0-20200320181252-af34d8274f85
 	golang.org/x/text v0.3.2
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
-	golang.org/x/tools v0.0.0-20200321014904-268ba720d32c
+	golang.org/x/tools v0.0.0-20200426102838-f3a5411a4c3b
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
 	google.golang.org/appengine v1.6.5
 	gopkg.in/inf.v0 v0.9.1
@@ -77,5 +80,8 @@ require (
 	k8s.io/gengo v0.0.0-20200205140755-e0e292d8aa12
 	k8s.io/klog v1.0.0
 	k8s.io/kube-openapi v0.0.0-20200204173128-addea2498afe
+	mvdan.cc/interfacer v0.0.0-20180901003855-c20040233aed // indirect
+	mvdan.cc/lint v0.0.0-20170908181259-adc824a0674b // indirect
+	mvdan.cc/unparam v0.0.0-20200501210554-b37ab49443f7 // indirect
 	sigs.k8s.io/controller-runtime v0.1.8
 )

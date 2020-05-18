@@ -12,10 +12,12 @@ package zookeepercluster
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	"github.com/pravega/zookeeper-operator/pkg/zk"
+	logs "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
@@ -199,6 +201,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 
 			BeforeEach(func() {
 				z.WithDefaults()
+				z.Status.Init()
 				next := z.DeepCopy()
 				st := zk.MakeStatefulSet(z)
 				next.Spec.Replicas = 6
@@ -227,6 +230,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 
 			BeforeEach(func() {
 				z.WithDefaults()
+				z.Status.Init()
 				next := z.DeepCopy()
 				st := zk.MakeStatefulSet(z)
 				cl = fake.NewFakeClient([]runtime.Object{next, st}...)
@@ -244,6 +248,58 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				Ω(err).To(BeNil())
 			})
 
+		})
+
+		Context("upgrading the image for zookeepercluster", func() {
+			var (
+				cl  client.Client
+				err error
+			)
+
+			BeforeEach(func() {
+				z.WithDefaults()
+				z.Status.Init()
+				next := z.DeepCopy()
+				next.Spec.Image.Tag = "0.2.5"
+				next.Status.CurrentVersion = "0.2.6"
+				st := zk.MakeStatefulSet(z)
+				cl = fake.NewFakeClient([]runtime.Object{next, st}...)
+				st = &appsv1.StatefulSet{}
+				err = cl.Get(context.TODO(), req.NamespacedName, st)
+				//changing the REvision vlue to simulate the update scenario
+				st.Status.CurrentRevision = "CurrentRevision"
+				st.Status.UpdateRevision = "UpdateRevision"
+				cl.Status().Update(context.TODO(), st)
+				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				res, err = r.Reconcile(req)
+			})
+
+			It("should not raise an error", func() {
+				Ω(err).To(BeNil())
+			})
+
+			It("should set the upgrade condition to true", func() {
+				foundPravega := &v1beta1.ZookeeperCluster{}
+				_ = cl.Get(context.TODO(), req.NamespacedName, foundPravega)
+				logs.Printf("krishna value of tag = %s", fmt.Sprint(foundPravega.Spec))
+				Ω(err).To(BeNil())
+				Ω(foundPravega.Status.IsClusterInUpgradingState()).To(BeTrue())
+			})
+
+			It("should set the target version", func() {
+				foundPravega := &v1beta1.ZookeeperCluster{}
+				_ = cl.Get(context.TODO(), req.NamespacedName, foundPravega)
+				logs.Printf("krishna value of tag = %s", fmt.Sprint(foundPravega.Status))
+				Ω(err).To(BeNil())
+				Ω(foundPravega.Status.TargetVersion).To(BeEquivalentTo("0.2.5"))
+
+			})
+
+			/*	It("should update the sts", func() {
+				foundSts := &appsv1.StatefulSet{}
+				err = cl.Get(context.TODO(), req.NamespacedName, foundSts)
+
+			})*/
 		})
 
 		Context("With an update to the client svc", func() {

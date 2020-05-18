@@ -139,7 +139,6 @@ func (r *ReconcileZookeeperCluster) Reconcile(request reconcile.Request) (reconc
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
-	instance.Status.Init()
 	changed := instance.WithDefaults()
 	if changed {
 		r.log.Info("Setting default settings for zookeeper-cluster")
@@ -449,6 +448,7 @@ func (r *ReconcileZookeeperCluster) reconcileClusterStatus(instance *zookeeperv1
 	if instance.Status.IsClusterInUpgradingState() || instance.Status.IsClusterInUpgradeFailedState() {
 		return nil
 	}
+	instance.Status.Init()
 	foundPods := &corev1.PodList{}
 	labelSelector := labels.SelectorFromSet(map[string]string{"app": instance.GetName()})
 	listOps := &client.ListOptions{
