@@ -107,10 +107,10 @@ $ kubectl get zookeepercluster
 NAME      REPLICAS   READY REPLICAS   VERSION   DESIRED VERSION   INTERNAL ENDPOINT    EXTERNAL ENDPOINT   AGE
 example   3          3                latest                      10.100.200.18:2181   N/A                 94s
 
-Note = when the Version field is set as well as Ready Replicas are equal to Replicas that signifies our cluster is in Ready state
+Note: when the Version field is set as well as Ready Replicas are equal to Replicas that signifies our cluster is in Ready state
 ```
 ```
-Additionally check the output of describecommand should show the following cluster condition:-
+Additionally, check the output of describe command which should show the following cluster condition:-
 
 $ kubectl describe zookeepercluster
 
@@ -120,8 +120,9 @@ Conditions:
   Status:                  True
   Type:                    PodsReady
 
-Note = User should wait for the Pods Ready condition to be True for the Zookeeper Cluster
+Note: User should wait for the Pods Ready condition to be True
 ```
+
 ```
 $ kubectl get all -l app=example
 NAME                   DESIRED   CURRENT   AGE
@@ -182,7 +183,7 @@ example        3          3                0.2.5                       10.100.20
 
 ```
 
-Additionally output of the Describe command will have the upgrade condition set to false and Pods Ready condition set to True
+Additionally, output of the Describe command will have the upgrade condition set to false and Pods Ready condition set to True
 
 ```
 $ kubectl describe zookeepercluster
