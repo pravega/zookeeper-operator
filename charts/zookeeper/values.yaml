@@ -1,4 +1,13 @@
+replicas: 3
+
 image:
   repository: pravega/zookeeper
   tag: latest
   pullPolicy: IfNotPresent
+
+storage:
+  className: standard
+  # specifying reclaim policy for PersistentVolumes
+  # accepted values - Delete / Retain
+  reclaimPolicy: Delete
+  cacheVolumeRequest: 10Gi
