@@ -223,26 +223,31 @@ func (r *ReconcileZookeeperCluster) updateStatefulSet(instance *zookeeperv1beta1
 		"StatefulSet.Name", foundSts.Name)
 	zk.SyncStatefulSet(foundSts, sts)
 
+	//Getting the upgradeCondition from the zk clustercondition
 	_, upgradeCondition := instance.Status.GetClusterCondition(zookeeperv1beta1.ClusterConditionUpgrading)
 
+	//Setting the upgrade condition to true when the zk cluster is upgrading
+	//When the zk cluster is upgrading currentversion is not empty as well as Statefulset CurrentRevision and UpdateRevision are not equal and zk cluster image tag is not equal to CurrentVersion
 	if upgradeCondition.Status != corev1.ConditionTrue && instance.Status.CurrentVersion != "" && foundSts.Status.CurrentRevision != foundSts.Status.UpdateRevision && instance.Spec.Image.Tag != instance.Status.CurrentVersion {
 		instance.Status.TargetVersion = instance.Spec.Image.Tag
 		instance.Status.SetPodsReadyConditionFalse()
 		instance.Status.SetUpgradingConditionTrue("", "")
 	}
 
+	//checking if the upgrade is in progress
 	if upgradeCondition.Status == corev1.ConditionTrue {
-		// Upgrade process already in progress
+		//checking when the targetversion is empty
 		if instance.Status.TargetVersion == "" {
 			r.log.Info("upgrading to an unknown version: cancelling upgrade process")
 			return r.clearUpgradeStatus(instance)
 		}
-
+		//Checking for upgrade completion
 		if foundSts.Status.CurrentRevision == foundSts.Status.UpdateRevision {
 			instance.Status.CurrentVersion = instance.Status.TargetVersion
 			r.log.Info("upgrade completed")
 			return r.clearUpgradeStatus(instance)
 		}
+		//updating the upgradecondition if upgrade is in progress
 		if foundSts.Status.CurrentRevision != foundSts.Status.UpdateRevision {
 			r.log.Info("upgrade in progress")
 			if fmt.Sprint(foundSts.Status.UpdatedReplicas) != upgradeCondition.Message {
@@ -271,24 +276,24 @@ func (r *ReconcileZookeeperCluster) updateStatefulSet(instance *zookeeperv1beta1
 	return nil
 }
 
-func (r *ReconcileZookeeperCluster) clearUpgradeStatus(p *zookeeperv1beta1.ZookeeperCluster) (err error) {
-	p.Status.SetUpgradingConditionFalse()
-	p.Status.TargetVersion = ""
+func (r *ReconcileZookeeperCluster) clearUpgradeStatus(z *zookeeperv1beta1.ZookeeperCluster) (err error) {
+	z.Status.SetUpgradingConditionFalse()
+	z.Status.TargetVersion = ""
 	// need to deep copy the status struct, otherwise it will be overwritten
 	// when updating the CR below
-	status := p.Status.DeepCopy()
+	status := z.Status.DeepCopy()
 
-	err = r.client.Status().Update(context.TODO(), p)
+	err = r.client.Status().Update(context.TODO(), z)
 	if err != nil {
 		return err
 	}
 
-	p.Status = *status
+	z.Status = *status
 	return nil
 }
 
-func checkSyncTimeout(p *zookeeperv1beta1.ZookeeperCluster, reason string, updatedReplicas int32) error {
-	lastCondition := p.Status.GetLastCondition()
+func checkSyncTimeout(z *zookeeperv1beta1.ZookeeperCluster, reason string, updatedReplicas int32) error {
+	lastCondition := z.Status.GetLastCondition()
 	if lastCondition == nil {
 		return nil
 	}

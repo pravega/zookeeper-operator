@@ -216,6 +216,6 @@ func (zs *ZookeeperClusterStatus) GetLastCondition() (lastCondition *ClusterCond
 		_, lastCondition := zs.GetClusterCondition(ClusterConditionUpgrading)
 		return lastCondition
 	}
-	// nothing to do if we are neither upgrading nor rolling back,
+	// nothing to do if we are not upgrading,
 	return nil
 }
