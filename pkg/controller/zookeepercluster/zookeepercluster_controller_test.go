@@ -266,7 +266,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				cl = fake.NewFakeClient([]runtime.Object{next, st}...)
 				st = &appsv1.StatefulSet{}
 				err = cl.Get(context.TODO(), req.NamespacedName, st)
-				//changing the REvision vlue to simulate the update scenario
+				//changing the Revision value to simulate the upgrade scenario
 				st.Status.CurrentRevision = "CurrentRevision"
 				st.Status.UpdateRevision = "UpdateRevision"
 				cl.Status().Update(context.TODO(), st)
@@ -292,14 +292,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				logs.Printf("krishna value of tag = %s", fmt.Sprint(foundPravega.Status))
 				Ω(err).To(BeNil())
 				Ω(foundPravega.Status.TargetVersion).To(BeEquivalentTo("0.2.5"))
-
 			})
-
-			/*	It("should update the sts", func() {
-				foundSts := &appsv1.StatefulSet{}
-				err = cl.Get(context.TODO(), req.NamespacedName, foundSts)
-
-			})*/
 		})
 
 		Context("With an update to the client svc", func() {
