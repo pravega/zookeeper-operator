@@ -23,6 +23,24 @@ var _ = Describe("ZookeeperCluster Status", func() {
 
 	var z v1beta1.ZookeeperCluster
 
+	Context("checking for default values", func() {
+		BeforeEach(func() {
+			z.Status.Init()
+		})
+		It("should contains pods ready condition and it is false status", func() {
+			_, condition := z.Status.GetClusterCondition(v1beta1.ClusterConditionPodsReady)
+			Ω(condition.Status).To(Equal(corev1.ConditionFalse))
+		})
+		It("should contains upgrade ready condition and it is false status", func() {
+			_, condition := z.Status.GetClusterCondition(v1beta1.ClusterConditionUpgrading)
+			Ω(condition.Status).To(Equal(corev1.ConditionFalse))
+		})
+		It("should contains pods ready condition and it is false status", func() {
+			_, condition := z.Status.GetClusterCondition(v1beta1.ClusterConditionError)
+			Ω(condition.Status).To(Equal(corev1.ConditionFalse))
+		})
+	})
+
 	BeforeEach(func() {
 		z = v1beta1.ZookeeperCluster{
 			ObjectMeta: metav1.ObjectMeta{
@@ -97,6 +115,9 @@ var _ = Describe("ZookeeperCluster Status", func() {
 				_, condition := z.Status.GetClusterCondition(v1beta1.ClusterConditionPodsReady)
 				Ω(condition.Status).To(Equal(corev1.ConditionTrue))
 			})
+			It("should have pods ready condition with true status using function", func() {
+				Ω(z.Status.IsClusterInReadyState()).To(Equal(true))
+			})
 		})
 
 		Context("set pod ready condition to be false", func() {
@@ -108,6 +129,10 @@ var _ = Describe("ZookeeperCluster Status", func() {
 			It("should have ready condition with false status", func() {
 				_, condition := z.Status.GetClusterCondition(v1beta1.ClusterConditionPodsReady)
 				Ω(condition.Status).To(Equal(corev1.ConditionFalse))
+			})
+
+			It("should have ready condition with false status using function", func() {
+				Ω(z.Status.IsClusterInReadyState()).To(Equal(false))
 			})
 
 			It("should have updated timestamps", func() {
@@ -129,6 +154,13 @@ var _ = Describe("ZookeeperCluster Status", func() {
 				_, condition := z.Status.GetClusterCondition(v1beta1.ClusterConditionUpgrading)
 				Ω(condition.Status).To(Equal(corev1.ConditionTrue))
 			})
+			It("should have pods upgrade condition with true status using function", func() {
+				Ω(z.Status.IsClusterInUpgradingState()).To(Equal(true))
+			})
+			It("Checking GetlastCondition function and It should return UpgradeCondition as cluster in Upgrading state", func() {
+				condition := z.Status.GetLastCondition()
+				Ω(string(condition.Type)).To(Equal(v1beta1.ClusterConditionUpgrading))
+			})
 		})
 
 		Context("set pod upgrade condition to be false", func() {
@@ -140,6 +172,15 @@ var _ = Describe("ZookeeperCluster Status", func() {
 			It("should have upgrade condition with false status", func() {
 				_, condition := z.Status.GetClusterCondition(v1beta1.ClusterConditionUpgrading)
 				Ω(condition.Status).To(Equal(corev1.ConditionFalse))
+			})
+
+			It("should have upgrade condition with false status using function", func() {
+				Ω(z.Status.IsClusterInUpgradingState()).To(Equal(false))
+			})
+
+			It("Checking GetlastCondition function and It should return nil as not in Upgrading state", func() {
+				condition := z.Status.GetLastCondition()
+				Ω(condition).To(BeNil())
 			})
 
 			It("should have updated timestamps", func() {
@@ -155,23 +196,31 @@ var _ = Describe("ZookeeperCluster Status", func() {
 		Context("set pods Error condition to be true", func() {
 			BeforeEach(func() {
 				z.Status.SetErrorConditionFalse()
-				z.Status.SetErrorConditionTrue(" ", " ")
+				z.Status.SetErrorConditionTrue("UpgradeFailed", " ")
+			})
+			It("should have pods Error condition with true status using function", func() {
+				Ω(z.Status.IsClusterInUpgradeFailedState()).To(Equal(true))
 			})
 			It("should have pods Error condition with true status", func() {
 				_, condition := z.Status.GetClusterCondition(v1beta1.ClusterConditionError)
 				Ω(condition.Status).To(Equal(corev1.ConditionTrue))
+
 			})
 		})
 
 		Context("set pod Error condition to be false", func() {
 			BeforeEach(func() {
-				z.Status.SetErrorConditionTrue(" ", " ")
+				z.Status.SetErrorConditionTrue("UpgradeFailed", " ")
 				z.Status.SetErrorConditionFalse()
 			})
 
 			It("should have Error condition with false status", func() {
 				_, condition := z.Status.GetClusterCondition(v1beta1.ClusterConditionError)
 				Ω(condition.Status).To(Equal(corev1.ConditionFalse))
+			})
+
+			It("should have Error condition with false status using function", func() {
+				Ω(z.Status.IsClusterInUpgradeFailedState()).To(Equal(false))
 			})
 
 			It("should have updated timestamps", func() {
@@ -182,5 +231,4 @@ var _ = Describe("ZookeeperCluster Status", func() {
 			})
 		})
 	})
-
 })
