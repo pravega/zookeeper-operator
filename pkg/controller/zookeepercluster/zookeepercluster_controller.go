@@ -253,7 +253,7 @@ func (r *ReconcileZookeeperCluster) updateStatefulSet(instance *zookeeperv1beta1
 			if fmt.Sprint(foundSts.Status.UpdatedReplicas) != upgradeCondition.Message {
 				instance.Status.UpdateProgress(zookeeperv1beta1.UpdatingZookeeperReason, fmt.Sprint(foundSts.Status.UpdatedReplicas))
 			} else {
-				err = checkSyncTimeout(instance, zookeeperv1beta1.UpdatingZookeeperReason, foundSts.Status.UpdatedReplicas)
+				err = checkSyncTimeout(instance, zookeeperv1beta1.UpdatingZookeeperReason, foundSts.Status.UpdatedReplicas, 10)
 				if err != nil {
 					instance.Status.SetErrorConditionTrue("UpgradeFailed", err.Error())
 					return r.client.Status().Update(context.TODO(), instance)
@@ -292,7 +292,7 @@ func (r *ReconcileZookeeperCluster) clearUpgradeStatus(z *zookeeperv1beta1.Zooke
 	return nil
 }
 
-func checkSyncTimeout(z *zookeeperv1beta1.ZookeeperCluster, reason string, updatedReplicas int32) error {
+func checkSyncTimeout(z *zookeeperv1beta1.ZookeeperCluster, reason string, updatedReplicas int32, t int) error {
 	lastCondition := z.Status.GetLastCondition()
 	if lastCondition == nil {
 		return nil
@@ -301,7 +301,7 @@ func checkSyncTimeout(z *zookeeperv1beta1.ZookeeperCluster, reason string, updat
 		// if reason and message are the same as before, which means there is no progress since the last reconciling,
 		// then check if it reaches the timeout.
 		parsedTime, _ := time.Parse(time.RFC3339, lastCondition.LastUpdateTime)
-		if time.Now().After(parsedTime.Add(time.Duration(10 * time.Minute))) {
+		if time.Now().After(parsedTime.Add(time.Duration(time.Duration(t) * time.Minute))) {
 			// timeout
 			return fmt.Errorf("progress deadline exceeded")
 		}
