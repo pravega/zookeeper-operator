@@ -22,8 +22,6 @@ import (
 	"github.com/pravega/zookeeper-operator/pkg/utils"
 	"github.com/pravega/zookeeper-operator/pkg/yamlexporter"
 
-	"k8s.io/apimachinery/pkg/labels"
-
 	"github.com/go-logr/logr"
 	zookeeperv1beta1 "github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	"github.com/pravega/zookeeper-operator/pkg/zk"
@@ -32,6 +30,7 @@ import (
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -253,7 +252,7 @@ func (r *ReconcileZookeeperCluster) updateStatefulSet(instance *zookeeperv1beta1
 			if fmt.Sprint(foundSts.Status.UpdatedReplicas) != upgradeCondition.Message {
 				instance.Status.UpdateProgress(zookeeperv1beta1.UpdatingZookeeperReason, fmt.Sprint(foundSts.Status.UpdatedReplicas))
 			} else {
-				err = checkSyncTimeout(instance, zookeeperv1beta1.UpdatingZookeeperReason, foundSts.Status.UpdatedReplicas, 10)
+				err = checkSyncTimeout(instance, zookeeperv1beta1.UpdatingZookeeperReason, foundSts.Status.UpdatedReplicas, 10*time.Minute)
 				if err != nil {
 					instance.Status.SetErrorConditionTrue("UpgradeFailed", err.Error())
 					return r.client.Status().Update(context.TODO(), instance)
@@ -292,7 +291,7 @@ func (r *ReconcileZookeeperCluster) clearUpgradeStatus(z *zookeeperv1beta1.Zooke
 	return nil
 }
 
-func checkSyncTimeout(z *zookeeperv1beta1.ZookeeperCluster, reason string, updatedReplicas int32, t int) error {
+func checkSyncTimeout(z *zookeeperv1beta1.ZookeeperCluster, reason string, updatedReplicas int32, t time.Duration) error {
 	lastCondition := z.Status.GetLastCondition()
 	if lastCondition == nil {
 		return nil
@@ -301,7 +300,7 @@ func checkSyncTimeout(z *zookeeperv1beta1.ZookeeperCluster, reason string, updat
 		// if reason and message are the same as before, which means there is no progress since the last reconciling,
 		// then check if it reaches the timeout.
 		parsedTime, _ := time.Parse(time.RFC3339, lastCondition.LastUpdateTime)
-		if time.Now().After(parsedTime.Add(time.Duration(time.Duration(t) * time.Minute))) {
+		if time.Now().After(parsedTime.Add(t)) {
 			// timeout
 			return fmt.Errorf("progress deadline exceeded")
 		}

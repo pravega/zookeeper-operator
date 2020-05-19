@@ -13,6 +13,7 @@ package zookeepercluster
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	"github.com/pravega/zookeeper-operator/pkg/zk"
@@ -371,8 +372,11 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				cl.Status().Update(context.TODO(), st)
 				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
 				res, err = r.Reconcile(req)
-				res, err = r.Reconcile(req)
-				err = checkSyncTimeout(next, " ", 1, 0)
+				//sleeping for 3 seconds
+				time.Sleep(3 * time.Second)
+				//checking if more than 2 secs have passed from the last update time
+				err = checkSyncTimeout(next, " ", 1, 2*time.Second)
+
 			})
 
 			It("checking update replicas", func() {
