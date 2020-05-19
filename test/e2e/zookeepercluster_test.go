@@ -50,13 +50,15 @@ func testZookeeperCluster(t *testing.T) {
 	}
 	// get global framework variables
 	f := framework.Global
-	// wait for pravega-operator to be ready
+	// wait for zookeeper-operator to be ready
 	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "zookeeper-operator", 1, zk_e2eutil.RetryInterval, zk_e2eutil.Timeout)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	testFuncs := map[string]func(t *testing.T){
+		"testDeletePods":            testDeletePods,
+		"testMultiZKCluster":        testMultiZKCluster,
 		"testUpgradeCluster":        testUpgradeCluster,
 		"testCreateRecreateCluster": testCreateRecreateCluster,
 		"testScaleCluster":          testScaleCluster,

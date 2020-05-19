@@ -17,6 +17,7 @@ import (
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
@@ -96,7 +97,7 @@ func WaitForClusterToBecomeReady(t *testing.T, f *framework.Framework, ctx *fram
 
 	err := wait.Poll(RetryInterval, ReadyTimeout, func() (done bool, err error) {
 		cluster, err := GetCluster(t, f, ctx, z)
-			if err != nil {
+		if err != nil {
 			return false, err
 		}
 
@@ -111,11 +112,12 @@ func WaitForClusterToBecomeReady(t *testing.T, f *framework.Framework, ctx *fram
 
 	if err != nil {
 		return err
-}
+	}
 	t.Logf("zookeeper cluster ready: %s", z.Name)
 	return nil
 
 }
+
 // WaitForClusterToUpgrade will wait until all pods are upgraded
 func WaitForClusterToUpgrade(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z *api.ZookeeperCluster, targetVersion string) error {
 	t.Logf("waiting for cluster to upgrade: %s", z.Name)
@@ -207,5 +209,29 @@ func WaitForClusterToTerminate(t *testing.T, f *framework.Framework, ctx *framew
 	}
 
 	t.Logf("zookeeper cluster terminated: %s", z.Name)
+	return nil
+}
+func DeletePods(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z *api.ZookeeperCluster, size int) error {
+	listOptions := metav1.ListOptions{
+		//LabelSelector: labels.SelectorFromSet(util.LabelsForZookeeperCluster(p)).String(),
+		LabelSelector: labels.SelectorFromSet(map[string]string{"app": z.GetName()}).String(),
+	}
+	podList, err := f.KubeClient.Core().Pods(z.Namespace).List(listOptions)
+	if err != nil {
+		return err
+	}
+	pod := &corev1.Pod{}
+
+	for i := 0; i < size; i++ {
+		pod = &podList.Items[i]
+		t.Logf("podnameis %v", pod.Name)
+		err := f.Client.Delete(goctx.TODO(), pod)
+		if err != nil {
+			return fmt.Errorf("failed to delete pod: %v", err)
+		}
+
+		t.Logf("deleted pravega pod: %s", pod.Name)
+
+	}
 	return nil
 }

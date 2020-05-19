@@ -12,11 +12,13 @@ PROJECT_NAME=zookeeper-operator
 EXPORTER_NAME=zookeeper-exporter
 APP_NAME=zookeeper
 REPO=pravega/$(PROJECT_NAME)
+TEST_REPO=$(DOCKER_USER)/$(PROJECT_NAME)
 APP_REPO=pravega/$(APP_NAME)
 ALTREPO=emccorp/$(PROJECT_NAME)
 APP_ALTREPO=emccorp/$(APP_NAME)
 VERSION=$(shell git describe --always --tags --dirty | sed "s/\(.*\)-g`git rev-parse --short HEAD`/\1/")
 GIT_SHA=$(shell git rev-parse --short HEAD)
+TEST_IMAGE=$(TEST_REPO)-testimages:$(VERSION)
 
 .PHONY: all build check clean test
 
@@ -57,6 +59,13 @@ build-zk-image-swarm:
 test:
 	go test $$(go list ./... | grep -v /vendor/ | grep -v /test/e2e) -race -coverprofile=coverage.txt -covermode=atomic
 
+test-e2e-remote: login
+	operator-sdk build $(TEST_IMAGE) --enable-tests
+	docker push $(TEST_IMAGE)
+	operator-sdk test local ./test/e2e --namespace default --namespaced-manifest ./test/e2e/resources/rbac-operator.yaml --global-manifest  deploy/crds/zookeeper_v1beta1_zookeepercluster_crd.yaml  --image $(TEST_IMAGE) --go-test-flags "-v -timeout 0"
+
+run-local:
+	operator-sdk up local
 login:
 	@docker login -u "$(DOCKER_USER)" -p "$(DOCKER_PASS)"
 
