@@ -137,7 +137,7 @@ var _ = Describe("ZookeeperCluster Status", func() {
 
 			It("should have updated timestamps", func() {
 				_, condition := z.Status.GetClusterCondition(v1beta1.ClusterConditionPodsReady)
-				// TODO: check the timestamps
+				//check the timestamps
 				Ω(condition.LastUpdateTime).NotTo(Equal(""))
 				Ω(condition.LastTransitionTime).NotTo(Equal(""))
 			})
@@ -185,7 +185,7 @@ var _ = Describe("ZookeeperCluster Status", func() {
 
 			It("should have updated timestamps", func() {
 				_, condition := z.Status.GetClusterCondition(v1beta1.ClusterConditionUpgrading)
-				// TODO: check the timestamps
+				//check the timestamps
 				Ω(condition.LastUpdateTime).NotTo(Equal(""))
 				Ω(condition.LastTransitionTime).NotTo(Equal(""))
 			})
@@ -225,7 +225,7 @@ var _ = Describe("ZookeeperCluster Status", func() {
 
 			It("should have updated timestamps", func() {
 				_, condition := z.Status.GetClusterCondition(v1beta1.ClusterConditionError)
-				// TODO: check the timestamps
+				//check the timestamps
 				Ω(condition.LastUpdateTime).NotTo(Equal(""))
 				Ω(condition.LastTransitionTime).NotTo(Equal(""))
 			})
