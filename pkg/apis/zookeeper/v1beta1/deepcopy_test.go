@@ -26,9 +26,9 @@ func TestDeepcopy(t *testing.T) {
 }
 
 var _ = Describe("ZookeeperCluster DeepCopy", func() {
-
 	Context("with defaults", func() {
-		var str1, str2 string
+		var str1, str2, str3, str4 string
+		var z2 *v1beta1.ZookeeperCluster
 		BeforeEach(func() {
 			z1 := &v1beta1.ZookeeperCluster{
 				ObjectMeta: metav1.ObjectMeta{
@@ -37,12 +37,25 @@ var _ = Describe("ZookeeperCluster DeepCopy", func() {
 				},
 			}
 			z1.WithDefaults()
-			z2 := *z1.DeepCopy()
+			temp := *z1.DeepCopy()
+			z2 = &temp
 			str1 = z1.Spec.Image.Tag
 			str2 = z2.Spec.Image.Tag
+			z1.Spec.Image.Tag = "0.2.5"
+			z1.Spec.Image.DeepCopyInto(&z2.Spec.Image)
+			str3 = z2.Spec.Image.Tag
+			z1.Spec.Image.Tag = "0.2.6"
+			z2.Spec.Image = *z1.Spec.Image.DeepCopy()
+			str4 = z2.Spec.Image.Tag
 		})
-		It("should set the image for z2 as that of z1", func() {
+		It("value of str1 and str2 should be equal", func() {
 			Ω(str2).To(Equal(str1))
+		})
+		It("value of str3 image tag should be 0.2.5", func() {
+			Ω(str3).To(Equal("0.2.5"))
+		})
+		It("value of str3 image tag should be 0.2.6", func() {
+			Ω(str4).To(Equal("0.2.6"))
 		})
 	})
 })
