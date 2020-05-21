@@ -34,6 +34,10 @@ const (
 	// container is stopped. This gives clients time to disconnect from a
 	// specific node gracefully.
 	DefaultTerminationGracePeriod = 30
+
+	// DefaultZookeeperCacheVolumeSize is the default volume size for the
+	// Zookeeper cache volume
+	DefaultZookeeperCacheVolumeSize = "20Gi"
 )
 
 // ZookeeperClusterSpec defines the desired state of ZookeeperCluster
@@ -376,9 +380,10 @@ func (p *Persistence) withDefaults() (changed bool) {
 		v1.ReadWriteOnce,
 	}
 
-	if len(p.PersistentVolumeClaimSpec.Resources.Requests) == 0 {
+	storage, _ := p.PersistentVolumeClaimSpec.Resources.Requests["storage"]
+	if storage.IsZero() {
 		p.PersistentVolumeClaimSpec.Resources.Requests = v1.ResourceList{
-			v1.ResourceStorage: resource.MustParse("20Gi"),
+			v1.ResourceStorage: resource.MustParse(DefaultZookeeperCacheVolumeSize),
 		}
 		changed = true
 	}
