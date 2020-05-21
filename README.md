@@ -101,7 +101,7 @@ example   3          3                 0.2.7     0.2.7             10.100.200.18
 ```
 >Note: when the Version field is set as well as Ready Replicas are equal to Replicas that signifies our cluster is in Ready state
 
-Additionally, check the output of describe command which should show the following cluster condition:-
+Additionally, check the output of describe command which should show the following cluster condition
 
 ```
 $ kubectl describe zk
@@ -139,7 +139,7 @@ To initiate an upgrade process, a user has to update the `spec.image.tag` field 
 
 After the `tag` field is updated, the StatefulSet will detect the version change and it will trigger the upgrade process.
 
-To detect whether a `ZookeeperCluster` upgrade is in progress or not, check the output of the command `kubectl describe zk`. Output of this command should contain the following entries:-
+To detect whether a `ZookeeperCluster` upgrade is in progress or not, check the output of the command `kubectl describe zk`. Output of this command should contain the following entries
 
 ```
 $ kubectl describe zk
@@ -164,7 +164,7 @@ NAME         REPLICAS   READY REPLICAS   VERSION   DESIRED VERSION   INTERNAL EN
 example        3          3                0.2.6     0.2.7             10.100.200.126:2181   N/A                 11m
 
 ```
-Once, the Upgrade completes, output for `$ kubectl get zk` command will have the Version as the Image tag it's supposed to upgrade to, as shown below :-
+Once, the Upgrade completes, output for `$ kubectl get zk` command will have the Version field set as he Desired Version, as shown below
 
 ```
 $ kubectl get zk
@@ -174,7 +174,7 @@ example        3          3               0.2.7     0.2.7            10.100.200.
 
 
 ```
-Additionally, the describe output will have the Upgrading status set to False and PodsReady status set to True which signifies that the upgrade has completed, as shown below :-
+Additionally, the describe output will have the Upgrading status set to False and PodsReady status set to True which signifies that the upgrade has completed, as shown below
 
 ```
 $ kubectl describe zk
