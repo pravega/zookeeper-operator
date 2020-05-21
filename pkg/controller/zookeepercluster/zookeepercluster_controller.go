@@ -212,7 +212,11 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 			r.log.Info("Updating Cluster Size.", "New Data:", data, "Version", version)
 			r.zkClient.UpdateNode(path, data, version)
 		}
-		return r.updateStatefulSet(instance, foundSts, sts)
+		err = r.updateStatefulSet(instance, foundSts, sts)
+		if err != nil {
+			return err
+		}
+		return r.upgradeStatefulSet(instance, foundSts, sts)
 	}
 }
 
@@ -222,12 +226,23 @@ func (r *ReconcileZookeeperCluster) updateStatefulSet(instance *zookeeperv1beta1
 		"StatefulSet.Name", foundSts.Name)
 	zk.SyncStatefulSet(foundSts, sts)
 
+	err = r.client.Update(context.TODO(), foundSts)
+	if err != nil {
+		return err
+	}
+	instance.Status.Replicas = foundSts.Status.Replicas
+	instance.Status.ReadyReplicas = foundSts.Status.ReadyReplicas
+	return nil
+}
+
+func (r *ReconcileZookeeperCluster) upgradeStatefulSet(instance *zookeeperv1beta1.ZookeeperCluster, foundSts *appsv1.StatefulSet, sts *appsv1.StatefulSet) (err error) {
+
 	//Getting the upgradeCondition from the zk clustercondition
 	_, upgradeCondition := instance.Status.GetClusterCondition(zookeeperv1beta1.ClusterConditionUpgrading)
 
 	//Setting the upgrade condition to true when the zk cluster is upgrading
 	//When the zk cluster is upgrading currentversion is not empty as well as Statefulset CurrentRevision and UpdateRevision are not equal and zk cluster image tag is not equal to CurrentVersion
-	if upgradeCondition.Status != corev1.ConditionTrue && instance.Status.CurrentVersion != "" && foundSts.Status.CurrentRevision != foundSts.Status.UpdateRevision && instance.Spec.Image.Tag != instance.Status.CurrentVersion {
+	if upgradeCondition != nil && upgradeCondition.Status != corev1.ConditionTrue && instance.Status.IsClusterInReadyState() && foundSts.Status.CurrentRevision != foundSts.Status.UpdateRevision && instance.Spec.Image.Tag != instance.Status.CurrentVersion {
 		instance.Status.TargetVersion = instance.Spec.Image.Tag
 		instance.Status.SetPodsReadyConditionFalse()
 		instance.Status.SetUpgradingConditionTrue("", "")
@@ -262,17 +277,7 @@ func (r *ReconcileZookeeperCluster) updateStatefulSet(instance *zookeeperv1beta1
 			}
 		}
 	}
-	err = r.client.Status().Update(context.TODO(), instance)
-	if err != nil {
-		return err
-	}
-	err = r.client.Update(context.TODO(), foundSts)
-	if err != nil {
-		return err
-	}
-	instance.Status.Replicas = foundSts.Status.Replicas
-	instance.Status.ReadyReplicas = foundSts.Status.ReadyReplicas
-	return nil
+	return r.client.Status().Update(context.TODO(), instance)
 }
 
 func (r *ReconcileZookeeperCluster) clearUpgradeStatus(z *zookeeperv1beta1.ZookeeperCluster) (err error) {

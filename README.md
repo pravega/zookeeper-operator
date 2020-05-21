@@ -91,28 +91,20 @@ spec:
 $ kubectl create -f zk.yaml
 ```
 
-Verify that the cluster instances and its components are running.
-
-```
-$ kubectl get zk
-NAME      AGE
-example   15s
-```
-
 After a couple of minutes, all cluster members should become ready.
 
 ```
-$ kubectl get zookeepercluster
+$ kubectl get zk
 
 NAME      REPLICAS   READY REPLICAS   VERSION   DESIRED VERSION   INTERNAL ENDPOINT    EXTERNAL ENDPOINT   AGE
-example   3          3                latest                      10.100.200.18:2181   N/A                 94s
+example   3          3                 0.2.7     0.2.7             10.100.200.18:2181   N/A                 94s
 ```
-Note: when the Version field is set as well as Ready Replicas are equal to Replicas that signifies our cluster is in Ready state
+>Note: when the Version field is set as well as Ready Replicas are equal to Replicas that signifies our cluster is in Ready state
 
 Additionally, check the output of describe command which should show the following cluster condition:-
 
 ```
-$ kubectl describe zookeepercluster
+$ kubectl describe zk
 
 Conditions:
   Last Transition Time:    2020-05-18T10:17:03Z
@@ -121,7 +113,7 @@ Conditions:
   Type:                    PodsReady
 
 ```
-Note: User should wait for the Pods Ready condition to be True
+>Note: User should wait for the Pods Ready condition to be True
 
 ```
 $ kubectl get all -l app=example
@@ -147,10 +139,10 @@ To initiate an upgrade process, a user has to update the `spec.image.tag` field 
 
 After the `tag` field is updated, the StatefulSet will detect the version change and it will trigger the upgrade process.
 
-To detect whether a `ZookeeperCluster` upgrade is in progress or not, check the output of the command `kubectl describe zookeepercluster`. Output of this command should contain the following entries:-
+To detect whether a `ZookeeperCluster` upgrade is in progress or not, check the output of the command `kubectl describe zk`. Output of this command should contain the following entries:-
 
 ```
-$ kubectl describe zookeepercluster
+$ kubectl describe zk
 
 status:
 Last Transition Time:    2020-05-18T10:25:12Z
@@ -163,30 +155,29 @@ Type:                    Upgrading
 
 If the Status value for clustercondition type `Upgrading` is True, it signifies that the cluster is in Upgrading state.
 
-Additionally, The output for the `$ kubectl get zookeepercluster ` will also have the Desired version set to the Image Tag the zookeepercluster is trying to Upgrade to.
+Additionally, The output for the `$ kubectl get zk` will also have the Desired version set to the Image Tag the zookeepercluster is trying to Upgrade to.
 
 ```
-$ kubectl get zookeepercluster
+$ kubectl get zk
 
 NAME         REPLICAS   READY REPLICAS   VERSION   DESIRED VERSION   INTERNAL ENDPOINT     EXTERNAL ENDPOINT   AGE
-example        3          3                0.2.6     0.2.5             10.100.200.126:2181   N/A                 11m
+example        3          3                0.2.6     0.2.7             10.100.200.126:2181   N/A                 11m
 
 ```
-Once, the Upgrade completes, The output for the `$ kubectl get zookeepercluster` will have the Version as the Image tag it's suppose to upgrade to and Desired Version will be empty. As shown Below:-
+Once, the Upgrade completes, output for `$ kubectl get zk` command will have the Version as the Image tag it's supposed to upgrade to, as shown below :-
 
 ```
-$ kubectl get zookeepercluster
+$ kubectl get zk
 
 NAME         REPLICAS   READY REPLICAS   VERSION   DESIRED VERSION   INTERNAL ENDPOINT     EXTERNAL ENDPOINT   AGE
-example        3          3                0.2.5                       10.100.200.126:2181   N/A                 11m
+example        3          3               0.2.7     0.2.7            10.100.200.126:2181   N/A                 11m
 
 
 ```
-
-Additionally, output of the Describe command will have the `Upgrading` Status set to False and `PodsReady` status set to True. Which signifies upgrade is completed. As shown Below :-
+Additionally, the describe output will have the Upgrading status set to False and PodsReady status set to True which signifies that the upgrade has completed, as shown below :-
 
 ```
-$ kubectl describe zookeepercluster
+$ kubectl describe zk
 
 Status:
   Conditions:
@@ -199,10 +190,7 @@ Status:
     Status:                  False
     Type:                    Upgrading
 ```
-
-```
-Note: The value of the tag field should not be modified while an upgrade is already in progress.
-```
+>Note: The value of the tag field should not be modified while an upgrade is already in progress.
 
 ### Uninstall the Zookeeper cluster
 

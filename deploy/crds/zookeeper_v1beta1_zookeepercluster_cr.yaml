@@ -8,7 +8,7 @@ spec:
   replicas: 3
   image:
     repository: pravega/zookeeper
-    tag: latest
+    tag: 0.2.7
   persistence:
     accessModes: [ "ReadWriteOnce" ]
     storageClassName: "standard"

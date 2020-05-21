@@ -27,7 +27,7 @@ spec:
   - name: Desired version
     type: string
     description: The desired Zookeeper version
-    JSONPath: .status.targetVersion    
+    JSONPath: .spec.image.tag    
   - name: Internal Endpoint
     type: string
     description: Client endpoint internal to cluster network

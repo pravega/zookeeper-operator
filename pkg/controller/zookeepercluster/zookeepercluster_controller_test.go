@@ -259,8 +259,9 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				z.WithDefaults()
 				z.Status.Init()
 				next := z.DeepCopy()
-				next.Spec.Image.Tag = "0.2.5"
+				next.Spec.Image.Tag = "0.2.7"
 				next.Status.CurrentVersion = "0.2.6"
+				next.Status.SetPodsReadyConditionTrue()
 				st := zk.MakeStatefulSet(z)
 				cl = fake.NewFakeClient([]runtime.Object{next, st}...)
 				st = &appsv1.StatefulSet{}
@@ -288,7 +289,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				foundZookeeper := &v1beta1.ZookeeperCluster{}
 				_ = cl.Get(context.TODO(), req.NamespacedName, foundZookeeper)
 				Ω(err).To(BeNil())
-				Ω(foundZookeeper.Status.TargetVersion).To(BeEquivalentTo("0.2.5"))
+				Ω(foundZookeeper.Status.TargetVersion).To(BeEquivalentTo("0.2.7"))
 			})
 
 			It("should set the target version", func() {
@@ -296,7 +297,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				_ = cl.Get(context.TODO(), req.NamespacedName, foundZookeeper)
 
 				Ω(err).To(BeNil())
-				Ω(foundZookeeper.Status.TargetVersion).To(BeEquivalentTo("0.2.5"))
+				Ω(foundZookeeper.Status.TargetVersion).To(BeEquivalentTo("0.2.7"))
 			})
 		})
 
@@ -310,9 +311,9 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				z.WithDefaults()
 				z.Status.Init()
 				next := z.DeepCopy()
-				next.Spec.Image.Tag = "0.2.5"
+				next.Spec.Image.Tag = "0.2.7"
 				next.Status.CurrentVersion = "0.2.6"
-				next.Status.TargetVersion = "0.2.5"
+				next.Status.TargetVersion = "0.2.7"
 				next.Status.SetUpgradingConditionTrue(" ", " ")
 				st := zk.MakeStatefulSet(z)
 				cl = fake.NewFakeClient([]runtime.Object{next, st}...)
@@ -338,7 +339,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				foundZookeeper := &v1beta1.ZookeeperCluster{}
 				_ = cl.Get(context.TODO(), req.NamespacedName, foundZookeeper)
 				Ω(err).To(BeNil())
-				Ω(foundZookeeper.Status.CurrentVersion).To(BeEquivalentTo("0.2.5"))
+				Ω(foundZookeeper.Status.CurrentVersion).To(BeEquivalentTo("0.2.7"))
 			})
 
 			It("should set the target version to empty", func() {
@@ -360,7 +361,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				z.Status.Init()
 				next := z.DeepCopy()
 				next.Status.SetUpgradingConditionTrue(" ", "1")
-				next.Status.TargetVersion = "0.2.5"
+				next.Status.TargetVersion = "0.2.7"
 				st := zk.MakeStatefulSet(z)
 				cl = fake.NewFakeClient([]runtime.Object{next, st}...)
 				st = &appsv1.StatefulSet{}
@@ -401,7 +402,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				z.WithDefaults()
 				z.Status.Init()
 				next := z.DeepCopy()
-				next.Spec.Image.Tag = "0.2.5"
+				next.Spec.Image.Tag = "0.2.7"
 				next.Status.CurrentVersion = "0.2.6"
 				next.Status.TargetVersion = ""
 				next.Status.IsClusterInUpgradingState()
