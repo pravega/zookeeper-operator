@@ -91,13 +91,29 @@ spec:
 $ kubectl create -f zk.yaml
 ```
 
-Verify that the cluster instances and its components are running.
+After a couple of minutes, all cluster members should become ready.
 
 ```
 $ kubectl get zk
-NAME      AGE
-example   15s
+
+NAME      REPLICAS   READY REPLICAS   VERSION   DESIRED VERSION   INTERNAL ENDPOINT    EXTERNAL ENDPOINT   AGE
+example   3          3                 0.2.7     0.2.7             10.100.200.18:2181   N/A                 94s
 ```
+>Note: when the Version field is set as well as Ready Replicas are equal to Replicas that signifies our cluster is in Ready state
+
+Additionally, check the output of describe command which should show the following cluster condition
+
+```
+$ kubectl describe zk
+
+Conditions:
+  Last Transition Time:    2020-05-18T10:17:03Z
+  Last Update Time:        2020-05-18T10:17:03Z
+  Status:                  True
+  Type:                    PodsReady
+
+```
+>Note: User should wait for the Pods Ready condition to be True
 
 ```
 $ kubectl get all -l app=example
@@ -123,24 +139,55 @@ To initiate an upgrade process, a user has to update the `spec.image.tag` field 
 
 After the `tag` field is updated, the StatefulSet will detect the version change and it will trigger the upgrade process.
 
-To detect whether a `ZookeeperCluster` upgrade is in progress or not, check the output of the command `kubectl get sts <name> -o yaml`. The output of this command contains the following entries
+To detect whether a `ZookeeperCluster` upgrade is in progress or not, check the output of the command `kubectl describe zk`. Output of this command should contain the following entries
 
 ```
+$ kubectl describe zk
+
 status:
-  collisionCount: 0
-  currentReplicas: 2
-  currentRevision: example-75d4b645c8
-  observedGeneration: 4
-  readyReplicas: 3
-  replicas: 3
-  updateRevision: example-5d9dfdb787
+Last Transition Time:    2020-05-18T10:25:12Z
+Last Update Time:        2020-05-18T10:25:12Z
+Message:                 0
+Reason:                  Updating Zookeeper
+Status:                  True
+Type:                    Upgrading
 ```
-
-If the values of the fields `currentRevision` and `updateRevision` are different, it indicates that the `ZookeeperCluster` is currently undergoing an upgrade. The value of `currentRevision` is set to the value of `updateRevision` when the upgrade is complete.
+Additionally, the Desired Version will be set to the version that we are upgrading our cluster to.
 
 ```
-Note: The value of the tag field should not be modified while an upgrade is already in progress.
+$ kubectl get zk
+
+NAME         REPLICAS   READY REPLICAS   VERSION   DESIRED VERSION   INTERNAL ENDPOINT     EXTERNAL ENDPOINT   AGE
+example       3          3                0.2.6     0.2.7             10.100.200.126:2181   N/A                 11m
+
 ```
+Once the upgrade completes, the Version field is set to the Desired Version, as shown below
+
+```
+$ kubectl get zk
+
+NAME         REPLICAS   READY REPLICAS   VERSION   DESIRED VERSION   INTERNAL ENDPOINT     EXTERNAL ENDPOINT   AGE
+example        3          3               0.2.7     0.2.7            10.100.200.126:2181   N/A                 11m
+
+
+```
+Additionally, the Upgrading status is set to False and PodsReady status is set to True, which signifies that the upgrade has completed, as shown below
+
+```
+$ kubectl describe zk
+
+Status:
+  Conditions:
+    Last Transition Time:    2020-05-18T10:28:22Z
+    Last Update Time:        2020-05-18T10:28:22Z
+    Status:                  True
+    Type:                    PodsReady
+    Last Transition Time:    2020-05-18T10:28:22Z
+    Last Update Time:        2020-05-18T10:28:22Z
+    Status:                  False
+    Type:                    Upgrading
+```
+>Note: The value of the tag field should not be modified while an upgrade is already in progress.
 
 ### Uninstall the Zookeeper cluster
 

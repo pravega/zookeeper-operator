@@ -13,6 +13,7 @@ package zookeepercluster
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	"github.com/pravega/zookeeper-operator/pkg/zk"
@@ -199,6 +200,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 
 			BeforeEach(func() {
 				z.WithDefaults()
+				z.Status.Init()
 				next := z.DeepCopy()
 				st := zk.MakeStatefulSet(z)
 				next.Spec.Replicas = 6
@@ -227,6 +229,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 
 			BeforeEach(func() {
 				z.WithDefaults()
+				z.Status.Init()
 				next := z.DeepCopy()
 				st := zk.MakeStatefulSet(z)
 				cl = fake.NewFakeClient([]runtime.Object{next, st}...)
@@ -244,6 +247,179 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				Ω(err).To(BeNil())
 			})
 
+		})
+
+		Context("upgrading the image for zookeepercluster", func() {
+			var (
+				cl  client.Client
+				err error
+			)
+
+			BeforeEach(func() {
+				z.WithDefaults()
+				z.Status.Init()
+				next := z.DeepCopy()
+				next.Spec.Image.Tag = "0.2.7"
+				next.Status.CurrentVersion = "0.2.6"
+				next.Status.SetPodsReadyConditionTrue()
+				st := zk.MakeStatefulSet(z)
+				cl = fake.NewFakeClient([]runtime.Object{next, st}...)
+				st = &appsv1.StatefulSet{}
+				err = cl.Get(context.TODO(), req.NamespacedName, st)
+				//changing the Revision value to simulate the upgrade scenario
+				st.Status.CurrentRevision = "CurrentRevision"
+				st.Status.UpdateRevision = "UpdateRevision"
+				cl.Status().Update(context.TODO(), st)
+				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				res, err = r.Reconcile(req)
+			})
+
+			It("should not raise an error", func() {
+				Ω(err).To(BeNil())
+			})
+
+			It("should set the upgrade condition to true", func() {
+				foundZookeeper := &v1beta1.ZookeeperCluster{}
+				_ = cl.Get(context.TODO(), req.NamespacedName, foundZookeeper)
+				Ω(err).To(BeNil())
+				Ω(foundZookeeper.Status.IsClusterInUpgradingState()).To(BeTrue())
+			})
+
+			It("should set the target version", func() {
+				foundZookeeper := &v1beta1.ZookeeperCluster{}
+				_ = cl.Get(context.TODO(), req.NamespacedName, foundZookeeper)
+				Ω(err).To(BeNil())
+				Ω(foundZookeeper.Status.TargetVersion).To(BeEquivalentTo("0.2.7"))
+			})
+
+			It("should set the target version", func() {
+				foundZookeeper := &v1beta1.ZookeeperCluster{}
+				_ = cl.Get(context.TODO(), req.NamespacedName, foundZookeeper)
+
+				Ω(err).To(BeNil())
+				Ω(foundZookeeper.Status.TargetVersion).To(BeEquivalentTo("0.2.7"))
+			})
+		})
+
+		Context("Checking for upgrade complition for zookeepercluster", func() {
+			var (
+				cl  client.Client
+				err error
+			)
+
+			BeforeEach(func() {
+				z.WithDefaults()
+				z.Status.Init()
+				next := z.DeepCopy()
+				next.Spec.Image.Tag = "0.2.7"
+				next.Status.CurrentVersion = "0.2.6"
+				next.Status.TargetVersion = "0.2.7"
+				next.Status.SetUpgradingConditionTrue(" ", " ")
+				st := zk.MakeStatefulSet(z)
+				cl = fake.NewFakeClient([]runtime.Object{next, st}...)
+				st = &appsv1.StatefulSet{}
+				err = cl.Get(context.TODO(), req.NamespacedName, st)
+				//changing the Revision value to simulate the upgrade scenario completion
+				st.Status.CurrentRevision = "complete"
+				st.Status.UpdateRevision = "complete"
+				cl.Status().Update(context.TODO(), st)
+				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				foundZookeeper := &v1beta1.ZookeeperCluster{}
+				_ = cl.Get(context.TODO(), req.NamespacedName, foundZookeeper)
+				res, err = r.Reconcile(req)
+				res, err = r.Reconcile(req)
+				res, err = r.Reconcile(req)
+			})
+
+			It("should not raise an error", func() {
+				Ω(err).To(BeNil())
+			})
+
+			It("should set the currentversion to Image.tag", func() {
+				foundZookeeper := &v1beta1.ZookeeperCluster{}
+				_ = cl.Get(context.TODO(), req.NamespacedName, foundZookeeper)
+				Ω(err).To(BeNil())
+				Ω(foundZookeeper.Status.CurrentVersion).To(BeEquivalentTo("0.2.7"))
+			})
+
+			It("should set the target version to empty", func() {
+				foundZookeeper := &v1beta1.ZookeeperCluster{}
+				_ = cl.Get(context.TODO(), req.NamespacedName, foundZookeeper)
+				Ω(err).To(BeNil())
+				Ω(foundZookeeper.Status.TargetVersion).To(BeEquivalentTo(""))
+			})
+		})
+
+		Context("Checking for upgrade failed for zookeepercluster", func() {
+			var (
+				cl  client.Client
+				err error
+			)
+
+			BeforeEach(func() {
+				z.WithDefaults()
+				z.Status.Init()
+				next := z.DeepCopy()
+				next.Status.SetUpgradingConditionTrue(" ", "1")
+				next.Status.TargetVersion = "0.2.7"
+				st := zk.MakeStatefulSet(z)
+				cl = fake.NewFakeClient([]runtime.Object{next, st}...)
+				st = &appsv1.StatefulSet{}
+				err = cl.Get(context.TODO(), req.NamespacedName, st)
+				//changing the Revision value to simulate the upgrade scenario
+				st.Status.CurrentRevision = "currentRevision"
+				st.Status.UpdateRevision = "updateRevision"
+				st.Status.UpdatedReplicas = 2
+				cl.Status().Update(context.TODO(), st)
+				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				res, err = r.Reconcile(req)
+				//sleeping for 3 seconds
+				time.Sleep(3 * time.Second)
+				//checking if more than 2 secs have passed from the last update time
+				err = checkSyncTimeout(next, " ", 1, 2*time.Second)
+
+			})
+
+			It("checking update replicas", func() {
+				foundZookeeper := &v1beta1.ZookeeperCluster{}
+				_ = cl.Get(context.TODO(), req.NamespacedName, foundZookeeper)
+				_, condition := foundZookeeper.Status.GetClusterCondition(v1beta1.ClusterConditionUpgrading)
+				Ω(condition.Message).To(Equal("2"))
+			})
+
+			It("should raise an error", func() {
+				Ω(err.Error()).To(Equal("progress deadline exceeded"))
+			})
+		})
+
+		Context("Upgrading with Targetversion empty", func() {
+			var (
+				cl  client.Client
+				err error
+			)
+
+			BeforeEach(func() {
+				z.WithDefaults()
+				z.Status.Init()
+				next := z.DeepCopy()
+				next.Spec.Image.Tag = "0.2.7"
+				next.Status.CurrentVersion = "0.2.6"
+				next.Status.TargetVersion = ""
+				next.Status.IsClusterInUpgradingState()
+				st := zk.MakeStatefulSet(z)
+				cl = fake.NewFakeClient([]runtime.Object{next, st}...)
+				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				res, err = r.Reconcile(req)
+			})
+
+			It("should not raise an error", func() {
+				Ω(err).To(BeNil())
+			})
+			It("should set the upgrade condition to false", func() {
+				foundZookeeper := &v1beta1.ZookeeperCluster{}
+				_ = cl.Get(context.TODO(), req.NamespacedName, foundZookeeper)
+				Ω(foundZookeeper.Status.IsClusterInUpgradingState()).To(Equal(false))
+			})
 		})
 
 		Context("With an update to the client svc", func() {
