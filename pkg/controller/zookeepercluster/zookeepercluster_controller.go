@@ -246,7 +246,7 @@ func (r *ReconcileZookeeperCluster) upgradeStatefulSet(instance *zookeeperv1beta
 		return nil
 	}
 
-	//Setting the upgrade condition to true when the zk cluster is upgrading
+	//Setting the upgrade condition to true to trigger the upgrade
 	//When the zk cluster is upgrading Statefulset CurrentRevision and UpdateRevision are not equal and zk cluster image tag is not equal to CurrentVersion
 	if upgradeCondition.Status == corev1.ConditionFalse {
 		if instance.Status.IsClusterInReadyState() && foundSts.Status.CurrentRevision != foundSts.Status.UpdateRevision && instance.Spec.Image.Tag != instance.Status.CurrentVersion {
