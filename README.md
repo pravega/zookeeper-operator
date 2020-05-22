@@ -171,7 +171,7 @@ example        3          3               0.2.7     0.2.7            10.100.200.
 
 
 ```
-Additionally, the Upgrading status set to False and PodsReady status set to True, which signifies that the upgrade has completed, as shown below
+Additionally, the Upgrading status is set to False and PodsReady status is set to True, which signifies that the upgrade has completed, as shown below
 
 ```
 $ kubectl describe zk

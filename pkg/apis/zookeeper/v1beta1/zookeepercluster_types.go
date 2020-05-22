@@ -38,7 +38,7 @@ const (
 
 // ZookeeperClusterSpec defines the desired state of ZookeeperCluster
 type ZookeeperClusterSpec struct {
-	// Image is the  container image. default is zookeeper:latest
+	// Image is the  container image. default is zookeeper:0.2.7
 	Image ContainerImage `json:"image,omitempty"`
 
 	// Labels specifies the labels to attach to pods the operator creates for
