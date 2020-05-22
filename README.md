@@ -152,19 +152,16 @@ Reason:                  Updating Zookeeper
 Status:                  True
 Type:                    Upgrading
 ```
-
-If the Status value for clustercondition type `Upgrading` is True, it signifies that the cluster is in Upgrading state.
-
-Additionally, The output for the `$ kubectl get zk` will also have the Desired version set to the Image Tag the zookeepercluster is trying to Upgrade to.
+Additionally, the Desired Version will be set to the version that we are upgrading our cluster to.
 
 ```
 $ kubectl get zk
 
 NAME         REPLICAS   READY REPLICAS   VERSION   DESIRED VERSION   INTERNAL ENDPOINT     EXTERNAL ENDPOINT   AGE
-example        3          3                0.2.6     0.2.7             10.100.200.126:2181   N/A                 11m
+example       3          3                0.2.6     0.2.7             10.100.200.126:2181   N/A                 11m
 
 ```
-Once, the Upgrade completes, output for `$ kubectl get zk` command will have the Version field set as he Desired Version, as shown below
+Once the upgrade completes, the Version field is set to the Desired Version, as shown below
 
 ```
 $ kubectl get zk
@@ -174,7 +171,7 @@ example        3          3               0.2.7     0.2.7            10.100.200.
 
 
 ```
-Additionally, the describe output will have the Upgrading status set to False and PodsReady status set to True which signifies that the upgrade has completed, as shown below
+Additionally, the Upgrading status set to False and PodsReady status set to True, which signifies that the upgrade has completed, as shown below
 
 ```
 $ kubectl describe zk

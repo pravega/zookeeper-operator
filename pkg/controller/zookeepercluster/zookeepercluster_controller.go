@@ -216,7 +216,7 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 		if err != nil {
 			return err
 		}
-		return r.upgradeStatefulSet(instance, foundSts, sts)
+		return r.upgradeStatefulSet(instance, foundSts)
 	}
 }
 
@@ -235,17 +235,25 @@ func (r *ReconcileZookeeperCluster) updateStatefulSet(instance *zookeeperv1beta1
 	return nil
 }
 
-func (r *ReconcileZookeeperCluster) upgradeStatefulSet(instance *zookeeperv1beta1.ZookeeperCluster, foundSts *appsv1.StatefulSet, sts *appsv1.StatefulSet) (err error) {
+func (r *ReconcileZookeeperCluster) upgradeStatefulSet(instance *zookeeperv1beta1.ZookeeperCluster, foundSts *appsv1.StatefulSet) (err error) {
 
 	//Getting the upgradeCondition from the zk clustercondition
 	_, upgradeCondition := instance.Status.GetClusterCondition(zookeeperv1beta1.ClusterConditionUpgrading)
 
+	if upgradeCondition == nil {
+		// Initially set upgrading condition to false
+		instance.Status.SetUpgradingConditionFalse()
+		return nil
+	}
+
 	//Setting the upgrade condition to true when the zk cluster is upgrading
-	//When the zk cluster is upgrading currentversion is not empty as well as Statefulset CurrentRevision and UpdateRevision are not equal and zk cluster image tag is not equal to CurrentVersion
-	if upgradeCondition != nil && upgradeCondition.Status != corev1.ConditionTrue && instance.Status.IsClusterInReadyState() && foundSts.Status.CurrentRevision != foundSts.Status.UpdateRevision && instance.Spec.Image.Tag != instance.Status.CurrentVersion {
-		instance.Status.TargetVersion = instance.Spec.Image.Tag
-		instance.Status.SetPodsReadyConditionFalse()
-		instance.Status.SetUpgradingConditionTrue("", "")
+	//When the zk cluster is upgrading Statefulset CurrentRevision and UpdateRevision are not equal and zk cluster image tag is not equal to CurrentVersion
+	if upgradeCondition.Status == corev1.ConditionFalse {
+		if instance.Status.IsClusterInReadyState() && foundSts.Status.CurrentRevision != foundSts.Status.UpdateRevision && instance.Spec.Image.Tag != instance.Status.CurrentVersion {
+			instance.Status.TargetVersion = instance.Spec.Image.Tag
+			instance.Status.SetPodsReadyConditionFalse()
+			instance.Status.SetUpgradingConditionTrue("", "")
+		}
 	}
 
 	//checking if the upgrade is in progress
