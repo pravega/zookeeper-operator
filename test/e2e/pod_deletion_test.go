@@ -11,7 +11,6 @@
 package e2e
 
 import (
-	"log"
 	"testing"
 	"time"
 
