@@ -55,7 +55,6 @@ func testDeletePods(t *testing.T) {
 	g.Expect(err).NotTo(HaveOccurred())
 
 	time.Sleep(60 * time.Second)
-	log.Printf("Anisha:replica is %v", zk.Status.ReadyReplicas)
 	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
 	g.Expect(err).NotTo(HaveOccurred())
 
