@@ -58,11 +58,7 @@ require (
 	github.com/samuel/go-zookeeper v0.0.0-20190923202752-2cc03de413da
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/pflag v1.0.5
-<<<<<<< HEAD
 	github.com/walle/lll v1.0.1 // indirect
-=======
-	github.com/tsenart/deadcode v0.0.0-20160724212837-210d2dc333e9 // indirect
->>>>>>> 236943e8ff04d809418842e71378714bdad11ff5
 	go.uber.org/atomic v1.6.0
 	go.uber.org/multierr v1.5.0
 	go.uber.org/zap v1.14.1
