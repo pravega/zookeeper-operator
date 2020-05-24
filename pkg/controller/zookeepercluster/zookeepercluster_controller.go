@@ -22,17 +22,15 @@ import (
 	"github.com/pravega/zookeeper-operator/pkg/utils"
 	"github.com/pravega/zookeeper-operator/pkg/yamlexporter"
 
-	"k8s.io/apimachinery/pkg/labels"
-
 	"github.com/go-logr/logr"
+	zookeeperv1beta1 "github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	"github.com/pravega/zookeeper-operator/pkg/zk"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	zookeeperv1beta1 "github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
-	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -166,6 +164,12 @@ func (r *ReconcileZookeeperCluster) Reconcile(request reconcile.Request) (reconc
 }
 
 func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
+
+	// we cannot upgrade if cluster is in UpgradeFailed
+	if instance.Status.IsClusterInUpgradeFailedState() {
+		return nil
+	}
+
 	sts := zk.MakeStatefulSet(instance)
 	if err = controllerutil.SetControllerReference(instance, sts, r.scheme); err != nil {
 		return err
@@ -208,9 +212,12 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 			r.log.Info("Updating Cluster Size.", "New Data:", data, "Version", version)
 			r.zkClient.UpdateNode(path, data, version)
 		}
-		return r.updateStatefulSet(instance, foundSts, sts)
+		err = r.updateStatefulSet(instance, foundSts, sts)
+		if err != nil {
+			return err
+		}
+		return r.upgradeStatefulSet(instance, foundSts)
 	}
-	return nil
 }
 
 func (r *ReconcileZookeeperCluster) updateStatefulSet(instance *zookeeperv1beta1.ZookeeperCluster, foundSts *appsv1.StatefulSet, sts *appsv1.StatefulSet) (err error) {
@@ -218,12 +225,99 @@ func (r *ReconcileZookeeperCluster) updateStatefulSet(instance *zookeeperv1beta1
 		"StatefulSet.Namespace", foundSts.Namespace,
 		"StatefulSet.Name", foundSts.Name)
 	zk.SyncStatefulSet(foundSts, sts)
+
 	err = r.client.Update(context.TODO(), foundSts)
 	if err != nil {
 		return err
 	}
 	instance.Status.Replicas = foundSts.Status.Replicas
 	instance.Status.ReadyReplicas = foundSts.Status.ReadyReplicas
+	return nil
+}
+
+func (r *ReconcileZookeeperCluster) upgradeStatefulSet(instance *zookeeperv1beta1.ZookeeperCluster, foundSts *appsv1.StatefulSet) (err error) {
+
+	//Getting the upgradeCondition from the zk clustercondition
+	_, upgradeCondition := instance.Status.GetClusterCondition(zookeeperv1beta1.ClusterConditionUpgrading)
+
+	if upgradeCondition == nil {
+		// Initially set upgrading condition to false
+		instance.Status.SetUpgradingConditionFalse()
+		return nil
+	}
+
+	//Setting the upgrade condition to true to trigger the upgrade
+	//When the zk cluster is upgrading Statefulset CurrentRevision and UpdateRevision are not equal and zk cluster image tag is not equal to CurrentVersion
+	if upgradeCondition.Status == corev1.ConditionFalse {
+		if instance.Status.IsClusterInReadyState() && foundSts.Status.CurrentRevision != foundSts.Status.UpdateRevision && instance.Spec.Image.Tag != instance.Status.CurrentVersion {
+			instance.Status.TargetVersion = instance.Spec.Image.Tag
+			instance.Status.SetPodsReadyConditionFalse()
+			instance.Status.SetUpgradingConditionTrue("", "")
+		}
+	}
+
+	//checking if the upgrade is in progress
+	if upgradeCondition.Status == corev1.ConditionTrue {
+		//checking when the targetversion is empty
+		if instance.Status.TargetVersion == "" {
+			r.log.Info("upgrading to an unknown version: cancelling upgrade process")
+			return r.clearUpgradeStatus(instance)
+		}
+		//Checking for upgrade completion
+		if foundSts.Status.CurrentRevision == foundSts.Status.UpdateRevision {
+			instance.Status.CurrentVersion = instance.Status.TargetVersion
+			r.log.Info("upgrade completed")
+			return r.clearUpgradeStatus(instance)
+		}
+		//updating the upgradecondition if upgrade is in progress
+		if foundSts.Status.CurrentRevision != foundSts.Status.UpdateRevision {
+			r.log.Info("upgrade in progress")
+			if fmt.Sprint(foundSts.Status.UpdatedReplicas) != upgradeCondition.Message {
+				instance.Status.UpdateProgress(zookeeperv1beta1.UpdatingZookeeperReason, fmt.Sprint(foundSts.Status.UpdatedReplicas))
+			} else {
+				err = checkSyncTimeout(instance, zookeeperv1beta1.UpdatingZookeeperReason, foundSts.Status.UpdatedReplicas, 10*time.Minute)
+				if err != nil {
+					instance.Status.SetErrorConditionTrue("UpgradeFailed", err.Error())
+					return r.client.Status().Update(context.TODO(), instance)
+				} else {
+					return nil
+				}
+			}
+		}
+	}
+	return r.client.Status().Update(context.TODO(), instance)
+}
+
+func (r *ReconcileZookeeperCluster) clearUpgradeStatus(z *zookeeperv1beta1.ZookeeperCluster) (err error) {
+	z.Status.SetUpgradingConditionFalse()
+	z.Status.TargetVersion = ""
+	// need to deep copy the status struct, otherwise it will be overwritten
+	// when updating the CR below
+	status := z.Status.DeepCopy()
+
+	err = r.client.Status().Update(context.TODO(), z)
+	if err != nil {
+		return err
+	}
+
+	z.Status = *status
+	return nil
+}
+
+func checkSyncTimeout(z *zookeeperv1beta1.ZookeeperCluster, reason string, updatedReplicas int32, t time.Duration) error {
+	lastCondition := z.Status.GetLastCondition()
+	if lastCondition == nil {
+		return nil
+	}
+	if lastCondition.Reason == reason && lastCondition.Message == fmt.Sprint(updatedReplicas) {
+		// if reason and message are the same as before, which means there is no progress since the last reconciling,
+		// then check if it reaches the timeout.
+		parsedTime, _ := time.Parse(time.RFC3339, lastCondition.LastUpdateTime)
+		if time.Now().After(parsedTime.Add(t)) {
+			// timeout
+			return fmt.Errorf("progress deadline exceeded")
+		}
+	}
 	return nil
 }
 
@@ -368,6 +462,10 @@ func (r *ReconcileZookeeperCluster) reconcileConfigMap(instance *zookeeperv1beta
 }
 
 func (r *ReconcileZookeeperCluster) reconcileClusterStatus(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
+	if instance.Status.IsClusterInUpgradingState() || instance.Status.IsClusterInUpgradeFailedState() {
+		return nil
+	}
+	instance.Status.Init()
 	foundPods := &corev1.PodList{}
 	labelSelector := labels.SelectorFromSet(map[string]string{"app": instance.GetName()})
 	listOps := &client.ListOptions{
@@ -418,6 +516,14 @@ func (r *ReconcileZookeeperCluster) reconcileClusterStatus(instance *zookeeperv1
 	r.log.Info("Updating zookeeper status",
 		"StatefulSet.Namespace", instance.Namespace,
 		"StatefulSet.Name", instance.Name)
+	if instance.Status.ReadyReplicas == instance.Spec.Replicas {
+		instance.Status.SetPodsReadyConditionTrue()
+	} else {
+		instance.Status.SetPodsReadyConditionFalse()
+	}
+	if instance.Status.CurrentVersion == "" && instance.Status.IsClusterInReadyState() {
+		instance.Status.CurrentVersion = instance.Spec.Image.Tag
+	}
 	return r.client.Status().Update(context.TODO(), instance)
 }
 

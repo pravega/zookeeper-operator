@@ -3,9 +3,13 @@ module github.com/pravega/zookeeper-operator
 go 1.13
 
 require (
+	4d63.com/gochecknoglobals v0.0.0-20190306162314-7c3491d2b6ec // indirect
+	4d63.com/gochecknoinits v0.0.0-20200108094044-eb73b47b9fc4 // indirect
 	cloud.google.com/go v0.55.0
 	github.com/PuerkitoBio/purell v1.1.1
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578
+	github.com/alecthomas/gocyclo v0.0.0-20150208221726-aa8f8b160214 // indirect
+	github.com/alexkohler/nakedret v1.0.0 // indirect
 	github.com/beorn7/perks v1.0.1
 	github.com/davecgh/go-spew v1.1.1
 	github.com/emicklei/go-restful v2.12.0+incompatible
@@ -35,10 +39,13 @@ require (
 	github.com/mailru/easyjson v0.7.1
 	github.com/mattbaird/jsonpatch v0.0.0-20171005235357-81af80346b1a
 	github.com/matttproud/golang_protobuf_extensions v1.0.1
+	github.com/mdempsky/maligned v0.0.0-20180708014732-6e39bd26a8c8 // indirect
+	github.com/mdempsky/unconvert v0.0.0-20200228143138-95ecdbfc0b5f // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd
 	github.com/modern-go/reflect2 v1.0.1
 	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.9.0
+	github.com/opennota/check v0.0.0-20180911053232-0c771f5545ff // indirect
 	github.com/operator-framework/operator-sdk v0.3.0
 	github.com/pborman/uuid v0.0.0-20180906182336-adf5a7427709
 	github.com/petar/GoLLRB v0.0.0-20190514000832-33fb24c13b99
@@ -49,8 +56,13 @@ require (
 	github.com/prometheus/common v0.9.1
 	github.com/prometheus/procfs v0.0.11
 	github.com/samuel/go-zookeeper v0.0.0-20190923202752-2cc03de413da
+	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/pflag v1.0.5
+<<<<<<< HEAD
 	github.com/walle/lll v1.0.1 // indirect
+=======
+	github.com/tsenart/deadcode v0.0.0-20160724212837-210d2dc333e9 // indirect
+>>>>>>> 236943e8ff04d809418842e71378714bdad11ff5
 	go.uber.org/atomic v1.6.0
 	go.uber.org/multierr v1.5.0
 	go.uber.org/zap v1.14.1

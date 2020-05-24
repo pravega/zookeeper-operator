@@ -25,7 +25,7 @@ const (
 
 	// DefaultZkContainerVersion is the default tag used for for the zookeeper
 	// container
-	DefaultZkContainerVersion = "latest"
+	DefaultZkContainerVersion = "0.2.7"
 
 	// DefaultZkContainerPolicy is the default container pull policy used
 	DefaultZkContainerPolicy = "Always"
@@ -34,11 +34,15 @@ const (
 	// container is stopped. This gives clients time to disconnect from a
 	// specific node gracefully.
 	DefaultTerminationGracePeriod = 30
+
+	// DefaultZookeeperCacheVolumeSize is the default volume size for the
+	// Zookeeper cache volume
+	DefaultZookeeperCacheVolumeSize = "20Gi"
 )
 
 // ZookeeperClusterSpec defines the desired state of ZookeeperCluster
 type ZookeeperClusterSpec struct {
-	// Image is the  container image. default is zookeeper:latest
+	// Image is the  container image. default is zookeeper:0.2.7
 	Image ContainerImage `json:"image,omitempty"`
 
 	// Labels specifies the labels to attach to pods the operator creates for
@@ -121,33 +125,6 @@ func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) 
 		changed = true
 	}
 	return changed
-}
-
-// ZookeeperClusterStatus defines the observed state of ZookeeperCluster
-type ZookeeperClusterStatus struct {
-	// Members is the zookeeper members in the cluster
-	Members MembersStatus `json:"members"`
-
-	// Replicas is the number of number of desired replicas in the cluster
-	Replicas int32 `json:"replicas"`
-
-	// ReadyReplicas is the number of number of ready replicas in the cluster
-	ReadyReplicas int32 `json:"readyReplicas"`
-
-	// InternalClientEndpoint is the internal client IP and port
-	InternalClientEndpoint string `json:"internalClientEndpoint"`
-
-	// ExternalClientEndpoint is the internal client IP and port
-	ExternalClientEndpoint string `json:"externalClientEndpoint"`
-
-	MetaRootCreated bool `json:"metaRootCreated"`
-}
-
-// MembersStatus is the status of the members of the cluster with both
-// ready and unready node membership lists
-type MembersStatus struct {
-	Ready   []string `json:"ready"`
-	Unready []string `json:"unready"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -376,9 +353,10 @@ func (p *Persistence) withDefaults() (changed bool) {
 		v1.ReadWriteOnce,
 	}
 
-	if len(p.PersistentVolumeClaimSpec.Resources.Requests) == 0 {
+	storage, _ := p.PersistentVolumeClaimSpec.Resources.Requests["storage"]
+	if storage.IsZero() {
 		p.PersistentVolumeClaimSpec.Resources.Requests = v1.ResourceList{
-			v1.ResourceStorage: resource.MustParse("20Gi"),
+			v1.ResourceStorage: resource.MustParse(DefaultZookeeperCacheVolumeSize),
 		}
 		changed = true
 	}
