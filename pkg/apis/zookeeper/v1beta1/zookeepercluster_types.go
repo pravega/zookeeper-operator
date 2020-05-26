@@ -314,6 +314,14 @@ type ZookeeperConfig struct {
 	//
 	// The default value is 2.
 	SyncLimit int `json:"syncLimit"`
+
+	// QuorumListenOnAllIPs when set to true the ZooKeeper server will listen for
+	// connections from its peers on all available IP addresses, and not only the
+	// address configured in the server list of the configuration file. It affects
+	// the connections handling the ZAB protocol and the Fast Leader Election protocol.
+	//
+	// The default value is false.
+	QuorumListenOnAllIPs bool `json:"quorumListenOnAllIPs"`
 }
 
 func (c *ZookeeperConfig) withDefaults() (changed bool) {
