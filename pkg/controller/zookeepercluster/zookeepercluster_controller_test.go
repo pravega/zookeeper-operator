@@ -12,11 +12,14 @@ package zookeepercluster
 
 import (
 	"context"
+	"fmt"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	"github.com/pravega/zookeeper-operator/pkg/zk"
+	logs "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
@@ -419,6 +422,41 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				foundZookeeper := &v1beta1.ZookeeperCluster{}
 				_ = cl.Get(context.TODO(), req.NamespacedName, foundZookeeper)
 				Ω(foundZookeeper.Status.IsClusterInUpgradingState()).To(Equal(false))
+			})
+		})
+
+		Context("Checking client", func() {
+			var (
+				cl    client.Client
+				err   error
+				count int
+			)
+
+			BeforeEach(func() {
+				z.WithDefaults()
+				z.Status.Init()
+				next := z.DeepCopy()
+				next.Spec.Image.Tag = "0.2.7"
+				next.Status.CurrentVersion = "0.2.6"
+				next.Status.TargetVersion = ""
+				next.Status.IsClusterInUpgradingState()
+				st := zk.MakeStatefulSet(z)
+				cl = fake.NewFakeClient([]runtime.Object{next, st}...)
+				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				err = mockZkClient.Connect("127.0.0.0:2181")
+				err = r.GenerateYAML(z)
+				err = r.cleanupOrphanPVCs(z)
+				count, err = r.getPVCCount(z)
+				_, err = r.getPVCList(z)
+				err = r.cleanUpAllPVCs(z)
+				logs.Printf("prabhu = %s", fmt.Sprintf("%v", err))
+				logs.Printf("prabhu = %s", fmt.Sprintf("%v", count))
+				_ = os.RemoveAll("ZookeeperCluster")
+				//res, err = r.Reconcile(req)
+			})
+
+			It("should not raise an error", func() {
+				//Ω(err).To(BeNil())
 			})
 		})
 
