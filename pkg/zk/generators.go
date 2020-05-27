@@ -163,7 +163,7 @@ func makeZkPodSpec(z *v1beta1.ZookeeperCluster) v1.PodSpec {
 func MakeClientService(z *v1beta1.ZookeeperCluster) *v1.Service {
 	ports := z.ZookeeperPorts()
 	svcPorts := []v1.ServicePort{
-		{Name: "client", Port: ports.Client},
+		{Name: "tcp-client", Port: ports.Client},
 	}
 	return makeService(z.GetClientServiceName(), svcPorts, true, z)
 }
@@ -193,9 +193,9 @@ func MakeConfigMap(z *v1beta1.ZookeeperCluster) *v1.ConfigMap {
 func MakeHeadlessService(z *v1beta1.ZookeeperCluster) *v1.Service {
 	ports := z.ZookeeperPorts()
 	svcPorts := []v1.ServicePort{
-		{Name: "quorum", Port: ports.Quorum},
-		{Name: "leader-election", Port: ports.Leader},
-		{Name: "metrics", Port: ports.Metrics},
+		{Name: "tcp-client", Port: ports.Client},
+		{Name: "tcp-quorum", Port: ports.Quorum},
+		{Name: "tcp-leader-election", Port: ports.Leader},
 	}
 	return makeService(headlessSvcName(z), svcPorts, false, z)
 }
