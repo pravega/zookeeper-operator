@@ -36,10 +36,11 @@ fi
 # "terminationGracePeriodSeconds" before focibly killing the container
 CONN_COUNT=`echo cons | nc localhost 2181 | grep -v "^$" |grep -v "/127.0.0.1:" | wc -l`
 for (( i = 0; i < 36; i++ )); do
-  echo "$CONN_COUNT non-local connections still connected."
-  sleep 5
-  CONN_COUNT=`echo cons | nc localhost 2181 | grep -v "^$" |grep -v "/127.0.0.1:" | wc -l`
+  if [[ "$CONN_COUNT" -gt 0 ]]; then
+    echo "$CONN_COUNT non-local connections still connected."
+    sleep 5
+  fi
 done
 
 # Kill the primary process ourselves to circumvent the terminationGracePeriodSeconds
-ps -ef | grep zoo.cfg | grep -v grep | awk '{print $1}' | xargs kill
+ps -ef | grep zoo.cfg | grep -v grep | awk '{print $2}' | xargs kill
