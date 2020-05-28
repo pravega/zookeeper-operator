@@ -39,6 +39,9 @@ for (( i = 0; i < 36; i++ )); do
   if [[ "$CONN_COUNT" -gt 0 ]]; then
     echo "$CONN_COUNT non-local connections still connected."
     sleep 5
+  else
+    echo "$CONN_COUNT non-local connections"
+    break
   fi
 done
 
