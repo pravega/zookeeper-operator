@@ -109,10 +109,6 @@ func testMultiZKCluster(t *testing.T) {
 	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk1, podSize)
 	g.Expect(err).NotTo(HaveOccurred())
 
-	// This is to get the latest zk cluster object
-	zk2, err = zk_e2eutil.GetCluster(t, f, ctx, zk2)
-	g.Expect(err).NotTo(HaveOccurred())
-
 	//upgrade the image in second Cluster
 	zk2.Spec.Image.Tag = upgradeVersion
 
@@ -130,9 +126,6 @@ func testMultiZKCluster(t *testing.T) {
 	g.Expect(zk2.Status.CurrentVersion).To(Equal(upgradeVersion))
 	g.Expect(zk2.Status.TargetVersion).To(Equal(""))
 
-	// This is to get the latest zk cluster object
-	zk3, err = zk_e2eutil.GetCluster(t, f, ctx, zk3)
-	g.Expect(err).NotTo(HaveOccurred())
 	//Delete all pods in the 3rd Cluster
 	podDeleteCount := 3
 	err = zk_e2eutil.DeletePods(t, f, ctx, zk3, podDeleteCount)
