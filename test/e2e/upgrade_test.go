@@ -49,7 +49,7 @@ func testUpgradeCluster(t *testing.T) {
 	zk, err := zk_e2eutil.CreateCluster(t, f, ctx, cluster)
 	g.Expect(err).NotTo(HaveOccurred())
 
-	// A default Zookeepercluster should have 2 pods:  1 controller, 1 segment store
+	// A default Zookeepercluster should have 3 replicas
 	podSize := 3
 	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
 	g.Expect(err).NotTo(HaveOccurred())
@@ -68,7 +68,7 @@ func testUpgradeCluster(t *testing.T) {
 	err = zk_e2eutil.WaitForClusterToUpgrade(t, f, ctx, zk, upgradeVersion)
 	g.Expect(err).NotTo(HaveOccurred())
 
-	// This is to get the latest Zookkeper cluster object
+	// This is to get the latest Zookeeper cluster object
 	zk, err = zk_e2eutil.GetCluster(t, f, ctx, zk)
 	g.Expect(err).NotTo(HaveOccurred())
 

@@ -156,7 +156,6 @@ func WaitForClusterToTerminate(t *testing.T, f *framework.Framework, ctx *framew
 	t.Logf("waiting for zookeeper cluster to terminate: %s", z.Name)
 
 	listOptions := metav1.ListOptions{
-		//LabelSelector: labels.SelectorFromSet(util.LabelsForZookeeperCluster(p)).String(),
 		LabelSelector: labels.SelectorFromSet(map[string]string{"app": z.GetName()}).String(),
 	}
 
