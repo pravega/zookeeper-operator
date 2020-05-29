@@ -21,10 +21,10 @@ func NewDefaultCluster(namespace string) *api.ZookeeperCluster {
 	return &api.ZookeeperCluster{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ZookeeperCluster",
-			APIVersion: "pravega.pravega.io/v1beta1",
+			APIVersion: "zookeeper.pravega.io/v1beta1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "zk",
+			Name:      "zookeeper",
 			Namespace: namespace,
 		},
 		Spec: api.ZookeeperClusterSpec{},

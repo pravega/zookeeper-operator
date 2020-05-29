@@ -18,7 +18,7 @@ import (
 	zk_e2eutil "github.com/pravega/zookeeper-operator/pkg/test/e2e/e2eutil"
 )
 
-// Test create and recreate a Pravega cluster with the same name
+// Test create and recreate a Zookeeper cluster with the same name
 func testCreateRecreateCluster(t *testing.T) {
 	g := NewGomegaWithT(t)
 
@@ -43,7 +43,7 @@ func testCreateRecreateCluster(t *testing.T) {
 	zk, err := zk_e2eutil.CreateCluster(t, f, ctx, defaultCluster)
 	g.Expect(err).NotTo(HaveOccurred())
 
-	// A default Pravega cluster should have 2 pods: 1 controller, 1 segment store
+	// A default Zookeeper cluster should have 3 replicas
 	podSize := 3
 	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
 	g.Expect(err).NotTo(HaveOccurred())

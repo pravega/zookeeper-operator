@@ -22,13 +22,13 @@ import (
 )
 
 func TestZookeeperCluster(t *testing.T) {
-	pravegaClusterList := &operator.ZookeeperClusterList{
+	zookeeperClusterList := &operator.ZookeeperClusterList{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ZookeeperCluster",
-			APIVersion: "pravega.pravega.io/v1beta1",
+			APIVersion: "zookeeper.pravega.io/v1beta1",
 		},
 	}
-	err := framework.AddToFrameworkScheme(apis.AddToScheme, pravegaClusterList)
+	err := framework.AddToFrameworkScheme(apis.AddToScheme, zookeeperClusterList)
 	if err != nil {
 		t.Fatalf("failed to add custom resource scheme to framework: %v", err)
 	}

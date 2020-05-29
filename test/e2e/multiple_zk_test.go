@@ -20,7 +20,7 @@ import (
 	zk_e2eutil "github.com/pravega/zookeeper-operator/pkg/test/e2e/e2eutil"
 )
 
-// Test create and recreate a Pravega cluster with the same name
+// Test create and recreate a Zookeeper cluster with the same name
 func testMultiZKCluster(t *testing.T) {
 	g := NewGomegaWithT(t)
 
@@ -46,7 +46,7 @@ func testMultiZKCluster(t *testing.T) {
 	zk1, err := zk_e2eutil.CreateCluster(t, f, ctx, defaultCluster)
 	g.Expect(err).NotTo(HaveOccurred())
 
-	// A default Pravega cluster should have 2 pods: 1 controller, 1 segment store
+	// A default zookeeper cluster should have 3 replicas
 	podSize := 3
 	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk1, podSize)
 	g.Expect(err).NotTo(HaveOccurred())
@@ -68,7 +68,7 @@ func testMultiZKCluster(t *testing.T) {
 
 	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk2, podSize)
 	g.Expect(err).NotTo(HaveOccurred())
-	// This is to get the latest Pravega cluster object
+	// This is to get the latest Zookeeper cluster object
 	zk2, err = zk_e2eutil.GetCluster(t, f, ctx, zk2)
 	g.Expect(err).NotTo(HaveOccurred())
 
@@ -85,10 +85,6 @@ func testMultiZKCluster(t *testing.T) {
 	g.Expect(err).NotTo(HaveOccurred())
 
 	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk3, podSize)
-	g.Expect(err).NotTo(HaveOccurred())
-
-	// This is to get the latest zk cluster object
-	zk1, err = zk_e2eutil.GetCluster(t, f, ctx, zk1)
 	g.Expect(err).NotTo(HaveOccurred())
 
 	// scale up the replicas in first cluster
@@ -126,7 +122,7 @@ func testMultiZKCluster(t *testing.T) {
 	err = zk_e2eutil.WaitForClusterToUpgrade(t, f, ctx, zk2, upgradeVersion)
 	g.Expect(err).NotTo(HaveOccurred())
 
-	// This is to get the latest Pravega cluster object
+	// This is to get the latest Zookeeper cluster object
 	zk2, err = zk_e2eutil.GetCluster(t, f, ctx, zk2)
 	g.Expect(err).NotTo(HaveOccurred())
 

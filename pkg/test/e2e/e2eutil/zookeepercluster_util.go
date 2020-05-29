@@ -25,7 +25,6 @@ import (
 
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	api "github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
-	//apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 var (
@@ -39,9 +38,9 @@ var (
 	VerificationTimeout  = time.Minute * 3
 )
 
-// CreateCluster creates a PravegaCluster CR with the desired spec
+// CreateCluster creates a ZookeeperCluster CR with the desired spec
 func CreateCluster(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z *api.ZookeeperCluster) (*api.ZookeeperCluster, error) {
-	t.Logf("creating pravega cluster: %s", z.Name)
+	t.Logf("creating zookeeper cluster: %s", z.Name)
 	err := f.Client.Create(goctx.TODO(), z, &framework.CleanupOptions{TestContext: ctx, Timeout: CleanupTimeout, RetryInterval: CleanupRetryInterval})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create CR: %v", err)
@@ -56,7 +55,7 @@ func CreateCluster(t *testing.T, f *framework.Framework, ctx *framework.TestCtx,
 	return z, nil
 }
 
-// DeleteCluster deletes the PravegaCluster CR specified by cluster spec
+// DeleteCluster deletes the ZookeeperCluster CR specified by cluster spec
 func DeleteCluster(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z *api.ZookeeperCluster) error {
 	t.Logf("deleting zookeeper cluster: %s", z.Name)
 	err := f.Client.Delete(goctx.TODO(), z)
@@ -68,19 +67,19 @@ func DeleteCluster(t *testing.T, f *framework.Framework, ctx *framework.TestCtx,
 	return nil
 }
 
-// UpdateCluster updates the PravegaCluster CR
+// UpdateCluster updates the ZookeeperCluster CR
 func UpdateCluster(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z *api.ZookeeperCluster) error {
-	t.Logf("updating pravega cluster: %s", z.Name)
+	t.Logf("updating zookeeper cluster: %s", z.Name)
 	err := f.Client.Update(goctx.TODO(), z)
 	if err != nil {
 		return fmt.Errorf("failed to update CR: %v", err)
 	}
 
-	t.Logf("updated pravega cluster: %s", z.Name)
+	t.Logf("updated zookeeper cluster: %s", z.Name)
 	return nil
 }
 
-// GetCluster returns the latest PravegaCluster CR
+// GetCluster returns the latest ZookeeperCluster CR
 func GetCluster(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z *api.ZookeeperCluster) (*api.ZookeeperCluster, error) {
 	zk := &api.ZookeeperCluster{}
 	err := f.Client.Get(goctx.TODO(), types.NamespacedName{Namespace: z.Namespace, Name: z.Name}, zk)
@@ -154,7 +153,7 @@ func WaitForClusterToUpgrade(t *testing.T, f *framework.Framework, ctx *framewor
 
 // WaitForClusterToTerminate will wait until all cluster pods are terminated
 func WaitForClusterToTerminate(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z *api.ZookeeperCluster) error {
-	t.Logf("waiting for pravega cluster to terminate: %s", z.Name)
+	t.Logf("waiting for zookeeper cluster to terminate: %s", z.Name)
 
 	listOptions := metav1.ListOptions{
 		//LabelSelector: labels.SelectorFromSet(util.LabelsForZookeeperCluster(p)).String(),
@@ -230,7 +229,7 @@ func DeletePods(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z 
 			return fmt.Errorf("failed to delete pod: %v", err)
 		}
 
-		t.Logf("deleted pravega pod: %s", pod.Name)
+		t.Logf("deleted zookeeper pod: %s", pod.Name)
 
 	}
 	return nil
