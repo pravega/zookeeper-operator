@@ -86,7 +86,7 @@ func GetCluster(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z 
 	if err != nil {
 		return nil, fmt.Errorf("failed to obtain created CR: %v", err)
 	}
-	t.Logf("zk cluster is %v", zk.Status.ReadyReplicas)
+	t.Logf("zk cluster has ready replicas %v", zk.Status.ReadyReplicas)
 	return zk, nil
 }
 
