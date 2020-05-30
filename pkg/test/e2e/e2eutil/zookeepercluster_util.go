@@ -211,7 +211,6 @@ func WaitForClusterToTerminate(t *testing.T, f *framework.Framework, ctx *framew
 }
 func DeletePods(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z *api.ZookeeperCluster, size int) error {
 	listOptions := metav1.ListOptions{
-		//LabelSelector: labels.SelectorFromSet(util.LabelsForZookeeperCluster(p)).String(),
 		LabelSelector: labels.SelectorFromSet(map[string]string{"app": z.GetName()}).String(),
 	}
 	podList, err := f.KubeClient.Core().Pods(z.Namespace).List(listOptions)
