@@ -37,6 +37,7 @@ require (
 	github.com/jgautheron/goconst v0.0.0-20200227150835-cda7ea3bf591 // indirect
 	github.com/json-iterator/go v1.1.9
 	github.com/mailru/easyjson v0.7.1
+	github.com/markbates/inflect v1.0.4 // indirect
 	github.com/mattbaird/jsonpatch v0.0.0-20171005235357-81af80346b1a
 	github.com/matttproud/golang_protobuf_extensions v1.0.1
 	github.com/mdempsky/maligned v0.0.0-20180708014732-6e39bd26a8c8 // indirect
@@ -57,6 +58,7 @@ require (
 	github.com/prometheus/procfs v0.0.11
 	github.com/samuel/go-zookeeper v0.0.0-20190923202752-2cc03de413da
 	github.com/sirupsen/logrus v1.4.2
+	github.com/spf13/afero v1.2.2 // indirect
 	github.com/spf13/pflag v1.0.5
 	github.com/tsenart/deadcode v0.0.0-20160724212837-210d2dc333e9 // indirect
 	go.uber.org/atomic v1.6.0
@@ -76,6 +78,7 @@ require (
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7
 	gopkg.in/yaml.v2 v2.2.8
 	k8s.io/api v0.0.0-20181126151915-b503174bad59
+	k8s.io/apiextensions-apiserver v0.0.0-00010101000000-000000000000 // indirect
 	k8s.io/apimachinery v0.0.0-20181126123746-eddba98df674
 	k8s.io/client-go v0.0.0-20181126152608-d082d5923d3c
 	k8s.io/code-generator v0.0.0-20180823001027-3dcf91f64f63
@@ -86,4 +89,22 @@ require (
 	mvdan.cc/lint v0.0.0-20170908181259-adc824a0674b // indirect
 	mvdan.cc/unparam v0.0.0-20200501210554-b37ab49443f7 // indirect
 	sigs.k8s.io/controller-runtime v0.1.8
+)
+
+replace (
+	k8s.io/api => k8s.io/api v0.0.0-20190528110122-9ad12a4af326
+	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20190528110544-fa58353d80f3
+	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20190221084156-01f179d85dbc
+	k8s.io/apiserver => k8s.io/apiserver v0.0.0-20190528110248-2d60c3dee270
+	k8s.io/cli-runtime => k8s.io/cli-runtime v0.0.0-20190528110732-ad79ea2fbc0f
+	k8s.io/client-go => k8s.io/client-go v0.0.0-20190528110200-4f3abb12cae2
+	k8s.io/code-generator => k8s.io/code-generator v0.0.0-20181128191024-b1289fc74931
+	k8s.io/gengo => k8s.io/gengo v0.0.0-20190327210449-e17681d19d3a
+	k8s.io/kube-aggregator => k8s.io/kube-aggregator v0.0.0-20190528110328-0ab90e449f7e
+	k8s.io/kube-controller-manager => k8s.io/kube-controller-manager v0.0.0-20190528111014-463e5d26aa13
+	k8s.io/kube-proxy => k8s.io/kube-proxy v0.0.0-20190528110839-96abc4c8d1a4
+	k8s.io/kube-scheduler => k8s.io/kube-scheduler v0.0.0-20190528110942-86bc7e94eb9a
+	k8s.io/kubelet => k8s.io/kubelet v0.0.0-20190528110910-f5f997cd2103
+	k8s.io/kubernetes => k8s.io/kubernetes v1.12.9
+	k8s.io/metrics => k8s.io/metrics v0.0.0-20190528110627-05eb8901940c
 )
