@@ -99,10 +99,11 @@ func testMultiZKCluster(t *testing.T) {
 
 	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk1, podSize)
 	g.Expect(err).NotTo(HaveOccurred())
-	//scale down the replicas back to 3
 
 	zk1, err = zk_e2eutil.GetCluster(t, f, ctx, zk1)
 	g.Expect(err).NotTo(HaveOccurred())
+
+	//scale down the replicas back to 3
 	zk1.Spec.Replicas = 3
 	podSize = 3
 
