@@ -9,16 +9,16 @@ domainName:
 labels: {}
 ports: []
 
-pod:
-  labels: {}
-  nodeSelector: {}
-  affinity: {}
-  resources: {}
-  tolerations: []
-  env: []
-  annotations: {}
-  securityContext:
-  terminationGracePeriodSeconds: 180
+pod: {}
+  # labels: {}
+  # nodeSelector: {}
+  # affinity: {}
+  # resources: {}
+  # tolerations: []
+  # env: []
+  # annotations: {}
+  # securityContext:
+  # terminationGracePeriodSeconds: 180
 
 config: {}
   # initLimit: 10
