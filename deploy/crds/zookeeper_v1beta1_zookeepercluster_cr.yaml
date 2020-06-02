@@ -10,9 +10,9 @@ spec:
     repository: pravega/zookeeper
     tag: 0.2.7
   persistence:
-    accessModes: [ "ReadWriteOnce" ]
-    storageClassName: "standard"
     reclaimPolicy: Delete
-    resources:
-      requests:
-        storage: 10Gi
+    spec:
+      storageClassName: "standard"
+      resources:
+        requests:
+          storage: 20Gi

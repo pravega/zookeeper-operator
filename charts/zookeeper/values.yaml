@@ -27,10 +27,11 @@ config: {}
   # quorumListenOnAllIPs: false
 
 persistence:
+  storageClassName: standard
   # specifying reclaim policy for PersistentVolumes
   # accepted values - Delete / Retain
   reclaimPolicy: Delete
-  cacheVolumeRequest: 20Gi
+  volumeSize: 20Gi
 
 hooks:
   image:

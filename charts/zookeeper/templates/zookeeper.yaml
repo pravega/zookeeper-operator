@@ -43,6 +43,8 @@ spec:
   {{- end }}
   persistence:
     reclaimPolicy: {{ .Values.persistence.reclaimPolicy }}
-    resources:
-      requests:
-        storage: {{ .Values.persistence.cacheVolumeRequest }}
+    spec:
+      storageClassName: {{ .Values.persistence.storageClassName }}
+      resources:
+        requests:
+          storage: {{ .Values.persistence.volumeSize }}

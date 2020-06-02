@@ -47,7 +47,7 @@ The following table lists the configurable parameters of the Zookeeper chart and
 | `ports` | Groups the ports for a zookeeper cluster node for easy access | `[]` |
 | `pod` | Defines the policy to create new pods for the zookeeper cluster | `{}` |
 | `pod.labels` | Labels to attach to the pods | `{}` |
-| `pod.nodeSelector` | | `{}` |
+| `pod.nodeSelector` | Map of key-value pairs to be present as labels in the node in which the pod should run | `{}` |
 | `pod.affinity` | Specifies scheduling constraints on pods | `{}` |
 | `pod.resources` | Specifies resource requirements for the container | `{}` |
 | `pod.tolerations` | Specifies the pod's tolerations | `[]` |
@@ -60,4 +60,5 @@ The following table lists the configurable parameters of the Zookeeper chart and
 | `config.syncLimit` | Amount of time (in ticks) to allow followers to sync with Zookeeper | `2` |
 | `config.quorumListenOnAllIPs` | Whether Zookeeper server will listen for connections from its peers on all available IP addresses | `false` |
 | `persistence.reclaimPolicy` | Reclaim policy for persistent volumes | `Delete` |
-| `persistence.cacheVolumeRequest` | Storage requests for cache volume | `20Gi` |
+| `persistence.storageClassName` | Storage class for persistent volumes | `standard` |
+| `persistence.volumeSize` | Size of the volume requested for persistent volumes | `20Gi` |
