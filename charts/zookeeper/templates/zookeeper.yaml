@@ -9,10 +9,40 @@ spec:
     repository: {{ .Values.image.repository }}
     tag: {{ .Values.image.tag }}
     pullPolicy: {{ .Values.image.pullPolicy }}
+  domainName: {{ .Values.domainName }}
+  labels:
+{{ toYaml .Values.labels | indent 4 }}
+  ports:
+{{ toYaml .Values.ports | indent 4 }}
+  {{- if .Values.pod }}
+  pod:
+    labels:
+{{ toYaml .Values.pod.labels | indent 6 }}
+    nodeSelector:
+{{ toYaml .Values.pod.nodeSelector | indent 6 }}
+    affinity:
+{{ toYaml .Values.pod.affinity | indent 6 }}
+    resources:
+{{ toYaml .Values.pod.resources | indent 6 }}
+    tolerations:
+{{ toYaml .Values.pod.tolerations | indent 6 }}
+    env:
+{{ toYaml .Values.pod.env | indent 6 }}
+    annotations:
+{{ toYaml .Values.pod.annotations | indent 6 }}
+    securityContext:
+{{ toYaml .Values.pod.securityContext | indent 6 }}
+    terminationGracePeriodSeconds: {{ .Values.pod.terminationGracePeriodSeconds }}
+  {{- end }}
+  {{- if .Values.config }}
+  config:
+    initLimit: {{ .Values.config.initLimit }}
+    tickTime: {{ .Values.config.tickTime }}
+    syncLimit: {{ .Values.config.syncLimit }}
+    quorumListenOnAllIPs: {{ .Values.config.quorumListenOnAllIPs }}
+  {{- end }}
   persistence:
-    accessModes: [ "ReadWriteOnce" ]
-    storageClassName: {{ .Values.storage.className }}
-    reclaimPolicy: {{ .Values.storage.reclaimPolicy }}
+    reclaimPolicy: {{ .Values.persistence.reclaimPolicy }}
     resources:
       requests:
-        storage: {{ .Values.storage.cacheVolumeRequest }}
+        storage: {{ .Values.persistence.cacheVolumeRequest }}

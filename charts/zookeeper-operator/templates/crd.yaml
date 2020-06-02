@@ -21,6 +21,14 @@ spec:
     type: integer
     description: The number of ZooKeeper servers in the ensemble that are in a Ready state
     JSONPath: .status.readyReplicas
+  - name: Version
+    type: string
+    description: The current Zookeeper version
+    JSONPath: .status.currentVersion
+  - name: Desired Version
+    type: string
+    description: The desired Zookeeper version
+    JSONPath: .spec.image.tag
   - name: Internal Endpoint
     type: string
     description: Client endpoint internal to cluster network

@@ -5,9 +5,34 @@ image:
   tag: 0.2.7
   pullPolicy: IfNotPresent
 
-storage:
-  className: standard
+domainName:
+labels: {}
+ports: []
+
+pod:
+  labels: {}
+  nodeSelector: {}
+  affinity: {}
+  resources: {}
+  tolerations: []
+  env: []
+  annotations: {}
+  securityContext:
+  terminationGracePeriodSeconds: 180
+
+config: {}
+  # initLimit: 10
+  # tickTime: 2000
+  # syncLimit: 2
+  # quorumListenOnAllIPs: false
+
+persistence:
   # specifying reclaim policy for PersistentVolumes
   # accepted values - Delete / Retain
   reclaimPolicy: Delete
-  cacheVolumeRequest: 10Gi
+  cacheVolumeRequest: 20Gi
+
+hooks:
+  image:
+    repository: lachlanevenson/k8s-kubectl
+    tag: v1.16.10

@@ -20,7 +20,6 @@ serviceAccount:
 crd:
   create: true
 
-#
 # Specifies which namespace the Operator should watch for new ClusterResource resources
 # Default: "" == Watch ALL namespaces
 watchNamespace: ""

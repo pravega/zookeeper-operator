@@ -1,13 +1,10 @@
-apiVersion: v1
+apiVersion: v2
 name: zookeeper-operator
-version: 0.2.7
+version: 0.1.0
 appVersion: 0.2.7
-description: zookeeper operator Helm chart for Kubernetes
+description: Zookeeper Operator Helm chart for Kubernetes
 keywords:
 - zookeeper
 - storage
-home: https://github.com/pravega/zookeeper-operator/blob/master/charts/zookeeper-operator
+home: https://github.com/pravega/zookeeper-operator
 icon: https://zookeeper.apache.org/images/zookeeper_small.gif
-sources:
-- https://github.com/pravega/zookeeper-operator/blob/master/charts/zookeeper-operator
-engine: gotpl
