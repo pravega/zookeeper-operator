@@ -11,8 +11,10 @@
 package v1beta1_test
 
 import (
+	"fmt"
 	"testing"
 
+	//"log"
 	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -28,9 +30,7 @@ func TestV1beta1(t *testing.T) {
 }
 
 var _ = Describe("ZookeeperCluster Types", func() {
-
 	var z v1beta1.ZookeeperCluster
-
 	BeforeEach(func() {
 		z = v1beta1.ZookeeperCluster{
 			ObjectMeta: metav1.ObjectMeta{
@@ -41,7 +41,6 @@ var _ = Describe("ZookeeperCluster Types", func() {
 
 	Context("#WithDefaults", func() {
 		var changed bool
-
 		BeforeEach(func() {
 			changed = z.WithDefaults()
 		})
@@ -80,6 +79,24 @@ var _ = Describe("ZookeeperCluster Types", func() {
 			It("should have the default policy", func() {
 				Ω(i.PullPolicy).To(BeEquivalentTo(v1beta1.DefaultZkContainerPolicy))
 			})
+
+			It("Checking tostring() function", func() {
+				Ω(z.Spec.Image.ToString()).To(Equal("pravega/zookeeper:0.2.7"))
+			})
+
+		})
+
+		Context("Reclaim policy", func() {
+			var z1 v1beta1.ZookeeperCluster
+			BeforeEach(func() {
+				z1 = *z.DeepCopy()
+				z1.Spec.Persistence.VolumeReclaimPolicy = "Delete"
+				z1.WithDefaults()
+			})
+
+			It("should set the Volumeclaimpolicy to Delete", func() {
+				Ω(fmt.Sprintf("%s", z1.Spec.Persistence.VolumeReclaimPolicy)).To(Equal("Delete"))
+			})
 		})
 
 		Context("Conf", func() {
@@ -87,6 +104,14 @@ var _ = Describe("ZookeeperCluster Types", func() {
 
 			BeforeEach(func() {
 				c = z.Spec.Conf
+			})
+
+			It("should give configMap name as example-configmap", func() {
+				Ω(z.ConfigMapName()).To(Equal("example-configmap"))
+			})
+
+			It("should give configMap name as example-configmap", func() {
+				Ω(z.GetClientServiceName()).To(Equal("example-client"))
 			})
 
 			It("should set InitLimit to 10", func() {
@@ -217,5 +242,4 @@ var _ = Describe("ZookeeperCluster Types", func() {
 			Ω(p.Leader).To(BeEquivalentTo(3888))
 		})
 	})
-
 })
