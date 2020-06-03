@@ -11,6 +11,7 @@ SHELL=/bin/bash -o pipefail
 PROJECT_NAME=zookeeper-operator
 EXPORTER_NAME=zookeeper-exporter
 APP_NAME=zookeeper
+KUBE_VERSION=1.17.5
 REPO=pravega/$(PROJECT_NAME)
 TEST_REPO=$(DOCKER_USER)/$(PROJECT_NAME)
 APP_REPO=pravega/$(APP_NAME)
@@ -94,3 +95,6 @@ check-format:
 
 check-license:
 	./scripts/check_license.sh
+
+update-kube-version:
+	./scripts/update_kube_version.sh ${KUBE_VERSION}
