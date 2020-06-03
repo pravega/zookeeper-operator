@@ -2,7 +2,6 @@ apiVersion: v2
 name: zookeeper
 description: Zookeeper Helm chart for Kubernetes
 version: 0.1.0
-appVersion: 0.2.7
 keywords:
 - zookeeper
 - storage

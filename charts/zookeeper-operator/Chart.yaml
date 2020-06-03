@@ -1,7 +1,6 @@
 apiVersion: v2
 name: zookeeper-operator
 version: 0.1.0
-appVersion: 0.2.7
 description: Zookeeper Operator Helm chart for Kubernetes
 keywords:
 - zookeeper
