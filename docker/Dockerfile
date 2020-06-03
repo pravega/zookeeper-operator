@@ -20,4 +20,4 @@ RUN chmod +x /usr/local/bin/*
 COPY --from=0 /zu/build/libs/zu.jar /root/
 
 RUN apt-get -q update && \
-    apt-get install -y dnsutils
+    apt-get install -y dnsutils curl procps
