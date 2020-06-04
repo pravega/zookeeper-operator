@@ -16,6 +16,8 @@ import (
 	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	"github.com/pravega/zookeeper-operator/pkg/zk"
 	appsv1 "k8s.io/api/apps/v1"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	. "github.com/onsi/ginkgo"
@@ -40,6 +42,9 @@ var _ = Describe("Synchronizers", func() {
 				},
 			}
 			z.WithDefaults()
+			z.Spec.Pod.Resources.Limits = v1.ResourceList{
+				v1.ResourceStorage: resource.MustParse("20Gi"),
+			}
 			sts1 = zk.MakeStatefulSet(z)
 			sts2 := zk.MakeStatefulSet(z)
 			reps := int32(4)

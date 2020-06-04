@@ -190,5 +190,32 @@ var _ = Describe("ZookeeperCluster DeepCopy", func() {
 			zk := z2.DeepCopyObject()
 			Ω(zk.GetObjectKind().GroupVersionKind().Version).To(Equal(""))
 		})
+		It("checking for deepcopyobject for clusterlist", func() {
+			var clusterlist v1beta1.ZookeeperClusterList
+			clusterlist.ResourceVersion = "v1beta1"
+			clusterlist2 := clusterlist.DeepCopyObject()
+			Ω(clusterlist2).ShouldNot(BeNil())
+		})
+		It("checking for deepcopyobject for clusterlist with items", func() {
+			var clusterlist v1beta1.ZookeeperClusterList
+			clusterlist.ResourceVersion = "v1beta1"
+			clusterlist.Items = []v1beta1.ZookeeperCluster{
+				{
+					Spec: v1beta1.ZookeeperClusterSpec{},
+				},
+			}
+			clusterlist2 := clusterlist.DeepCopyObject()
+			Ω(clusterlist2).ShouldNot(BeNil())
+		})
+		It("checking for nil pravega cluster deepcopyobject", func() {
+			var cluster *v1beta1.ZookeeperCluster
+			cluster2 := cluster.DeepCopyObject()
+			Ω(cluster2).To(BeNil())
+		})
+		It("checking for nil pravega clusterlist deepcopyobject", func() {
+			var clusterlist *v1beta1.ZookeeperClusterList
+			clusterlist2 := clusterlist.DeepCopyObject()
+			Ω(clusterlist2).To(BeNil())
+		})
 	})
 })
