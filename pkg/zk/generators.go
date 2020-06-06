@@ -195,6 +195,7 @@ func MakeHeadlessService(z *v1beta1.ZookeeperCluster) *v1.Service {
 	svcPorts := []v1.ServicePort{
 		{Name: "quorum", Port: ports.Quorum},
 		{Name: "leader-election", Port: ports.Leader},
+		{Name: "metrics", Port: ports.Metrics},
 	}
 	return makeService(headlessSvcName(z), svcPorts, false, z)
 }
@@ -205,6 +206,9 @@ func makeZkConfigString(s v1beta1.ZookeeperClusterSpec) string {
 		"standaloneEnabled=false\n" +
 		"reconfigEnabled=true\n" +
 		"skipACL=yes\n" +
+		"metricsProvider.className=org.apache.zookeeper.metrics.prometheus.PrometheusMetricsProvider\n" +
+		"metricsProvider.httpPort=7000\n" +
+		"metricsProvider.exportJvmInfo=true\n" +
 		"initLimit=" + strconv.Itoa(s.Conf.InitLimit) + "\n" +
 		"syncLimit=" + strconv.Itoa(s.Conf.SyncLimit) + "\n" +
 		"tickTime=" + strconv.Itoa(s.Conf.TickTime) + "\n" +
@@ -271,7 +275,7 @@ func makeService(name string, ports []v1.ServicePort, clusterIP bool, z *v1beta1
 					Kind:    "ZookeeperCluster",
 				}),
 			},
-			Labels:      map[string]string{"app": z.GetName()},
+			Labels:      map[string]string{"app": z.GetName(), "headless": strconv.FormatBool(!clusterIP)},
 			Annotations: annotationMap,
 		},
 		Spec: v1.ServiceSpec{
