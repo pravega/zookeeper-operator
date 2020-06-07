@@ -12,14 +12,12 @@ package zookeepercluster
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"testing"
 	"time"
 
 	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	"github.com/pravega/zookeeper-operator/pkg/zk"
-	logs "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
@@ -126,7 +124,23 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 			It("should requeue the request", func() {
 				Ω(res.Requeue).To(BeTrue())
 			})
+		})
 
+		Context("After defaults are applied", func() {
+			var (
+				cl  client.Client
+				err error
+			)
+
+			BeforeEach(func() {
+				cl = fake.NewFakeClient(z)
+				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				res, err = r.Reconcile(req)
+			})
+
+			It("should give error", func() {
+				Ω(err).To(BeNil())
+			})
 		})
 
 		Context("After defaults are applied", func() {
@@ -302,6 +316,13 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				Ω(err).To(BeNil())
 				Ω(foundZookeeper.Status.TargetVersion).To(BeEquivalentTo("0.2.7"))
 			})
+
+			It("should check if the cluster is in upgrade failed state", func() {
+				z.Status.SetErrorConditionTrue("UpgradeFailed", " ")
+				cl.Status().Update(context.TODO(), z)
+				res, err = r.Reconcile(req)
+				Ω(err).To(BeNil())
+			})
 		})
 
 		Context("Checking for upgrade complition for zookeepercluster", func() {
@@ -435,29 +456,66 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 			BeforeEach(func() {
 				z.WithDefaults()
 				z.Status.Init()
-				next := z.DeepCopy()
-				next.Spec.Image.Tag = "0.2.7"
-				next.Status.CurrentVersion = "0.2.6"
-				next.Status.TargetVersion = ""
-				next.Status.IsClusterInUpgradingState()
-				st := zk.MakeStatefulSet(z)
-				cl = fake.NewFakeClient([]runtime.Object{next, st}...)
+				cl = fake.NewFakeClient(z)
 				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
-				err = mockZkClient.Connect("127.0.0.0:2181")
-				err = r.GenerateYAML(z)
-				err = r.cleanupOrphanPVCs(z)
-				count, err = r.getPVCCount(z)
-				_, err = r.getPVCList(z)
-				err = r.cleanUpAllPVCs(z)
-				logs.Printf("prabhu = %s", fmt.Sprintf("%v", err))
-				logs.Printf("prabhu = %s", fmt.Sprintf("%v", count))
-				_ = os.RemoveAll("ZookeeperCluster")
-				//res, err = r.Reconcile(req)
+				res, err = r.Reconcile(req)
 			})
 
 			It("should not raise an error", func() {
-				//Ω(err).To(BeNil())
+				err = mockZkClient.Connect("127.0.0.0:2181")
+				Ω(err).To(BeNil())
 			})
+			It("should not raise an erro", func() {
+				err = r.GenerateYAML(z)
+				Ω(err).To(BeNil())
+			})
+			It("should not raise an error", func() {
+				err = r.cleanupOrphanPVCs(z)
+				Ω(err).To(BeNil())
+			})
+			It("should not raise an error", func() {
+				z.Status.ReadyReplicas = -1
+				z.Spec.Replicas = -1
+				cl.Update(context.TODO(), z)
+				err = r.cleanupOrphanPVCs(z)
+				Ω(err).To(BeNil())
+			})
+			It("should not raise an error", func() {
+				count, err = r.getPVCCount(z)
+				_, err = r.getPVCList(z)
+				Ω(err).To(BeNil())
+				Ω(count).To(Equal(0))
+			})
+			It("should not raise an error", func() {
+				z.Spec.Persistence.VolumeReclaimPolicy = v1beta1.VolumeReclaimPolicyDelete
+				cl.Update(context.TODO(), z)
+				err = r.reconcileFinalizers(z)
+				Ω(err).To(BeNil())
+			})
+
+			It("should delete pvc", func() {
+				pvcDelete := &corev1.PersistentVolumeClaim{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "Name",
+						Namespace: "Namespace",
+					},
+				}
+				r.client.Create(context.TODO(), pvcDelete)
+				r.deletePVC(*pvcDelete)
+				r.deletePVC(*pvcDelete)
+			})
+
+			It("should not raise an error", func() {
+				err = r.cleanUpAllPVCs(z)
+				_ = os.RemoveAll("ZookeeperCluster")
+				Ω(err).To(BeNil())
+			})
+
+			It("calling YAMLEXPORTER", func() {
+				recon := YAMLExporterReconciler(z)
+				Ω(recon).NotTo(BeNil())
+			})
+
 		})
 
 		Context("With an update to the client svc", func() {

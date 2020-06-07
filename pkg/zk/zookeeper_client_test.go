@@ -28,7 +28,7 @@ func TestZookeeperClient(t *testing.T) {
 var _ = Describe("Zookeeper Client", func() {
 
 	Context("with a valid update of Service port", func() {
-		var err1, err2, err3, err4 error
+		var err1, err2, err3, err4, err5 error
 		BeforeEach(func() {
 			z := &v1beta1.ZookeeperCluster{
 				ObjectMeta: metav1.ObjectMeta{
@@ -39,7 +39,8 @@ var _ = Describe("Zookeeper Client", func() {
 			zkclient := new(zk.DefaultZookeeperClient)
 			z.WithDefaults()
 			err1 = zkclient.Connect("127.0.0.0:2181")
-			err2 = zkclient.CreateNode(z, "temp/tmp")
+			err2 = zkclient.CreateNode(z, "temp/tmp/tmp")
+			err5 = zkclient.CreateNode(z, "temp/tmp")
 			err3 = zkclient.UpdateNode("temp/tem/temp", "dasd", 2)
 			_, err4 = zkclient.NodeExists("temp")
 			zkclient.Close()
@@ -55,6 +56,9 @@ var _ = Describe("Zookeeper Client", func() {
 		})
 		It("err4 should be not nil", func() {
 			Ω(err4).ShouldNot(BeNil())
+		})
+		It("err5 should be not nil", func() {
+			Ω(err5).ShouldNot(BeNil())
 		})
 	})
 })
