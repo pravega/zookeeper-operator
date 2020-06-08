@@ -446,6 +446,45 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 			})
 		})
 
+		Context("Checking result when request namespace is different to cluster namespcace", func() {
+			var (
+				cl  client.Client
+				err error
+			)
+
+			BeforeEach(func() {
+				z.WithDefaults()
+				z.Status.Init()
+				cl = fake.NewFakeClient(z)
+				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				req.NamespacedName.Namespace = "temp"
+				res, err = r.Reconcile(req)
+			})
+			It("should have false in reconcile result", func() {
+				Ω(res.Requeue).To(Equal(false))
+				Ω(err).To(BeNil())
+			})
+		})
+
+		Context("reconcile errors in reconcileStatefulSet", func() {
+			var (
+				cl  client.Client
+				err error
+			)
+
+			BeforeEach(func() {
+				z.WithDefaults()
+				z.Status.Init()
+				z.WithDefaults()
+				cl = fake.NewFakeClient(z)
+				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				err = r.reconcileStatefulSet(z)
+			})
+			It("should have false in reconcile result", func() {
+				Ω(err).To(BeNil())
+			})
+		})
+
 		Context("Checking client", func() {
 			var (
 				cl    client.Client
@@ -511,11 +550,10 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				Ω(err).To(BeNil())
 			})
 
-			It("calling YAMLEXPORTER", func() {
+			It("calling YamlExporterReconciler", func() {
 				recon := YAMLExporterReconciler(z)
 				Ω(recon).NotTo(BeNil())
 			})
-
 		})
 
 		Context("With an update to the client svc", func() {
