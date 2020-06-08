@@ -33,7 +33,7 @@ const (
 	// DefaultTerminationGracePeriod is the default time given before the
 	// container is stopped. This gives clients time to disconnect from a
 	// specific node gracefully.
-	DefaultTerminationGracePeriod = 30
+	DefaultTerminationGracePeriod = 180
 
 	// DefaultZookeeperCacheVolumeSize is the default volume size for the
 	// Zookeeper cache volume
@@ -249,7 +249,7 @@ type PodPolicy struct {
 
 	// TerminationGracePeriodSeconds is the amount of time that kubernetes will
 	// give for a pod instance to shutdown normally.
-	// The default value is 1800.
+	// The default value is 180.
 	TerminationGracePeriodSeconds int64 `json:"terminationGracePeriodSeconds"`
 }
 
