@@ -466,25 +466,6 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 			})
 		})
 
-		Context("reconcile errors in reconcileStatefulSet", func() {
-			var (
-				cl  client.Client
-				err error
-			)
-
-			BeforeEach(func() {
-				z.WithDefaults()
-				z.Status.Init()
-				z.WithDefaults()
-				cl = fake.NewFakeClient(z)
-				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
-				err = r.reconcileStatefulSet(z)
-			})
-			It("should have false in reconcile result", func() {
-				Ω(err).To(BeNil())
-			})
-		})
-
 		Context("Checking client", func() {
 			var (
 				cl    client.Client
