@@ -2,6 +2,10 @@
 ## This is a YAML-formatted file.
 ## Declare variables to be passed into your templates.
 
+global:
+  # Lists the secrets you need to use to pull zookeeper-operator image from a private registry.
+  imagePullSecrets: []
+  # - private-registry-key
 
 image:
   repository: pravega/zookeeper-operator
@@ -16,9 +20,8 @@ rbac:
 serviceAccount:
   create: true
   name: zookeeper-operator
-  # Lists the secrets you need to use to pull zookeeper-operator image from a private registry.
-  imagePullSecrets: []
-    # - private-registry-key
+  ## Optionally specify an array of imagePullSecrets. Will override the global parameter if set
+  # imagePullSecrets:
 
 ## Whether to create the CRD.
 crd:
