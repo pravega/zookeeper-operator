@@ -39,7 +39,7 @@ var _ = Describe("Zookeeper Test_Utils", func() {
 		})
 		It("should set the serviceportbyname ", func() {
 			Ω(err).To(Equal("port not found"))
-			Ω(port).To(Equal("2181"))
+			Ω(port).To(Equal("0"))
 		})
 	})
 })
