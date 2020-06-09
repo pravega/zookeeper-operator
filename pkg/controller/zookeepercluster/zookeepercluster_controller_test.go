@@ -254,7 +254,6 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				cl  client.Client
 				err error
 			)
-
 			BeforeEach(func() {
 				z.WithDefaults()
 				z.Status.Init()
@@ -308,7 +307,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 			})
 		})
 
-		Context("Checking for upgrade complition for zookeepercluster", func() {
+		Context("Checking for upgrade completion for zookeepercluster", func() {
 			var (
 				cl  client.Client
 				err error
@@ -429,7 +428,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 			})
 		})
 
-		Context("Checking result when request namespace is different to cluster namespcace", func() {
+		Context("Checking result when request namespace does not contains zookeeper cluster", func() {
 			var (
 				cl  client.Client
 				err error

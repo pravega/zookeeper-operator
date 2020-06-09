@@ -103,8 +103,7 @@ var _ = Describe("Synchronizers", func() {
 			zk.SyncConfigMap(cm1, cm2)
 			value = cm1.Data["k1"]
 		})
-
-		It("should have the updated fields for service", func() {
+		It("should have value as v1 for cm1.Data's key k1", func() {
 			Ω(value).To(BeEquivalentTo("v1"))
 		})
 	})

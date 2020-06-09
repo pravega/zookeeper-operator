@@ -109,7 +109,7 @@ var _ = Describe("ZookeeperCluster Types", func() {
 				Ω(z.ConfigMapName()).To(Equal("example-configmap"))
 			})
 
-			It("should give configMap name as example-configmap", func() {
+			It("should give clientservicename as example-client", func() {
 				Ω(z.GetClientServiceName()).To(Equal("example-client"))
 			})
 

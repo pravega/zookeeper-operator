@@ -32,13 +32,15 @@ var _ = Describe("Zookeeper Test_Utils", func() {
 			}
 			z.WithDefaults()
 			s := zk.MakeClientService(z)
-			p, e := ServicePortByName(s.Spec.Ports, "c")
+			p, e := ServicePortByName(s.Spec.Ports, "temp")
 			err = e.Error()
 			p, e = ServicePortByName(s.Spec.Ports, "tcp-client")
 			port = fmt.Sprintf("%v", p.Port)
 		})
-		It("should set the serviceportbyname ", func() {
+		It("should return error port not found for temp", func() {
 			Ω(err).To(Equal("port not found"))
+		})
+		It("should set the serviceportbyname to 2181 for tcp-client", func() {
 			Ω(port).To(Equal("2181"))
 		})
 	})
