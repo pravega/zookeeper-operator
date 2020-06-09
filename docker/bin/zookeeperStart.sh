@@ -51,6 +51,7 @@ if [ -f $DYNCONFIG ]; then
   ONDISK_DYN_CONFIG=true
 fi
 
+set +e
 # Check if envoy is up and running
 if [[ -n "$ENVOY_SIDECAR_STATUS" ]]; then
   COUNT=0
@@ -66,6 +67,7 @@ if [[ -n "$ENVOY_SIDECAR_STATUS" ]]; then
     fi
   done
 fi
+set -e
 
 # Determine if there is a ensemble available to join by checking the service domain
 set +e

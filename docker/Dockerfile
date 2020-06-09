@@ -8,13 +8,13 @@
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 
-FROM openjdk:latest
+FROM openjdk:11-jdk
 RUN mkdir /zu
 COPY zu /zu
 WORKDIR /zu
-RUN ./gradlew assemble
+RUN ./gradlew --console=verbose --info shadowJar
 
-FROM zookeeper:3.5.5
+FROM zookeeper:3.6.1
 COPY bin /usr/local/bin
 RUN chmod +x /usr/local/bin/*
 COPY --from=0 /zu/build/libs/zu.jar /root/

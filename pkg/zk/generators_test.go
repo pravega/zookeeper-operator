@@ -139,7 +139,7 @@ var _ = Describe("Generators Spec", func() {
 		})
 
 		It("should have a client port", func() {
-			p, err := utils.ServicePortByName(s.Spec.Ports, "client")
+			p, err := utils.ServicePortByName(s.Spec.Ports, "tcp-client")
 			Ω(err).To(BeNil())
 			Ω(p.Port).To(BeEquivalentTo(2181))
 		})
@@ -178,13 +178,13 @@ var _ = Describe("Generators Spec", func() {
 		})
 
 		It("should have a quorum port", func() {
-			p, err := utils.ServicePortByName(s.Spec.Ports, "quorum")
+			p, err := utils.ServicePortByName(s.Spec.Ports, "tcp-quorum")
 			Ω(err).To(BeNil())
 			Ω(p.Port).To(BeEquivalentTo(2888))
 		})
 
 		It("should have a leader port", func() {
-			p, err := utils.ServicePortByName(s.Spec.Ports, "leader-election")
+			p, err := utils.ServicePortByName(s.Spec.Ports, "tcp-leader-election")
 			Ω(err).To(BeNil())
 			Ω(p.Port).To(BeEquivalentTo(3888))
 		})
