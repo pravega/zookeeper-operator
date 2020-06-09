@@ -133,23 +133,6 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 			)
 
 			BeforeEach(func() {
-				cl = fake.NewFakeClient(z)
-				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
-				res, err = r.Reconcile(req)
-			})
-
-			It("should give error", func() {
-				Ω(err).To(BeNil())
-			})
-		})
-
-		Context("After defaults are applied", func() {
-			var (
-				cl  client.Client
-				err error
-			)
-
-			BeforeEach(func() {
 				z.WithDefaults()
 				cl = fake.NewFakeClient(z)
 				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
@@ -485,7 +468,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				err = mockZkClient.Connect("127.0.0.0:2181")
 				Ω(err).To(BeNil())
 			})
-			It("should not raise an erro", func() {
+			It("should not raise an error", func() {
 				err = r.GenerateYAML(z)
 				Ω(err).To(BeNil())
 			})

@@ -14,7 +14,6 @@ import (
 	"fmt"
 	"testing"
 
-	//"log"
 	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"

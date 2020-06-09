@@ -11,7 +11,6 @@ package utils
 
 import (
 	"fmt"
-	"testing"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -19,11 +18,6 @@ import (
 	"github.com/pravega/zookeeper-operator/pkg/zk"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
-
-func Test(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Zookeeper Test_Utils")
-}
 
 var _ = Describe("Zookeeper Test_Utils", func() {
 	Context("with defaults", func() {

@@ -48,7 +48,7 @@ var _ = Describe("Zookeeper Finalizers", func() {
 			Ω(ContainsString(result, "10")).To(Equal(false))
 		})
 	})
-	Context("creating strSlice", func() {
+	Context("IsPvCOrphan", func() {
 		var result1, result2, result3, result4 bool
 		BeforeEach(func() {
 			var zkPvcName string = "zk"
