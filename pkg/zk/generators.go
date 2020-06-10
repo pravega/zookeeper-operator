@@ -196,6 +196,7 @@ func MakeHeadlessService(z *v1beta1.ZookeeperCluster) *v1.Service {
 		{Name: "tcp-client", Port: ports.Client},
 		{Name: "tcp-quorum", Port: ports.Quorum},
 		{Name: "tcp-leader-election", Port: ports.Leader},
+		{Name: "tcp-metrics", Port: ports.Metrics},
 	}
 	return makeService(headlessSvcName(z), svcPorts, false, z)
 }

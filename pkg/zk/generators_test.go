@@ -177,6 +177,12 @@ var _ = Describe("Generators Spec", func() {
 			s = zk.MakeHeadlessService(z)
 		})
 
+		It("should have a client port", func() {
+			p, err := utils.ServicePortByName(s.Spec.Ports, "tcp-client")
+			Ω(err).To(BeNil())
+			Ω(p.Port).To(BeEquivalentTo(2181))
+		})
+
 		It("should have a quorum port", func() {
 			p, err := utils.ServicePortByName(s.Spec.Ports, "tcp-quorum")
 			Ω(err).To(BeNil())
@@ -187,6 +193,12 @@ var _ = Describe("Generators Spec", func() {
 			p, err := utils.ServicePortByName(s.Spec.Ports, "tcp-leader-election")
 			Ω(err).To(BeNil())
 			Ω(p.Port).To(BeEquivalentTo(3888))
+		})
+
+		It("should have a metrics port", func() {
+			p, err := utils.ServicePortByName(s.Spec.Ports, "tcp-metrics")
+			Ω(err).To(BeNil())
+			Ω(p.Port).To(BeEquivalentTo(7000))
 		})
 
 		It("should have a the client svc name", func() {
