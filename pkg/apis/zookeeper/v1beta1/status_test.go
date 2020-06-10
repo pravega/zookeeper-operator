@@ -23,6 +23,20 @@ var _ = Describe("ZookeeperCluster Status", func() {
 
 	var z v1beta1.ZookeeperCluster
 
+	Context("Checking when zookeepercluster has nil status conditions", func() {
+		var isClusterUpgradingState, isClusterInUpgradeFailedState bool
+		BeforeEach(func() {
+			isClusterUpgradingState = z.Status.IsClusterInUpgradingState()
+			isClusterInUpgradeFailedState = z.Status.IsClusterInUpgradeFailedState()
+		})
+		It("should have set isclusterupgrading to false", func() {
+			Ω(isClusterUpgradingState).To(Equal(false))
+		})
+		It("should have set isClusterInUpgradeFailedState to false", func() {
+			Ω(isClusterInUpgradeFailedState).To(Equal(false))
+		})
+	})
+
 	Context("checking for default values", func() {
 		BeforeEach(func() {
 			z.Status.Init()
@@ -79,11 +93,17 @@ var _ = Describe("ZookeeperCluster Status", func() {
 				LastTransitionTime: "",
 			}
 			z.Status.Conditions = append(z.Status.Conditions, condition)
+			z.Status.UpdateProgress(" ", "3")
 		})
 
 		It("should contains pods upgrade condition and it is true status", func() {
 			_, condition := z.Status.GetClusterCondition(v1beta1.ClusterConditionUpgrading)
 			Ω(condition.Status).To(Equal(corev1.ConditionTrue))
+		})
+
+		It("should set the message to 3", func() {
+			_, condition := z.Status.GetClusterCondition(v1beta1.ClusterConditionUpgrading)
+			Ω(condition.Message).To(Equal("3"))
 		})
 	})
 	Context("manually set pods Error condition to be true", func() {

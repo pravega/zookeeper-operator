@@ -12,6 +12,7 @@ package zookeepercluster
 
 import (
 	"context"
+	"os"
 	"testing"
 	"time"
 
@@ -123,7 +124,6 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 			It("should requeue the request", func() {
 				Ω(res.Requeue).To(BeTrue())
 			})
-
 		})
 
 		Context("After defaults are applied", func() {
@@ -254,7 +254,6 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				cl  client.Client
 				err error
 			)
-
 			BeforeEach(func() {
 				z.WithDefaults()
 				z.Status.Init()
@@ -299,9 +298,16 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				Ω(err).To(BeNil())
 				Ω(foundZookeeper.Status.TargetVersion).To(BeEquivalentTo("0.2.7"))
 			})
+
+			It("should check if the cluster is in upgrade failed state", func() {
+				z.Status.SetErrorConditionTrue("UpgradeFailed", " ")
+				cl.Status().Update(context.TODO(), z)
+				res, err = r.Reconcile(req)
+				Ω(err).To(BeNil())
+			})
 		})
 
-		Context("Checking for upgrade complition for zookeepercluster", func() {
+		Context("Checking for upgrade completion for zookeepercluster", func() {
 			var (
 				cl  client.Client
 				err error
@@ -419,6 +425,97 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				foundZookeeper := &v1beta1.ZookeeperCluster{}
 				_ = cl.Get(context.TODO(), req.NamespacedName, foundZookeeper)
 				Ω(foundZookeeper.Status.IsClusterInUpgradingState()).To(Equal(false))
+			})
+		})
+
+		Context("Checking result when request namespace does not contains zookeeper cluster", func() {
+			var (
+				cl  client.Client
+				err error
+			)
+
+			BeforeEach(func() {
+				z.WithDefaults()
+				z.Status.Init()
+				cl = fake.NewFakeClient(z)
+				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				req.NamespacedName.Namespace = "temp"
+				res, err = r.Reconcile(req)
+			})
+			It("should have false in reconcile result", func() {
+				Ω(res.Requeue).To(Equal(false))
+				Ω(err).To(BeNil())
+			})
+		})
+
+		Context("Checking client", func() {
+			var (
+				cl    client.Client
+				err   error
+				count int
+			)
+
+			BeforeEach(func() {
+				z.WithDefaults()
+				z.Status.Init()
+				cl = fake.NewFakeClient(z)
+				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				res, err = r.Reconcile(req)
+			})
+
+			It("should not raise an error", func() {
+				err = mockZkClient.Connect("127.0.0.0:2181")
+				Ω(err).To(BeNil())
+			})
+			It("should not raise an error", func() {
+				err = r.GenerateYAML(z)
+				Ω(err).To(BeNil())
+			})
+			It("should not raise an error", func() {
+				err = r.cleanupOrphanPVCs(z)
+				Ω(err).To(BeNil())
+			})
+			It("should not raise an error", func() {
+				z.Status.ReadyReplicas = -1
+				z.Spec.Replicas = -1
+				cl.Update(context.TODO(), z)
+				err = r.cleanupOrphanPVCs(z)
+				Ω(err).To(BeNil())
+			})
+			It("should not raise an error", func() {
+				count, err = r.getPVCCount(z)
+				_, err = r.getPVCList(z)
+				Ω(err).To(BeNil())
+				Ω(count).To(Equal(0))
+			})
+			It("should not raise an error", func() {
+				z.Spec.Persistence.VolumeReclaimPolicy = v1beta1.VolumeReclaimPolicyDelete
+				cl.Update(context.TODO(), z)
+				err = r.reconcileFinalizers(z)
+				Ω(err).To(BeNil())
+			})
+
+			It("should delete pvc", func() {
+				pvcDelete := &corev1.PersistentVolumeClaim{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "Name",
+						Namespace: "Namespace",
+					},
+				}
+				r.client.Create(context.TODO(), pvcDelete)
+				r.deletePVC(*pvcDelete)
+				r.deletePVC(*pvcDelete)
+			})
+
+			It("should not raise an error", func() {
+				err = r.cleanUpAllPVCs(z)
+				_ = os.RemoveAll("ZookeeperCluster")
+				Ω(err).To(BeNil())
+			})
+
+			It("calling YamlExporterReconciler", func() {
+				recon := YAMLExporterReconciler(z)
+				Ω(recon).NotTo(BeNil())
 			})
 		})
 

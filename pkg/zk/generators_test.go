@@ -16,7 +16,8 @@ import (
 	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	"github.com/pravega/zookeeper-operator/pkg/utils"
 	"github.com/pravega/zookeeper-operator/pkg/zk"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
+	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	. "github.com/onsi/ginkgo"
@@ -201,5 +202,36 @@ var _ = Describe("Generators Spec", func() {
 				"external-dns.alpha.kubernetes.io/hostname",
 				"example-headless.zk.com."))
 		})
+	})
+
+	Context("#MakePodDisruptionBudget", func() {
+		var pdb *policyv1beta1.PodDisruptionBudget
+		var domainName string
+		var zkClusterName string
+
+		BeforeEach(func() {
+			domainName = "zk.com."
+			z := &v1beta1.ZookeeperCluster{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "example",
+					Namespace: "default",
+				},
+				Spec: v1beta1.ZookeeperClusterSpec{
+					DomainName: domainName,
+				},
+			}
+			z.WithDefaults()
+			pdb = zk.MakePodDisruptionBudget(z)
+			zkClusterName = z.GetName()
+		})
+
+		It("should have kind PodDisruptionBudget", func() {
+			Ω(pdb.GetObjectKind().GroupVersionKind().Kind).To(Equal("PodDisruptionBudget"))
+		})
+
+		It("should have slector is zookeeper cluster name", func() {
+			Ω(pdb.Spec.Selector.MatchLabels["app"]).To(BeEquivalentTo(zkClusterName))
+		})
+
 	})
 })

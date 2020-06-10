@@ -42,6 +42,7 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.1
 	github.com/mdempsky/maligned v0.0.0-20180708014732-6e39bd26a8c8 // indirect
 	github.com/mdempsky/unconvert v0.0.0-20200228143138-95ecdbfc0b5f // indirect
+	github.com/mibk/dupl v1.0.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd
 	github.com/modern-go/reflect2 v1.0.1
 	github.com/onsi/ginkgo v1.12.0
@@ -57,10 +58,11 @@ require (
 	github.com/prometheus/common v0.9.1
 	github.com/prometheus/procfs v0.0.11
 	github.com/samuel/go-zookeeper v0.0.0-20190923202752-2cc03de413da
+	github.com/securego/gosec v0.0.0-20200401082031-e946c8c39989 // indirect
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/spf13/pflag v1.0.5
-	github.com/tsenart/deadcode v0.0.0-20160724212837-210d2dc333e9 // indirect
+	github.com/walle/lll v1.0.1 // indirect
 	go.uber.org/atomic v1.6.0
 	go.uber.org/multierr v1.5.0
 	go.uber.org/zap v1.14.1
