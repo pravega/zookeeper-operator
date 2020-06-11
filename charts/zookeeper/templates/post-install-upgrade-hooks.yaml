@@ -1,7 +1,8 @@
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: {{ template "hook.fullname" . }}
+  name: {{ template "zookeeper.fullname" . }}-post-install-upgrade
+  namespace: {{ .Release.Namespace }}
   annotations:
     "helm.sh/hook": post-install, post-upgrade
     "helm.sh/hook-weight": "1"
@@ -18,18 +19,19 @@ rules:
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: {{ template "hook.fullname" . }}
+  name: {{ template "zookeeper.fullname" . }}-post-install-upgrade
+  namespace: {{ .Release.Namespace }}
   annotations:
     "helm.sh/hook": post-install, post-upgrade
     "helm.sh/hook-weight": "1"
     "helm.sh/hook-delete-policy": hook-succeeded, before-hook-creation, hook-failed
 subjects:
 - kind: ServiceAccount
-  name: {{ template "hook.fullname" . }}
+  name: {{ template "zookeeper.fullname" . }}-post-install-upgrade
   namespace: {{.Release.Namespace}}
 roleRef:
   kind: Role
-  name: {{ template "hook.fullname" . }}
+  name: {{ template "zookeeper.fullname" . }}-post-install-upgrade
   apiGroup: rbac.authorization.k8s.io
 
 ---
@@ -37,7 +39,8 @@ roleRef:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: {{ template "hook.fullname" . }}
+  name: {{ template "zookeeper.fullname" . }}-post-install-upgrade
+  namespace: {{ .Release.Namespace }}
   annotations:
     "helm.sh/hook": post-install, post-upgrade
     "helm.sh/hook-weight": "1"
@@ -48,7 +51,8 @@ metadata:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ template "hook.fullname" . }}
+  name: {{ template "zookeeper.fullname" . }}-post-install-upgrade
+  namespace: {{ .Release.Namespace }}
   annotations:
       "helm.sh/hook": post-install, post-upgrade
       "helm.sh/hook-weight": "1"
@@ -82,7 +86,8 @@ data:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ template "hook.fullname" . }}
+  name: {{ template "zookeeper.fullname" . }}-post-install-upgrade
+  namespace: {{ .Release.Namespace }}
   annotations:
     "helm.sh/hook": post-install, post-upgrade
     "helm.sh/hook-weight": "2"
@@ -91,9 +96,9 @@ spec:
   backoffLimit: 3
   template:
     metadata:
-      name: {{ template "hook.fullname" . }}
+      name: {{ template "zookeeper.fullname" . }}-post-install-upgrade
     spec:
-      serviceAccountName: {{ template "hook.fullname" . }}
+      serviceAccountName: {{ template "zookeeper.fullname" . }}-post-install-upgrade
       restartPolicy: Never
       containers:
       - name: post-install-upgrade-job
@@ -107,5 +112,5 @@ spec:
       volumes:
         - name: sh
           configMap:
-            name: {{ template "hook.fullname" . }}
+            name: {{ template "zookeeper.fullname" . }}-post-install-upgrade
             defaultMode: 0555

@@ -28,8 +28,8 @@ config: {}
 
 persistence:
   storageClassName: standard
-  # specifying reclaim policy for PersistentVolumes
-  # accepted values - Delete / Retain
+  ## specifying reclaim policy for PersistentVolumes
+  ## accepted values - Delete / Retain
   reclaimPolicy: Delete
   volumeSize: 20Gi
 

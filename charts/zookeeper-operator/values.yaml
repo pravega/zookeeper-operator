@@ -1,25 +1,25 @@
-# Default values for zookeeper-operator.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
+## Default values for zookeeper-operator.
+## This is a YAML-formatted file.
+## Declare variables to be passed into your templates.
 
 image:
   repository: pravega/zookeeper-operator
   tag: 0.2.7
   pullPolicy: IfNotPresent
 
-## Install RBAC roles and bindings
+## Install RBAC roles and bindings.
 rbac:
   create: true
 
-## Service account names and whether to create them
+## Service account name and whether to create it.
 serviceAccount:
   create: true
   name: zookeeper-operator
 
-# Whether to create custom resource
+## Whether to create the CRD.
 crd:
   create: true
 
-# Specifies which namespace the Operator should watch for new ClusterResource resources
-# Default: "" == Watch ALL namespaces
+## Specifies which namespace the Operator should watch over.
+## An empty string means all namespaces.
 watchNamespace: ""
