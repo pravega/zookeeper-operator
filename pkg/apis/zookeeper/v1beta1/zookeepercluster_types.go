@@ -74,6 +74,9 @@ type ZookeeperClusterSpec struct {
 
 	// Domain Name to be used for DNS
 	DomainName string `json:"domainName,omitempty"`
+
+	// Domain of the kubernetes cluster, defaults to cluster.local
+	KubernetesClusterDomain string `json:"kubernetesClusterDomain,omitempty"`
 }
 
 func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) {
@@ -151,6 +154,14 @@ func (z *ZookeeperCluster) WithDefaults() bool {
 // ConfigMapName returns the name of the cluster config-map
 func (z *ZookeeperCluster) ConfigMapName() string {
 	return fmt.Sprintf("%s-configmap", z.GetName())
+}
+
+// GetKubernetesClusterDomain returns the cluster domain of kubernetes
+func (z *ZookeeperCluster) GetKubernetesClusterDomain() string {
+	if z.Spec.KubernetesClusterDomain == "" {
+		return "cluster.local"
+	}
+	return z.Spec.KubernetesClusterDomain
 }
 
 // ZookeeperPorts returns a struct of ports

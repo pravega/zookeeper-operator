@@ -31,7 +31,7 @@ const (
 )
 
 func headlessDomain(z *v1beta1.ZookeeperCluster) string {
-	return fmt.Sprintf("%s.%s.svc.cluster.local", headlessSvcName(z), z.GetNamespace())
+	return fmt.Sprintf("%s.%s.svc.%s", headlessSvcName(z), z.GetNamespace(), z.GetKubernetesClusterDomain())
 }
 
 func headlessSvcName(z *v1beta1.ZookeeperCluster) string {
