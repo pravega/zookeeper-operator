@@ -472,7 +472,7 @@ func (r *ReconcileZookeeperCluster) reconcileClusterStatus(instance *zookeeperv1
 		Namespace:     instance.Namespace,
 		LabelSelector: labelSelector,
 	}
-	err = r.client.List(context.TODO(), listOps, foundPods)
+	err = r.client.List(context.TODO(), foundPods, listOps)
 	if err != nil {
 		return err
 	}
@@ -687,7 +687,7 @@ func (r *ReconcileZookeeperCluster) getPVCList(instance *zookeeperv1beta1.Zookee
 		LabelSelector: selector,
 	}
 	pvcList := &corev1.PersistentVolumeClaimList{}
-	err = r.client.List(context.TODO(), pvclistOps, pvcList)
+	err = r.client.List(context.TODO(), pvcList, pvclistOps)
 	return *pvcList, err
 }
 
