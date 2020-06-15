@@ -3,6 +3,8 @@ kind: "ZookeeperCluster"
 metadata:
   name: {{ template "zookeeper.fullname" . }}
   namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "zookeeper.commonLabels" . | indent 4 }}
 spec:
   replicas: {{ .Values.replicas }}
   image:
