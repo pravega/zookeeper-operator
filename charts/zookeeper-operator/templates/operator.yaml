@@ -34,3 +34,5 @@ spec:
               fieldPath: metadata.name
         - name: OPERATOR_NAME
           value: {{ template "zookeeper-operator.fullname" . }}
+        resources:
+{{ toYaml .Values.resources | indent 10 }}
