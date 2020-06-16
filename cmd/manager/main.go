@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"strings"
 
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"github.com/operator-framework/operator-sdk/pkg/leader"
@@ -25,6 +26,7 @@ import (
 	"github.com/pravega/zookeeper-operator/pkg/version"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
@@ -63,10 +65,23 @@ func main() {
 		os.Exit(0)
 	}
 
-	namespace, err := k8sutil.GetWatchNamespace()
+	namespaces, err := k8sutil.GetWatchNamespace()
 	if err != nil {
 		log.Error(err, "failed to get watch namespace")
 		os.Exit(1)
+	}
+	//When operator is started to watch resources in a specific set of namespaces, we use the MultiNamespacedCacheBuilder cache.
+	//In this scenario, it is also suggested to restrict the provided authorization to this namespace by replacing the default
+	//ClusterRole and ClusterRoleBinding to Role and RoleBinding respectively
+	//For further information see the kubernetes documentation about
+	//Using [RBAC Authorization](https://kubernetes.io/docs/reference/access-authn-authz/rbac/).
+	managerWatchCache := (cache.NewCacheFunc)(nil)
+	if namespaces != "" {
+		ns := strings.Split(namespaces, ",")
+		for i := range ns {
+			ns[i] = strings.TrimSpace(ns[i])
+		}
+		managerWatchCache = cache.MultiNamespacedCacheBuilder(ns)
 	}
 
 	// Get a config to talk to the apiserver
@@ -80,7 +95,7 @@ func main() {
 	leader.Become(context.TODO(), "zookeeper-operator-lock")
 
 	// Create a new Cmd to provide shared dependencies and start components
-	mgr, err := manager.New(cfg, manager.Options{Namespace: namespace})
+	mgr, err := manager.New(cfg, manager.Options{NewCache: managerWatchCache})
 	if err != nil {
 		log.Error(err, "")
 		os.Exit(1)
