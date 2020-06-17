@@ -106,7 +106,9 @@ func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) 
 		}
 		changed = true
 	} else {
-		var foundClient, foundQuorum, foundLeader, foundMetrics bool
+		var (
+			foundClient, foundQuorum, foundLeader, foundMetrics bool
+		)
 		for i := 0; i < len(s.Ports); i++ {
 			if s.Ports[i].Name == "client" {
 				foundClient = true
