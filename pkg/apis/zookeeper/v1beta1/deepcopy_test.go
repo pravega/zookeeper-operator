@@ -108,11 +108,11 @@ var _ = Describe("ZookeeperCluster DeepCopy", func() {
 		It("value of str7 should be 2000", func() {
 			Ω(str7).To(Equal("2000"))
 		})
-		It("value of str8 should be 180", func() {
-			Ω(str8).To(Equal("180"))
+		It("value of str8 should be 30", func() {
+			Ω(str8).To(Equal("30"))
 		})
-		It("value of str9 should be 180", func() {
-			Ω(str9).To(Equal("180"))
+		It("value of str9 should be 30", func() {
+			Ω(str9).To(Equal("30"))
 		})
 		It("value of str10 should be zk-2", func() {
 			Ω(str10).To(Equal("zk-2"))
