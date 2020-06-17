@@ -16,6 +16,7 @@ import (
 
 	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -229,6 +230,42 @@ var _ = Describe("ZookeeperCluster Types", func() {
 			p = z.ZookeeperPorts()
 		})
 
+		It("should have a client port", func() {
+			Ω(p.Client).To(BeEquivalentTo(2181))
+		})
+
+		It("should have a quorum port", func() {
+			Ω(p.Quorum).To(BeEquivalentTo(2888))
+		})
+
+		It("should have a leader port", func() {
+			Ω(p.Leader).To(BeEquivalentTo(3888))
+		})
+
+		It("should have a metrics port", func() {
+			Ω(p.Metrics).To(BeEquivalentTo(7000))
+		})
+	})
+	Context("#ZookeeperPorts with values set", func() {
+		var p v1beta1.Ports
+		BeforeEach(func() {
+			ports := []v1.ContainerPort{
+				{
+					Name:          "testclient",
+					ContainerPort: 2181,
+				},
+			}
+			z = v1beta1.ZookeeperCluster{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "example",
+				},
+				Spec: v1beta1.ZookeeperClusterSpec{
+					Ports: ports,
+				},
+			}
+			z.WithDefaults()
+			p = z.ZookeeperPorts()
+		})
 		It("should have a client port", func() {
 			Ω(p.Client).To(BeEquivalentTo(2181))
 		})

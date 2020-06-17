@@ -105,7 +105,41 @@ func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) 
 			},
 		}
 		changed = true
+	} else {
+		var foundClient, foundQuorum, foundLeader, foundMetrics bool
+		for i := 0; i < len(s.Ports); i++ {
+			if s.Ports[i].Name == "client" {
+				foundClient = true
+			} else if s.Ports[i].Name == "quorum" {
+				foundQuorum = true
+			} else if s.Ports[i].Name == "leader-election" {
+				foundLeader = true
+			} else if s.Ports[i].Name == "metrics" {
+				foundMetrics = true
+			}
+		}
+		if !foundClient {
+			ports := v1.ContainerPort{Name: "client", ContainerPort: 2181}
+			s.Ports = append(s.Ports, ports)
+			changed = true
+		}
+		if !foundQuorum {
+			ports := v1.ContainerPort{Name: "quorum", ContainerPort: 2888}
+			s.Ports = append(s.Ports, ports)
+			changed = true
+		}
+		if !foundLeader {
+			ports := v1.ContainerPort{Name: "leader-election", ContainerPort: 3888}
+			s.Ports = append(s.Ports, ports)
+			changed = true
+		}
+		if !foundMetrics {
+			ports := v1.ContainerPort{Name: "metrics", ContainerPort: 7000}
+			s.Ports = append(s.Ports, ports)
+			changed = true
+		}
 	}
+
 	if z.Spec.Labels == nil {
 		z.Spec.Labels = map[string]string{}
 		changed = true
