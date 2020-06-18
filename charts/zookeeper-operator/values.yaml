@@ -30,3 +30,12 @@ crd:
 ## Specifies which namespace the Operator should watch over.
 ## An empty string means all namespaces.
 watchNamespace: ""
+
+## Operator pod resources
+resources: {}
+  # limits:
+  #   cpu: 2
+  #   memory: 256Mi
+  # requests:
+  #   cpu: 1
+  #   memory: 128Mi
