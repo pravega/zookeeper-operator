@@ -21,7 +21,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -269,13 +268,7 @@ func makeService(name string, ports []v1.ServicePort, clusterIP bool, z *v1beta1
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: z.Namespace,
-			OwnerReferences: []metav1.OwnerReference{
-				*metav1.NewControllerRef(z, schema.GroupVersionKind{
-					Group:   v1beta1.SchemeGroupVersion.Group,
-					Version: v1beta1.SchemeGroupVersion.Version,
-					Kind:    "ZookeeperCluster",
-				}),
-			},
+
 			Labels:      map[string]string{"app": z.GetName(), "headless": strconv.FormatBool(!clusterIP)},
 			Annotations: annotationMap,
 		},
@@ -301,13 +294,6 @@ func MakePodDisruptionBudget(z *v1beta1.ZookeeperCluster) *policyv1beta1.PodDisr
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      z.GetName(),
 			Namespace: z.Namespace,
-			OwnerReferences: []metav1.OwnerReference{
-				*metav1.NewControllerRef(z, schema.GroupVersionKind{
-					Group:   v1beta1.SchemeGroupVersion.Group,
-					Version: v1beta1.SchemeGroupVersion.Version,
-					Kind:    "ZookeeperCluster",
-				}),
-			},
 		},
 		Spec: policyv1beta1.PodDisruptionBudgetSpec{
 			MaxUnavailable: &pdbCount,
