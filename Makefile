@@ -61,9 +61,9 @@ test:
 	go test $$(go list ./... | grep -v /vendor/ | grep -v /test/e2e) -race -coverprofile=coverage.txt -covermode=atomic
 
 test-e2e-remote: login
-	operator-sdk build $(TEST_IMAGE) --namespaced-manifest  ./deploy/all_ns/operator.yaml --enable-tests
+	operator-sdk build $(TEST_IMAGE)
 	docker push $(TEST_IMAGE)
-	operator-sdk test local ./test/e2e --namespace default --namespaced-manifest ./test/e2e/resources/rbac-operator.yaml --global-manifest  deploy/crds/zookeeper_v1beta1_zookeepercluster_crd.yaml  --image $(TEST_IMAGE) --go-test-flags "-v -timeout 0"
+	operator-sdk test local ./test/e2e --operator-namespace default --namespaced-manifest ./test/e2e/resources/rbac-operator.yaml --global-manifest  deploy/crds/zookeeper_v1beta1_zookeepercluster_crd.yaml  --image $(TEST_IMAGE) --go-test-flags "-v -timeout 0"
 
 run-local:
 	operator-sdk up local
