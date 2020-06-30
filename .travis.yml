@@ -1,7 +1,7 @@
 language: go
 go:
 - '1.13.8'
-- tip
+
 sudo: required
 env:
     global:
@@ -12,6 +12,7 @@ env:
       - MINIKUBE_VERSION=v1.11.0
       - HELM_VERSION=v2.12.0
     secure: dIXvb2BS2AwvQf+McXNClqoV4AjobYyc0/2b+zn4yMQ2v8gAW5V0w8Y3af6EnwOLe9Szke0RRHj/5ktxyrnQtBLsQhZd13GUItLuvIyD1fZZx9/djA7aII71fqKBVLVg2OR9VFltfPDB1B9NSPD3w4NJhyWdAzUORnqiNkQmOc+WGdCVYJ6olXZoq1rCVD+ysxssuWaHVD4ujbdLmwToFhQiGGbpdInZjdLUZ8FWLEJHl5uHkntrHESDBBjZ+ZHeF5jZYEUKjoV0xvapiI+lqp6mcWzaVkop78SbjlHnbQNjqH3mW6i0lI7dRyMPPURUBPNKvhvDlAbRjd7CU70ASJmI2rCgKQru5tfASaegeCzdGCp1fOn4bdvDgL+9NtxsojL6J4j5H9MPmSE6zZVLLQN/wA4IM7vB12o+O7pEM40WiZ7qtCsolIFWE53zx9Beuf7FQFv8Zz/pCfUctvZdyE53T41uuzZVQC+w+w5sj/1rrLgBCjPD1ghNZdN+y3GD7Sgaic03a+FiCTKnOOab9Dk6Pil0m4qbYLJdkKKLt/PvAw7nb9GEX36VPLWrG9xCXsJvzbiG+JQBYEpSQrzJYj9vuNScoWZuvu1I+cRIZsj26dPt9XXn2I/8uQSKBQlNzPAIOD1NCTLtRglVkgPf+BxNppTLV2BmBRQ4V9ZtpJQ=
+
 services:
 - docker
 
@@ -35,8 +36,10 @@ script:
 - make test
 - make test-e2e
 - make clean
+
 after_success:
 - bash <(curl -s https://codecov.io/bash)
+
 deploy:
   - provider: script
     skip_cleanup: true
