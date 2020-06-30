@@ -28,11 +28,11 @@ import (
 )
 
 var (
-	RetryInterval        = time.Second * 5
+	RetryInterval        = time.Second * 10
 	Timeout              = time.Second * 60
 	CleanupRetryInterval = time.Second * 5
 	CleanupTimeout       = time.Second * 5
-	ReadyTimeout         = time.Minute * 5
+	ReadyTimeout         = time.Minute * 10
 	UpgradeTimeout       = time.Minute * 10
 	TerminateTimeout     = time.Minute * 5
 	VerificationTimeout  = time.Minute * 5
