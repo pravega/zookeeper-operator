@@ -32,7 +32,7 @@ var (
 	Timeout              = time.Second * 60
 	CleanupRetryInterval = time.Second * 5
 	CleanupTimeout       = time.Second * 5
-	ReadyTimeout         = time.Minute * 9
+	ReadyTimeout         = time.Minute * 5
 	UpgradeTimeout       = time.Minute * 10
 	TerminateTimeout     = time.Minute * 5
 	VerificationTimeout  = time.Minute * 5

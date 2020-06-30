@@ -37,6 +37,7 @@ func testUpgradeCluster(t *testing.T) {
 	cluster := zk_e2eutil.NewDefaultCluster(namespace)
 
 	cluster.WithDefaults()
+	cluster.Spec.Replicas = 1
 	cluster.Status.Init()
 	cluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
 	initialVersion := "0.2.5"
@@ -49,8 +50,8 @@ func testUpgradeCluster(t *testing.T) {
 	zk, err := zk_e2eutil.CreateCluster(t, f, ctx, cluster)
 	g.Expect(err).NotTo(HaveOccurred())
 
-	// A default Zookeepercluster should have 3 replicas
-	podSize := 3
+	// A default Zookeepercluster should have 1 replicas
+	podSize := 1
 	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
 	g.Expect(err).NotTo(HaveOccurred())
 

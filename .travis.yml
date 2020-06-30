@@ -18,7 +18,7 @@ install:
   - curl -Lo operator-sdk https://github.com/operator-framework/operator-sdk/releases/download/$OPERATOR_SDK_VERSION/operator-sdk-$OPERATOR_SDK_VERSION-x86_64-linux-gnu && chmod +x operator-sdk && sudo mv operator-sdk /usr/local/bin/
 before_script:
   - sudo mount --make-rshared /
-  - sudo minikube start --cpus=8 --memory=50000mb --disk-size=50000mb --vm-driver=none --bootstrapper=kubeadm --kubernetes-version=$KUBERNETES_VERSION
+  - sudo minikube start --vm-driver=none --bootstrapper=kubeadm --kubernetes-version=$KUBERNETES_VERSION
   - minikube update-context
   - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl get nodes -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1; done
   # Show cluster information
