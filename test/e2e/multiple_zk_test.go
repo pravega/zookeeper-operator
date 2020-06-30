@@ -81,9 +81,8 @@ func testMultiZKCluster(t *testing.T) {
 	defaultCluster.WithDefaults()
 	defaultCluster.Status.Init()
 	defaultCluster.ObjectMeta.Name = "zk3"
-	defaultCluster.Spec.Replicas = 1
 	defaultCluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
-
+	defaultCluster.Spec.Replicas = 1
 	zk3, err := zk_e2eutil.CreateCluster(t, f, ctx, defaultCluster)
 	g.Expect(err).NotTo(HaveOccurred())
 
@@ -136,6 +135,7 @@ func testMultiZKCluster(t *testing.T) {
 	// This is to get the latest zk cluster object
 	zk3, err = zk_e2eutil.GetCluster(t, f, ctx, zk3)
 
+	podSize = 1
 	//Delete all pods in the 3rd Cluster
 	podDeleteCount := 1
 	err = zk_e2eutil.DeletePods(t, f, ctx, zk3, podDeleteCount)
@@ -168,6 +168,7 @@ func testMultiZKCluster(t *testing.T) {
 	defaultCluster.Status.Init()
 	defaultCluster.ObjectMeta.Name = "zk1"
 	defaultCluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
+	defaultCluster.Spec.Replicas = 1
 
 	zk1, err = zk_e2eutil.CreateCluster(t, f, ctx, defaultCluster)
 	g.Expect(err).NotTo(HaveOccurred())
