@@ -5,7 +5,7 @@ go:
 sudo: required
 env:
     global:
-      - KUBECTL_VERSION=v1.15.0
+      - KUBERNETES_VERSION=v1.15.0
       - OPERATOR_SDK_VERSION=v0.17.0
       - KUBERNETES_CONFIG_FILE=$HOME/.kube/config
       - CHANGE_MINIKUBE_NONE_USER=true
