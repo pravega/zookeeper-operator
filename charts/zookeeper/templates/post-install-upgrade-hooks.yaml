@@ -61,7 +61,6 @@ data:
   validations.sh: |
     #!/bin/sh
     set -e
-
     sleep 30
 
     replicas=`kubectl get zk -n {{ .Release.Namespace }} {{ template "zookeeper.fullname" . }} -o jsonpath='{.status.replicas}'`
@@ -93,7 +92,7 @@ metadata:
     "helm.sh/hook-weight": "2"
     "helm.sh/hook-delete-policy": hook-succeeded, before-hook-creation, hook-failed
 spec:
-  backoffLimit: 3
+  backoffLimit: {{ .Values.hook.backoffLimit }}
   template:
     metadata:
       name: {{ template "zookeeper.fullname" . }}-post-install-upgrade
@@ -102,7 +101,7 @@ spec:
       restartPolicy: Never
       containers:
       - name: post-install-upgrade-job
-        image: "{{ .Values.hooks.image.repository }}:{{ .Values.hooks.image.tag }}"
+        image: "{{ .Values.hook.image.repository }}:{{ .Values.hook.image.tag }}"
         command:
           - /scripts/validations.sh
         volumeMounts:
