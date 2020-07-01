@@ -47,7 +47,7 @@ func testMultiZKCluster(t *testing.T) {
 	zk1, err := zk_e2eutil.CreateCluster(t, f, ctx, defaultCluster)
 	g.Expect(err).NotTo(HaveOccurred())
 
-	// A default zookeeper cluster should have 3 replicas
+	// A default zookeeper cluster should have 1 replicas
 	podSize := 1
 	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk1, podSize)
 	g.Expect(err).NotTo(HaveOccurred())
@@ -58,8 +58,8 @@ func testMultiZKCluster(t *testing.T) {
 	defaultCluster.Status.Init()
 	defaultCluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
 	defaultCluster.ObjectMeta.Name = "zk2"
-	initialVersion := "0.2.5"
-	upgradeVersion := "0.2.7"
+	initialVersion := "0.2.7"
+	upgradeVersion := "0.2.8-rc0"
 	defaultCluster.Spec.Replicas = 1
 	defaultCluster.Spec.Image = api.ContainerImage{
 		Repository: "pravega/zookeeper",
