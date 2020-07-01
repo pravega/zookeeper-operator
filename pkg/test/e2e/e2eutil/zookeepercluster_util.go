@@ -93,8 +93,6 @@ func GetCluster(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z 
 // WaitForClusterToBecomeReady will wait until all cluster pods are ready
 func WaitForClusterToBecomeReady(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z *api.ZookeeperCluster, size int) error {
 	t.Logf("waiting for cluster pods to become ready: %s", z.Name)
-	t.Logf("prabhaker value of spec = %v", z.Spec)
-	t.Logf("prabhaker value of status = %v", z.Status)
 	err := wait.Poll(RetryInterval, ReadyTimeout, func() (done bool, err error) {
 		cluster, err := GetCluster(t, f, ctx, z)
 		if err != nil {

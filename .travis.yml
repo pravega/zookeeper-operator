@@ -28,7 +28,6 @@ before_script:
 script:
 - make check
 - make test
-- while sleep 5m; do kubectl get pods; done &
 - make test-e2e
 - make clean
 after_success:
