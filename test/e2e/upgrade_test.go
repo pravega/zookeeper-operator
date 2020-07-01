@@ -40,8 +40,8 @@ func testUpgradeCluster(t *testing.T) {
 	cluster.Spec.Replicas = 3
 	cluster.Status.Init()
 	cluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
-	initialVersion := "0.2.7"
-	upgradeVersion := "0.2.5"
+	initialVersion := "0.2.6"
+	upgradeVersion := "0.2.7"
 	cluster.Spec.Image = api.ContainerImage{
 		Repository: "pravega/zookeeper",
 		Tag:        initialVersion,
