@@ -113,6 +113,10 @@ func testMultiZKCluster(t *testing.T) {
 	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk1, podSize)
 	g.Expect(err).NotTo(HaveOccurred())
 
+	// This is to get the latest Zookeeper cluster object
+	zk2, err = zk_e2eutil.GetCluster(t, f, ctx, zk2)
+	g.Expect(err).NotTo(HaveOccurred())
+
 	//upgrade the image in second Cluster
 	zk2.Spec.Image.Tag = upgradeVersion
 
