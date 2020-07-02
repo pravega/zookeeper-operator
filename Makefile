@@ -69,6 +69,9 @@ test-e2e-remote: test-login
 	docker push $(TEST_IMAGE)
 	operator-sdk test local ./test/e2e --operator-namespace default --namespaced-manifest ./test/e2e/resources/rbac-operator.yaml --global-manifest  deploy/crds/zookeeper_v1beta1_zookeepercluster_crd.yaml  --image $(TEST_IMAGE) --go-test-flags "-v -timeout 0"
 
+test-e2e-local:
+		operator-sdk test local ./test/e2e --operator-namespace default --up-local --go-test-flags "-v -timeout 0"
+
 run-local:
 	operator-sdk up local
 
