@@ -37,7 +37,6 @@ func testUpgradeCluster(t *testing.T) {
 	cluster := zk_e2eutil.NewDefaultCluster(namespace)
 
 	cluster.WithDefaults()
-	cluster.Spec.Replicas = 3
 	cluster.Status.Init()
 	cluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
 	initialVersion := "0.2.7"
