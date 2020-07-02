@@ -182,8 +182,9 @@ $ kubectl create -f zk-with-istio.yaml
 
 The upgrade can be triggered via helm using the following command
 ```
-$ helm upgrade <zookeeper cluster release name> <location of modified charts> --timeout 600s
+$ helm upgrade zookeeper <location of modified charts> --timeout 600s
 ```
+Here `zookeeper` is the release name of the zookeeper cluster.
 
 #### Trigger the upgrade manually
 
