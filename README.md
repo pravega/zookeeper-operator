@@ -43,10 +43,10 @@ We recommend using our [helm charts](charts) for all installation and upgrades. 
 
 #### Install via helm
 
-Use helm to quickly deploy a zookeeper operator with the release name `zookkeeper-operator`.
+Use helm to quickly deploy a zookeeper operator with the release name `zookeeper-operator`.
 
 ```
-$ helm install zookkeeper-operator charts/zookkeeper-operator
+$ helm install zookeeper-operator charts/zookeeper-operator
 ```
 
 #### Manual deployment
@@ -91,13 +91,13 @@ zookeeper-operator   1         1         1            1           12m
 
 #### Install via helm
 
-Helm can be used to install a sample zookeeper cluster with the release name `zookkeeper`.
+Helm can be used to install a sample zookeeper cluster with the release name `zookeeper`.
 
 ```
-$ helm install bookkeeper charts/zookkeeper
+$ helm install zookeeper charts/zookeeper
 ```
 
-Check out the [zookkeeper helm charts](charts/zookkeeper) for the complete list of configurable parameters.
+Check out the [zookeeper helm charts](charts/zookeeper) for the complete list of configurable parameters.
 
 #### Manual deployment
 
