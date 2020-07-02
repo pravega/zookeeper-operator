@@ -64,13 +64,18 @@ test:
 
 test-e2e: test-e2e-remote
 
-test-e2e-remote: login
+test-e2e-remote: test-login
 	operator-sdk build $(TEST_IMAGE)
 	docker push $(TEST_IMAGE)
 	operator-sdk test local ./test/e2e --operator-namespace default --namespaced-manifest ./test/e2e/resources/rbac-operator.yaml --global-manifest  deploy/crds/zookeeper_v1beta1_zookeepercluster_crd.yaml  --image $(TEST_IMAGE) --go-test-flags "-v -timeout 0"
+
 run-local:
 	operator-sdk up local
+
 login:
+	@docker login -u "$(DOCKER_USER)" -p "$(DOCKER_PASS)"
+
+test-login:
 	echo "$(DOCKER_TEST_PASS)" | docker login -u "$(DOCKER_TEST_USER)" --password-stdin
 
 push: build-image build-zk-image  build-zk-image-swarm login
