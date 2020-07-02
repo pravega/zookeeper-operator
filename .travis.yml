@@ -28,7 +28,12 @@ before_script:
 script:
 - make check
 - make test
+# ping stdout every 5 minutes or Travis kills build
+# ref: https://docs.travis-ci.com/user/common-build-problems/#build-times-out-because-no-output-was-received
+- while sleep 5m; do kubectl get pods; done &
 - make test-e2e
+# kill background echo loop
+- echo "killing while sleep loop" && kill %1
 - make clean
 after_success:
 - bash <(curl -s https://codecov.io/bash)

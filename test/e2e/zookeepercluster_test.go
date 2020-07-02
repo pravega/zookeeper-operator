@@ -58,7 +58,7 @@ func testZookeeperCluster(t *testing.T) {
 
 	testFuncs := map[string]func(t *testing.T){
 		//"testUpgradeCluster":        testUpgradeCluster,
-		"testDeletePods":     testDeletePods,
+		//"testDeletePods":     testDeletePods,
 		"testMultiZKCluster": testMultiZKCluster,
 		//"testCreateRecreateCluster": testCreateRecreateCluster,
 		//"testScaleCluster":          testScaleCluster,
