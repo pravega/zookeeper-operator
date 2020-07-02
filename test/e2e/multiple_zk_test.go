@@ -140,7 +140,7 @@ func testMultiZKCluster(t *testing.T) {
 	podDeleteCount := 1
 	err = zk_e2eutil.DeletePods(t, f, ctx, zk3, podDeleteCount)
 	g.Expect(err).NotTo(HaveOccurred())
-	time.Sleep(60 * time.Second)
+	time.Sleep(7 * time.Minute)
 	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk3, podSize)
 	g.Expect(err).NotTo(HaveOccurred())
 
