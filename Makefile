@@ -13,13 +13,15 @@ EXPORTER_NAME=zookeeper-exporter
 APP_NAME=zookeeper
 KUBE_VERSION=1.17.5
 REPO=pravega/$(PROJECT_NAME)
-TEST_REPO=$(DOCKER_USER)/$(PROJECT_NAME)
+TEST_REPO=testzkop/$(PROJECT_NAME)
 APP_REPO=pravega/$(APP_NAME)
 ALTREPO=emccorp/$(PROJECT_NAME)
 APP_ALTREPO=emccorp/$(APP_NAME)
 VERSION=$(shell git describe --always --tags --dirty | sed "s/\(.*\)-g`git rev-parse --short HEAD`/\1/")
 GIT_SHA=$(shell git rev-parse --short HEAD)
 TEST_IMAGE=$(TEST_REPO)-testimages:$(VERSION)
+DOCKER_TEST_PASS=testzkop@123
+DOCKER_TEST_USER=testzkop
 
 .PHONY: all build check clean test
 
@@ -56,26 +58,35 @@ build-zk-image:
 
 build-zk-image-swarm:
 	docker build --build-arg VERSION=$(VERSION)-swarm --build-arg GIT_SHA=$(GIT_SHA) -f ./docker/Dockerfile-swarm  -t $(APP_REPO):$(VERSION)-swarm  ./docker
-        
+
 test:
 	go test $$(go list ./... | grep -v /vendor/ | grep -v /test/e2e) -race -coverprofile=coverage.txt -covermode=atomic
 
-test-e2e-remote: login
-	operator-sdk build $(TEST_IMAGE) --namespaced-manifest  ./deploy/all_ns/operator.yaml --enable-tests
+test-e2e: test-e2e-remote
+
+test-e2e-remote: test-login
+	operator-sdk build $(TEST_IMAGE)
 	docker push $(TEST_IMAGE)
-	operator-sdk test local ./test/e2e --namespace default --namespaced-manifest ./test/e2e/resources/rbac-operator.yaml --global-manifest  deploy/crds/zookeeper_v1beta1_zookeepercluster_crd.yaml  --image $(TEST_IMAGE) --go-test-flags "-v -timeout 0"
+	operator-sdk test local ./test/e2e --operator-namespace default --namespaced-manifest ./test/e2e/resources/rbac-operator.yaml --global-manifest  deploy/crds/zookeeper_v1beta1_zookeepercluster_crd.yaml  --image $(TEST_IMAGE) --go-test-flags "-v -timeout 0"
+
+test-e2e-local:
+		operator-sdk test local ./test/e2e --operator-namespace default --up-local --go-test-flags "-v -timeout 0"
 
 run-local:
 	operator-sdk up local
+
 login:
 	@docker login -u "$(DOCKER_USER)" -p "$(DOCKER_PASS)"
+
+test-login:
+	echo "$(DOCKER_TEST_PASS)" | docker login -u "$(DOCKER_TEST_USER)" --password-stdin
 
 push: build-image build-zk-image  build-zk-image-swarm login
 	docker push $(REPO):$(VERSION)
 	docker push $(REPO):latest
 	docker push $(APP_REPO):$(VERSION)
 	docker push $(APP_REPO):latest
-	docker push $(APP_REPO):$(VERSION)-swarm         
+	docker push $(APP_REPO):$(VERSION)-swarm
 	docker tag $(REPO):$(VERSION) $(ALTREPO):$(VERSION)
 	docker tag $(REPO):$(VERSION) $(ALTREPO):latest
 	docker tag $(APP_REPO):$(VERSION) $(APP_ALTREPO):$(VERSION)
