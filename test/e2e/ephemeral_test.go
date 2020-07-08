@@ -46,10 +46,37 @@ func testephemeralstorage(t *testing.T) {
 	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
 	g.Expect(err).NotTo(HaveOccurred())
 
-	err = zk_e2eutil.DeleteCluster(t, f, ctx, zk)
+	// This is to get the latest zk cluster object
+	zk, err = zk_e2eutil.GetCluster(t, f, ctx, zk)
 	g.Expect(err).NotTo(HaveOccurred())
 
-	err = zk_e2eutil.WaitForClusterToTerminate(t, f, ctx, zk)
+	// Scale up zk cluster, increase replicas to 5
+
+	zk.Spec.Replicas = 5
+	podSize = 5
+
+	err = zk_e2eutil.UpdateCluster(t, f, ctx, zk)
+	g.Expect(err).NotTo(HaveOccurred())
+
+	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
+	g.Expect(err).NotTo(HaveOccurred())
+
+	// This is to get the latest zk cluster object
+	zk, err = zk_e2eutil.GetCluster(t, f, ctx, zk)
+	g.Expect(err).NotTo(HaveOccurred())
+
+	// Scale down zk cluster back to default
+	zk.Spec.Replicas = 3
+	podSize = 3
+
+	err = zk_e2eutil.UpdateCluster(t, f, ctx, zk)
+	g.Expect(err).NotTo(HaveOccurred())
+
+	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
+	g.Expect(err).NotTo(HaveOccurred())
+
+	// Delete cluster
+	err = zk_e2eutil.DeleteCluster(t, f, ctx, zk)
 	g.Expect(err).NotTo(HaveOccurred())
 
 	// No need to do cleanup since the cluster CR has already been deleted
