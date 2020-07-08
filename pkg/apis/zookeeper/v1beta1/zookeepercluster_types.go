@@ -67,6 +67,10 @@ type ZookeeperClusterSpec struct {
 	// PersistentVolumeClaimSpec and VolumeReclaimPolicy can be specified in here.
 	Persistence *Persistence `json:"persistence,omitempty"`
 
+	//specifying EmptyDirVolumeSource parameter will enable the Ephemeral storage
+	//At anypoint only one of Persistence or EmptyDirVolumeSource should be present in the manifest
+	EmptyDirVolumeSource *v1.EmptyDirVolumeSource `json:"emptydirvolumesource,omitempty"`
+
 	// Conf is the zookeeper configuration, which will be used to generate the
 	// static zookeeper configuration. If no configuration is provided required
 	// default values will be provided, and optional values will be excluded.
@@ -157,11 +161,11 @@ func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) 
 	if s.Pod.withDefaults(z) {
 		changed = true
 	}
-	if s.Persistence == nil {
+	if s.Persistence == nil && s.EmptyDirVolumeSource == nil {
 		s.Persistence = &Persistence{}
 		changed = true
 	}
-	if s.Persistence.withDefaults() {
+	if s.EmptyDirVolumeSource == nil && s.Persistence.withDefaults() {
 		changed = true
 	}
 	return changed
