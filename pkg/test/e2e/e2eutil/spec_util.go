@@ -13,6 +13,7 @@ package e2eutil
 import (
 	api "github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+		v1 "k8s.io/api/core/v1"
 )
 
 // NewDefaultCluster returns a cluster with an empty spec, which will be filled
@@ -43,6 +44,10 @@ func NewClusterWithVersion(namespace, version string) *api.ZookeeperCluster {
 
 func NewClusterWithEmptyDir(namespace string) *api.ZookeeperCluster {
 	cluster := NewDefaultCluster(namespace)
-	cluster.Spec.EmptyDirVolumeSource.Medium = ""
+	cluster.Spec = api.ZookeeperClusterSpec{
+		EmptyDirVolumeSource: &v1.EmptyDirVolumeSource{
+			  Medium: "",
+		},
+	}
 	return cluster
 }
