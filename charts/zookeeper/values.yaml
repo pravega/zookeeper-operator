@@ -26,6 +26,12 @@ config: {}
   # syncLimit: 2
   # quorumListenOnAllIPs: false
 
+ephemeral:
+  enabled: false
+  #emptydirvolumesource:
+    #medium: ""/Memory
+    #sizeLimit: 15Gi
+
 persistence:
   storageClassName: standard
   ## specifying reclaim policy for PersistentVolumes

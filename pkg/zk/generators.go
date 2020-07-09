@@ -57,7 +57,7 @@ func MakeStatefulSet(z *v1beta1.ZookeeperCluster) *appsv1.StatefulSet {
 		extraVolumes = append(extraVolumes, v1.Volume{
 			Name: zkDataVolume,
 			VolumeSource: v1.VolumeSource{
-				EmptyDir: z.Spec.EmptyDirVolumeSource,
+				EmptyDir: &z.Spec.Ephemeral.EmptyDirVolumeSource,
 			},
 		})
 	}

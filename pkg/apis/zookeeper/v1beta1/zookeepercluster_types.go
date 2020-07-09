@@ -67,9 +67,9 @@ type ZookeeperClusterSpec struct {
 	// PersistentVolumeClaimSpec and VolumeReclaimPolicy can be specified in here.
 	Persistence *Persistence `json:"persistence,omitempty"`
 
-	//specifying EmptyDirVolumeSource parameter will enable the Ephemeral storage
-	//At anypoint only one of Persistence or EmptyDirVolumeSource should be present in the manifest
-	EmptyDirVolumeSource *v1.EmptyDirVolumeSource `json:"emptydirvolumesource,omitempty"`
+	//Ephemeral is the configuration which helps create ephemeral storage
+	//At anypoint only one of Persistence or Ephemeral should be present in the manifest
+	Ephemeral *Ephemeral `json:"ephemeral,omitempty"`
 
 	// Conf is the zookeeper configuration, which will be used to generate the
 	// static zookeeper configuration. If no configuration is provided required
@@ -161,11 +161,11 @@ func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) 
 	if s.Pod.withDefaults(z) {
 		changed = true
 	}
-	if s.Persistence == nil && s.EmptyDirVolumeSource == nil {
+	if s.Persistence == nil && (s.Ephemeral == nil || s.Ephemeral.Enabled == false) {
 		s.Persistence = &Persistence{}
 		changed = true
 	}
-	if s.EmptyDirVolumeSource == nil && s.Persistence.withDefaults() {
+	if s.Persistence != nil && s.Persistence.withDefaults() {
 		changed = true
 	}
 	return changed
@@ -393,9 +393,20 @@ type Persistence struct {
 	// The default value is Retain.
 	VolumeReclaimPolicy VolumeReclaimPolicy `json:"reclaimPolicy,omitempty"`
 	// PersistentVolumeClaimSpec is the spec to describe PVC for the container
-	// This field is optional. If no PVC spec, stateful containers will use
-	// emptyDir as volume.
+	// This field is optional. If no PVC is specified by default persistentvolume
+	// will get created.
 	PersistentVolumeClaimSpec v1.PersistentVolumeClaimSpec `json:"spec,omitempty"`
+}
+
+type Ephemeral struct {
+	// Enabled specifies whether or not ephemeral storage is enabled
+	// By default, external access is not enabled
+	Enabled bool `json:"enabled"`
+	//EmptyDirVolumeSource is optional and this will create the emptydir volume
+	//It has two parameters Medium and SizeLimit which are optional as well
+	//Medium specifies What type of storage medium should back this directory.
+	//SizeLimit specifies Total amount of local storage required for this EmptyDir volume.
+	EmptyDirVolumeSource v1.EmptyDirVolumeSource `json:"emptydirvolumesource,omitempty"`
 }
 
 func (p *Persistence) withDefaults() (changed bool) {

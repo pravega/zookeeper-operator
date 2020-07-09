@@ -12,7 +12,6 @@ package e2eutil
 
 import (
 	api "github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -45,8 +44,8 @@ func NewClusterWithVersion(namespace, version string) *api.ZookeeperCluster {
 func NewClusterWithEmptyDir(namespace string) *api.ZookeeperCluster {
 	cluster := NewDefaultCluster(namespace)
 	cluster.Spec = api.ZookeeperClusterSpec{
-		EmptyDirVolumeSource: &v1.EmptyDirVolumeSource{
-			Medium: "",
+		Ephemeral: &api.Ephemeral{
+			Enabled: true,
 		},
 	}
 	return cluster

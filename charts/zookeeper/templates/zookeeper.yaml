@@ -43,6 +43,13 @@ spec:
     syncLimit: {{ .Values.config.syncLimit }}
     quorumListenOnAllIPs: {{ .Values.config.quorumListenOnAllIPs }}
   {{- end }}
+  {{- if .Values.ehemeral }}
+  ephemeral:
+    enabled: {{ .Values.ephemeral.enabled }}
+    emptydirvolumesource:
+      medium: {{ .Values.ephemeral.emptydirvolumesource.medium }}
+      sizeLimit: {{ .Values.ephemeral.emptydirvolumesource.sizeLimit }}
+  {{- else }}
   persistence:
     reclaimPolicy: {{ .Values.persistence.reclaimPolicy }}
     spec:
@@ -50,3 +57,4 @@ spec:
       resources:
         requests:
           storage: {{ .Values.persistence.volumeSize }}
+   {{- end }}
