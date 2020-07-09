@@ -64,4 +64,4 @@ The following table lists the configurable parameters of the Zookeeper chart and
 | `persistence.volumeSize` | Size of the volume requested for persistent volumes | `20Gi` |
 | `ephemeral.enabled` | whether ephemeral storage is enabled or not | `false` |
 | `ephemeral.emptydirvolumesource.medium` |  What type of storage medium should back the directory. | `""` |
-| `ephemeral.emptydirvolumesource.volumeSize` | Total amount of local storage required for the EmptyDir volume. | `20Gi` |
+| `ephemeral.emptydirvolumesource.volumeSize` | Total amount of local storage required for the EmptyDir volume. | `nil` |

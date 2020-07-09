@@ -11,7 +11,7 @@ The project is currently alpha. While no breaking API changes are currently plan
  * [Usage](#usage)    
     * [Installation of the Operator](#install-the-operator)
     * [Deploy a sample Zookeeper Cluster](#deploy-a-sample-zookeeper-cluster)
-    * [Deploy a sample ZooKeeper Cluster with Ephemeral Storage](#Deploy-a-sample-zookeeper-cluster-with -ephemeral-storage)
+    * [Deploy a sample ZooKeeper Cluster with Ephemeral Storage](#Deploy-a-sample-zookeeper-cluster-with-ephemeral-storage)
     * [Deploy a sample Zookeeper Cluster to a cluster using Istio](#deploy-a-sample-zookeeper-cluster-with-istio)
     * [Upgrade a Zookeeper Cluster](#upgrade-a-zookeeper-cluster)
     * [Uninstall the Zookeeper Cluster](#uninstall-the-zookeeper-cluster)
