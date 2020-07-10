@@ -43,7 +43,7 @@ spec:
     syncLimit: {{ .Values.config.syncLimit }}
     quorumListenOnAllIPs: {{ .Values.config.quorumListenOnAllIPs }}
   {{- end }}
-  {{- if .Values.ehemeral }}
+  {{- if .Values.ehemeral.enabled }}
   ephemeral:
     enabled: {{ .Values.ephemeral.enabled }}
     emptydirvolumesource:
