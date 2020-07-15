@@ -41,7 +41,7 @@ func testMultiZKCluster(t *testing.T) {
 	defaultCluster.WithDefaults()
 	defaultCluster.Status.Init()
 	defaultCluster.ObjectMeta.Name = "zk1"
-	defaultCluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
+	defaultCluster.Spec.Storage.Persistence.VolumeReclaimPolicy = "Delete"
 
 	zk1, err := zk_e2eutil.CreateCluster(t, f, ctx, defaultCluster)
 	g.Expect(err).NotTo(HaveOccurred())
@@ -55,7 +55,7 @@ func testMultiZKCluster(t *testing.T) {
 
 	defaultCluster.WithDefaults()
 	defaultCluster.Status.Init()
-	defaultCluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
+	defaultCluster.Spec.Storage.Persistence.VolumeReclaimPolicy = "Delete"
 	defaultCluster.ObjectMeta.Name = "zk2"
 	initialVersion := "0.2.7"
 	upgradeVersion := "0.2.8-rc0"
@@ -79,7 +79,7 @@ func testMultiZKCluster(t *testing.T) {
 	defaultCluster.WithDefaults()
 	defaultCluster.Status.Init()
 	defaultCluster.ObjectMeta.Name = "zk3"
-	defaultCluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
+	defaultCluster.Spec.Storage.Persistence.VolumeReclaimPolicy = "Delete"
 
 	zk3, err := zk_e2eutil.CreateCluster(t, f, ctx, defaultCluster)
 	g.Expect(err).NotTo(HaveOccurred())
@@ -168,7 +168,7 @@ func testMultiZKCluster(t *testing.T) {
 	defaultCluster.WithDefaults()
 	defaultCluster.Status.Init()
 	defaultCluster.ObjectMeta.Name = "zk1"
-	defaultCluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
+	defaultCluster.Spec.Storage.Persistence.VolumeReclaimPolicy = "Delete"
 
 	zk1, err = zk_e2eutil.CreateCluster(t, f, ctx, defaultCluster)
 	g.Expect(err).NotTo(HaveOccurred())

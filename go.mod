@@ -14,6 +14,7 @@ require (
 	github.com/operator-framework/operator-sdk v0.17.0
 	github.com/pkg/errors v0.9.1
 	github.com/samuel/go-zookeeper v0.0.0-20190923202752-2cc03de413da
+	github.com/securego/gosec v0.0.0-20200401082031-e946c8c39989 // indirect
 	k8s.io/api v0.17.5
 	k8s.io/apimachinery v0.17.5
 	k8s.io/client-go v12.0.0+incompatible

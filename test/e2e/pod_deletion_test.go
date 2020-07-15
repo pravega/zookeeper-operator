@@ -39,7 +39,7 @@ func testDeletePods(t *testing.T) {
 
 	defaultCluster.WithDefaults()
 	defaultCluster.Status.Init()
-	defaultCluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
+	defaultCluster.Spec.Storage.Persistence.VolumeReclaimPolicy = "Delete"
 
 	zk, err := zk_e2eutil.CreateCluster(t, f, ctx, defaultCluster)
 	g.Expect(err).NotTo(HaveOccurred())
