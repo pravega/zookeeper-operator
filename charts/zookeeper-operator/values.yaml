@@ -39,3 +39,8 @@ resources: {}
   # requests:
   #   cpu: 1
   #   memory: 128Mi
+
+hooks:
+  image:
+    repository: lachlanevenson/k8s-kubectl
+    tag: v1.16.10
