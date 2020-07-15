@@ -143,8 +143,9 @@ metadata:
   name: "example"
 spec:
   replicas: 3
-  ephemeral:
-    enabled: true
+  storage:        
+    ephemeral:
+      enabled: true
 ```
 
 ```

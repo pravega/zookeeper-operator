@@ -59,17 +59,11 @@ type ZookeeperClusterSpec struct {
 	Ports []v1.ContainerPort `json:"ports,omitempty"`
 
 	// Pod defines the policy to create pod for the zookeeper cluster.
-	//
 	// Updating the Pod does not take effect on any existing pods.
 	Pod PodPolicy `json:"pod,omitempty"`
 
-	// Persistence is the configuration for zookeeper persistent layer.
-	// PersistentVolumeClaimSpec and VolumeReclaimPolicy can be specified in here.
-	Persistence *Persistence `json:"persistence,omitempty"`
-
-	//Ephemeral is the configuration which helps create ephemeral storage
-	//At anypoint only one of Persistence or Ephemeral should be present in the manifest
-	Ephemeral *Ephemeral `json:"ephemeral,omitempty"`
+	//storage is used to define which storagetype we will be using
+	Storage *Storage `json:"storage,omitempty"`
 
 	// Conf is the zookeeper configuration, which will be used to generate the
 	// static zookeeper configuration. If no configuration is provided required
@@ -161,11 +155,13 @@ func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) 
 	if s.Pod.withDefaults(z) {
 		changed = true
 	}
-	if s.Persistence == nil && (s.Ephemeral == nil || s.Ephemeral.Enabled == false) {
-		s.Persistence = &Persistence{}
+	if s.Storage == nil || (s.Storage.Ephemeral.Enabled == false && s.Storage.Persistence.Enabled == false) {
+		s.Storage = &Storage{}
+		s.Storage.Persistence = Persistence{}
+		s.Storage.Persistence.Enabled = true
 		changed = true
 	}
-	if s.Persistence != nil && s.Persistence.withDefaults() {
+	if s.Storage.Persistence.Enabled == true && s.Storage.Persistence.withDefaults() {
 		changed = true
 	}
 	return changed
@@ -387,7 +383,21 @@ func (c *ZookeeperConfig) withDefaults() (changed bool) {
 	return changed
 }
 
+type Storage struct {
+	//Default storage is Persistence storage
+	// Persistence is the configuration for zookeeper persistent layer.
+	// PersistentVolumeClaimSpec and VolumeReclaimPolicy can be specified in here.
+	Persistence Persistence `json:"persistence,omitempty"`
+
+	// Ephemeral is the configuration which helps create ephemeral storage
+	// At anypoint only one of Persistence or Ephemeral should be present in the manifest
+	Ephemeral Ephemeral `json:"ephemeral,omitempty"`
+}
+
 type Persistence struct {
+	// Enabled specifies whether or not persistent storage is enabled
+	// By default, Persistence is not enabled
+	Enabled bool `json:"enabled"`
 	// VolumeReclaimPolicy is a zookeeper operator configuration. If it's set to Delete,
 	// the corresponding PVCs will be deleted by the operator when zookeeper cluster is deleted.
 	// The default value is Retain.
@@ -400,7 +410,7 @@ type Persistence struct {
 
 type Ephemeral struct {
 	// Enabled specifies whether or not ephemeral storage is enabled
-	// By default, external access is not enabled
+	// By default, ephemeral is not enabled
 	Enabled bool `json:"enabled"`
 	//EmptyDirVolumeSource is optional and this will create the emptydir volume
 	//It has two parameters Medium and SizeLimit which are optional as well

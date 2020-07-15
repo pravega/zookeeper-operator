@@ -59,6 +59,7 @@ The following table lists the configurable parameters of the Zookeeper chart and
 | `config.tickTime` | Length of a single tick which is the basic time unit used by Zookeeper (measured in milliseconds) | `2000` |
 | `config.syncLimit` | Amount of time (in ticks) to allow followers to sync with Zookeeper | `2` |
 | `config.quorumListenOnAllIPs` | Whether Zookeeper server will listen for connections from its peers on all available IP addresses | `false` |
+| `persistence.enabled` | whether persistence storage is enabled or not | `true` |
 | `persistence.reclaimPolicy` | Reclaim policy for persistent volumes | `Delete` |
 | `persistence.storageClassName` | Storage class for persistent volumes | `standard` |
 | `persistence.volumeSize` | Size of the volume requested for persistent volumes | `20Gi` |

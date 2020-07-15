@@ -44,8 +44,10 @@ func NewClusterWithVersion(namespace, version string) *api.ZookeeperCluster {
 func NewClusterWithEmptyDir(namespace string) *api.ZookeeperCluster {
 	cluster := NewDefaultCluster(namespace)
 	cluster.Spec = api.ZookeeperClusterSpec{
-		Ephemeral: &api.Ephemeral{
-			Enabled: true,
+		Storage: &api.Storage{
+			Ephemeral: api.Ephemeral{
+				Enabled: true,
+			},
 		},
 	}
 	return cluster

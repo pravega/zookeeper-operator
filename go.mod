@@ -3,6 +3,8 @@ module github.com/pravega/zookeeper-operator
 go 1.13
 
 require (
+	4d63.com/gochecknoglobals v0.0.0-20190306162314-7c3491d2b6ec // indirect
+	4d63.com/gochecknoinits v0.0.0-20200108094044-eb73b47b9fc4 // indirect
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
 	github.com/go-logr/logr v0.1.0
 	github.com/gordonklaus/ineffassign v0.0.0-20200309095847-7953dde2c7bf // indirect
