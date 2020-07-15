@@ -21,7 +21,7 @@ The project is currently alpha. While no breaking API changes are currently plan
     * [Direct Access to Cluster](#direct-access-to-the-cluster)
     * [Run the Operator Locally](#run-the-operator-locally)
     * [Installation on GKE](#installation-on-google-kubernetes-engine)
-
+    * [Installation on Minikube](#installation-on-minikube)
 
 
 ### Overview
@@ -335,6 +335,21 @@ On GKE, the following command must be run before installing the operator, replac
 
 ```
 $ kubectl create clusterrolebinding your-user-cluster-admin-binding --clusterrole=cluster-admin --user=your.google.cloud.email@example.org
+```
+
+### Installation on Minikube
+
+#### Minikube Setup
+To setup minikube locally you can follow the steps mentioned [here](https://github.com/pravega/pravega/wiki/Kubernetes-Based-System-Test-Framework#minikube-setup).
+
+Once minikube setup is complete, `minikube start` will create a minikube VM.
+
+#### Cluster Deployment
+First install the zookeeper operator in either of the ways mentioned [here](#install-the-operator).
+Since minikube provides a single node Kubernetes cluster which has a low resource provisioning, we provide a simple way to install a small zookeeper cluster on a minikube environment using the following command.
+
+```
+helm install zookeeper charts/zookeeper --values charts/zookeeper/values/minikube.yaml
 ```
 
 #### Zookeeper YAML  Exporter
