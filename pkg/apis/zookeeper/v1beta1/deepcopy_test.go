@@ -69,7 +69,7 @@ var _ = Describe("ZookeeperCluster DeepCopy", func() {
 			z2.Spec.Ports[0].ContainerPort = p.ContainerPort
 			z1.SetAnnotations(m)
 			z2.Spec.Pod.Annotations = z1.Spec.Pod.Annotations
-			z2.Spec.Storage.Persistence = *z1.Spec.Storage.Persistence.DeepCopy()
+			z2.Spec.Storage.Persistence = z1.Spec.Storage.Persistence.DeepCopy()
 			z1.Spec.Pod.DeepCopyInto(&z2.Spec.Pod)
 			z1.Status.Members.Ready = []string{"zk-0", "zk-1"}
 			z1.Status.Members.Unready = []string{"zk-2"}

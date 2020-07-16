@@ -155,13 +155,12 @@ func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) 
 	if s.Pod.withDefaults(z) {
 		changed = true
 	}
-	if s.Storage == nil || (s.Storage.Ephemeral.Enabled == false && s.Storage.Persistence.Enabled == false) {
+	if s.Storage == nil || (s.Storage.Ephemeral == nil && s.Storage.Persistence == nil) {
 		s.Storage = &Storage{}
-		s.Storage.Persistence = Persistence{}
-		s.Storage.Persistence.Enabled = true
+		s.Storage.Persistence = &Persistence{}
 		changed = true
 	}
-	if s.Storage.Persistence.Enabled == true && s.Storage.Persistence.withDefaults() {
+	if s.Storage != nil && s.Storage.Persistence != nil && s.Storage.Persistence.withDefaults() {
 		changed = true
 	}
 	return changed
@@ -387,17 +386,14 @@ type Storage struct {
 	//Default storage is Persistence storage
 	// Persistence is the configuration for zookeeper persistent layer.
 	// PersistentVolumeClaimSpec and VolumeReclaimPolicy can be specified in here.
-	Persistence Persistence `json:"persistence,omitempty"`
+	Persistence *Persistence `json:"persistence,omitempty"`
 
 	// Ephemeral is the configuration which helps create ephemeral storage
 	// At anypoint only one of Persistence or Ephemeral should be present in the manifest
-	Ephemeral Ephemeral `json:"ephemeral,omitempty"`
+	Ephemeral *Ephemeral `json:"ephemeral,omitempty"`
 }
 
 type Persistence struct {
-	// Enabled specifies whether or not persistent storage is enabled
-	// By default, Persistence is not enabled
-	Enabled bool `json:"enabled"`
 	// VolumeReclaimPolicy is a zookeeper operator configuration. If it's set to Delete,
 	// the corresponding PVCs will be deleted by the operator when zookeeper cluster is deleted.
 	// The default value is Retain.

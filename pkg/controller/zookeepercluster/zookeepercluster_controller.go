@@ -620,7 +620,7 @@ func (r *ReconcileZookeeperCluster) yamlConfigMap(instance *zookeeperv1beta1.Zoo
 }
 
 func (r *ReconcileZookeeperCluster) reconcileFinalizers(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
-	if instance.Spec.Storage.Persistence.Enabled == true && instance.Spec.Storage.Persistence.VolumeReclaimPolicy != zookeeperv1beta1.VolumeReclaimPolicyDelete {
+	if instance.Spec.Storage.Persistence != nil && instance.Spec.Storage.Persistence.VolumeReclaimPolicy != zookeeperv1beta1.VolumeReclaimPolicyDelete {
 		return nil
 	}
 	if instance.DeletionTimestamp.IsZero() {

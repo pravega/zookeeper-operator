@@ -25,17 +25,21 @@ config: {}
   # tickTime: 2000
   # syncLimit: 2
   # quorumListenOnAllIPs: false
+storageType:
+    ## configure the storage backend type
+    ## accepted values : persistence/ephemeral
+    ## default option is
+    type: persistence
 
-persistence: 
-    enabled: true
+persistence:
     storageClassName: standard
     # specifying reclaim policy for PersistentVolumes
     # accepted values - Delete / Retain
     reclaimPolicy: Delete
     volumeSize: 20Gi
 
-ephemeral: 
-    enabled: false
+ephemeral:
+    enabled: true
     #emptydirvolumesource: {}
     #medium: ""/Memory
     #sizeLimit: 15Gi

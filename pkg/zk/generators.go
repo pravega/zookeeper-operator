@@ -45,7 +45,7 @@ func MakeStatefulSet(z *v1beta1.ZookeeperCluster) *appsv1.StatefulSet {
 	extraVolumes := []v1.Volume{}
 	persistence := z.Spec.Storage.Persistence
 	pvcs := []v1.PersistentVolumeClaim{}
-	if persistence.Enabled == true {
+	if persistence != nil {
 		pvcs = append(pvcs, v1.PersistentVolumeClaim{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:   zkDataVolume,

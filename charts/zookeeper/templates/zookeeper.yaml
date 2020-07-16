@@ -44,6 +44,7 @@ spec:
     quorumListenOnAllIPs: {{ .Values.config.quorumListenOnAllIPs }}
   {{- end }}
   storage:
+    {{- if eq .Values.storage.storageType.type "ephemeral" }}
     ephemeral:
       enabled: {{ .Values.ephemeral.enabled }}
       {{- if .Values.ephemeral.emptydirvolumesource }}
@@ -51,8 +52,9 @@ spec:
         medium: {{ .Values.ephemeral.emptydirvolumesource.medium }}
         sizeLimit: {{ .Values.ephemeral.emptydirvolumesource.sizeLimit }}
        {{- end }}
+    {{- end }}
+    {{- if eq .Values.storage.storageType.type "persistence" }}
     persistence:
-      enabled: {{ .Values.persistence.enabled }}
       {{- if .Values.persistence.enabled }}
       reclaimPolicy: {{ .Values.persistence.reclaimPolicy }}
       spec:
@@ -61,3 +63,4 @@ spec:
           requests:
             storage: {{ .Values.persistence.volumeSize }}
       {{- end }}
+    {{- end }}
