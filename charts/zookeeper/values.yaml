@@ -30,7 +30,7 @@ storage:
     ## configure the storage type
     ## accepted values : persistence/ephemeral
     ## default option is
-    type: ephemeral
+    type: persistence
 
 persistence:
     storageClassName: standard
