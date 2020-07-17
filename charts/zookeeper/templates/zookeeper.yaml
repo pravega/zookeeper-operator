@@ -44,16 +44,15 @@ spec:
     quorumListenOnAllIPs: {{ .Values.config.quorumListenOnAllIPs }}
   {{- end }}
   storage:
-    {{- if eq .Values.storageType.type "ephemeral" }}
+    storagetype: {{ .Values.storage.type }}
+    {{- if eq .Values.storage.type "ephemeral" }}
     ephemeral:
-      enabled: {{ .Values.ephemeral.enabled }}
-      {{- if .Values.ephemeral.emptydirvolumesource }}
+      {{- if .Values.emptydirvolumesource }}
       emptydirvolumesource:
-        medium: {{ .Values.ephemeral.emptydirvolumesource.medium }}
-        sizeLimit: {{ .Values.ephemeral.emptydirvolumesource.sizeLimit }}
+        medium: {{ .Values.emptydirvolumesource.medium }}
+        sizeLimit: {{ .Values.emptydirvolumesource.sizeLimit }}
        {{- end }}
-    {{- end }}
-    {{- if eq .Values.storageType.type "persistence" }}
+    {{- else }}
     persistence:
       reclaimPolicy: {{ .Values.persistence.reclaimPolicy }}
       spec:

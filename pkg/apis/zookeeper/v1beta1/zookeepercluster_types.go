@@ -155,9 +155,15 @@ func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) 
 	if s.Pod.withDefaults(z) {
 		changed = true
 	}
-	if s.Storage == nil || (s.Storage.Ephemeral == nil && s.Storage.Persistence == nil) {
+	if s.Storage == nil || (s.Storage.Persistence == nil && s.Storage.Storagetype != "ephemeral") {
 		s.Storage = &Storage{}
+		s.Storage.Storagetype = "persistence"
 		s.Storage.Persistence = &Persistence{}
+		changed = true
+	}
+	if s.Storage != nil && s.Storage.Storagetype == "ephemeral" && s.Storage.Ephemeral == nil {
+		s.Storage.Ephemeral = &Ephemeral{}
+		s.Storage.Ephemeral.EmptyDirVolumeSource = v1.EmptyDirVolumeSource{}
 		changed = true
 	}
 	if s.Storage != nil && s.Storage.Persistence != nil && s.Storage.Persistence.withDefaults() {
@@ -167,7 +173,6 @@ func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) 
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
 // ZookeeperCluster is the Schema for the zookeeperclusters API
 // +k8s:openapi-gen=true
 type ZookeeperCluster struct {
@@ -383,11 +388,13 @@ func (c *ZookeeperConfig) withDefaults() (changed bool) {
 }
 
 type Storage struct {
-	//Default storage is Persistence storage
+	//storagetype is used to tell which type of storage we will be using
+	//It can take either Ephemeral or persistence
+	//Default Storagetype is Persistence storage
+	Storagetype string `json:"storagetype,omitempty"`
 	// Persistence is the configuration for zookeeper persistent layer.
 	// PersistentVolumeClaimSpec and VolumeReclaimPolicy can be specified in here.
 	Persistence *Persistence `json:"persistence,omitempty"`
-
 	// Ephemeral is the configuration which helps create ephemeral storage
 	// At anypoint only one of Persistence or Ephemeral should be present in the manifest
 	Ephemeral *Ephemeral `json:"ephemeral,omitempty"`
@@ -405,9 +412,6 @@ type Persistence struct {
 }
 
 type Ephemeral struct {
-	// Enabled specifies whether or not ephemeral storage is enabled
-	// By default, ephemeral is not enabled
-	Enabled bool `json:"enabled"`
 	//EmptyDirVolumeSource is optional and this will create the emptydir volume
 	//It has two parameters Medium and SizeLimit which are optional as well
 	//Medium specifies What type of storage medium should back this directory.
