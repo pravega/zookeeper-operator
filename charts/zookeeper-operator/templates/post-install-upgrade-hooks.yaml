@@ -63,7 +63,13 @@ data:
     set -e
     sleep 30
 
-    if [ -z "$(kubectl api-resources | grep zookeeperclusters)" ]; then
+    if [ -z "$(kubectl api-resources | grep zk)" ]; then
+        exit 1
+    fi
+
+    replicas=`kubectl get zk -n {{ .Release.Namespace }} {{ template "zookeeper-operator.fullname" . }} -o jsonpath='{.status.replicas}'`
+    readyReplicas=`kubectl get zk -n {{ .Release.Namespace }} {{ template "zookeeper-operator.fullname" . }} -o jsonpath='{.status.readyReplicas}'
+    if [ $readyReplicas != $replicas ]; then
         exit 1
     fi
 ---
@@ -78,7 +84,7 @@ metadata:
     "helm.sh/hook-weight": "2"
     "helm.sh/hook-delete-policy": hook-succeeded, before-hook-creation, hook-failed
 spec:
-  backoffLimit: 10
+  backoffLimit: 3
   template:
     metadata:
       name: {{ template "zookeeper-operator.fullname" . }}-post-install-upgrade
