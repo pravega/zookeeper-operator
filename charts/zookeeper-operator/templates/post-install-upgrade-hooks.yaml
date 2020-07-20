@@ -14,6 +14,12 @@ rules:
   - "*"
   verbs:
   - get
+- apiGroups:
+  - extensions
+  resources:
+  - "deployments"
+  verbs:
+  - get
 ---
 
 kind: RoleBinding
@@ -67,8 +73,15 @@ data:
         exit 1
     fi
 
-    replicas=`kubectl get zk -n {{ .Release.Namespace }} {{ template "zookeeper-operator.fullname" . }} -o jsonpath='{.status.replicas}'`
-    readyReplicas=`kubectl get zk -n {{ .Release.Namespace }} {{ template "zookeeper-operator.fullname" . }} -o jsonpath='{.status.readyReplicas}'
+    replicas=`kubectl get deployment {{ template "zookeeper-operator.fullname" . }} \
+      -n {{ .Release.Namespace }} \
+      -o jsonpath='{.status.replicas}'`
+    readyReplicas=`kubectl get deployment {{ template "zookeeper-operator.fullname" . }} \
+      -n {{ .Release.Namespace }} \
+      -o jsonpath='{.status.readyReplicas}'`
+    echo "ZookeeperCluster replicas: $replicas"
+    echo "ZookeeperCluster readyReplicas: $readyReplicas"
+
     if [ $readyReplicas != $replicas ]; then
         exit 1
     fi
