@@ -73,16 +73,12 @@ data:
         exit 1
     fi
 
-    replicas=`kubectl get deployment {{ template "zookeeper-operator.fullname" . }} \
-      -n {{ .Release.Namespace }} \
-      -o jsonpath='{.status.replicas}'`
     readyReplicas=`kubectl get deployment {{ template "zookeeper-operator.fullname" . }} \
       -n {{ .Release.Namespace }} \
       -o jsonpath='{.status.readyReplicas}'`
-    echo "ZookeeperCluster replicas: $replicas"
     echo "ZookeeperCluster readyReplicas: $readyReplicas"
 
-    if [ $readyReplicas != $replicas ]; then
+    if [ -z $readyReplicas ] || [ $readyReplicas -le 0 ]; then
         exit 1
     fi
 ---
