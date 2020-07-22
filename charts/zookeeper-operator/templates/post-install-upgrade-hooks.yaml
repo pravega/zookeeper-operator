@@ -72,15 +72,6 @@ data:
     if [ -z "$(kubectl api-resources | grep zk)" ]; then
         exit 1
     fi
-
-    readyReplicas=`kubectl get deployment {{ template "zookeeper-operator.fullname" . }} \
-      -n {{ .Release.Namespace }} \
-      -o jsonpath='{.status.readyReplicas}'`
-    echo "ZookeeperCluster readyReplicas: $readyReplicas"
-
-    if [ -z $readyReplicas ] || [ $readyReplicas -le 0 ]; then
-        exit 1
-    fi
 ---
 
 apiVersion: batch/v1
