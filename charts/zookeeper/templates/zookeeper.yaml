@@ -47,7 +47,7 @@ spec:
     storagetype: {{ .Values.storage.type }}
     {{- if eq .Values.storage.type "ephemeral" }}
     ephemeral:
-      {{- if .Values.emptydirvolumesource }}
+      {{- if .Values.ephemeral.emptydirvolumesource }}
       emptydirvolumesource:
         medium: {{ .Values.ephemeral.emptydirvolumesource.medium }}
         sizeLimit: {{ .Values.ephemeral.emptydirvolumesource.sizeLimit }}
