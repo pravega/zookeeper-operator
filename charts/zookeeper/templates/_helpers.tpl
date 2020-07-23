@@ -29,7 +29,6 @@ Common labels
 */}}
 {{- define "zookeeper.commonLabels" -}}
 app.kubernetes.io/name: {{ include "zookeeper.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}

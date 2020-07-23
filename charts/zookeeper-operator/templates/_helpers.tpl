@@ -28,18 +28,10 @@ If release name contains chart name it will be used as a full name.
 Common labels
 */}}
 {{- define "zookeeper-operator.commonLabels" -}}
-helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
-{{ include "zookeeper-operator.selectorLabels" . }}
+app.kubernetes.io/name: {{ include "zookeeper-operator.name" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
+helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
 {{- end -}}
-
-{{/*
-Selector labels
-*/}}
-{{- define "zookeeper-operator.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "zookeeper-operator.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
-{{- end }}

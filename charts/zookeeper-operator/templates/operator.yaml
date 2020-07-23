@@ -9,11 +9,12 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-{{ include "zookeeper-operator.selectorLabels" . | indent 6 }}
+      name: {{ template "zookeeper-operator.fullname" . }}
   template:
     metadata:
       labels:
-{{ include "zookeeper-operator.selectorLabels" . | indent 8 }}
+        name: {{ template "zookeeper-operator.fullname" . }}
+        component: zookeeper-operator
     spec:
       serviceAccountName: {{ .Values.serviceAccount.name }}
       containers:
