@@ -69,7 +69,7 @@ data:
     set -e
     sleep 30
 
-    if [ -z "$(kubectl api-resources | grep zk)" ]; then
+    if [ -z "$(kubectl api-resources | grep ZookeeperCluster)" ]; then
         exit 1
     fi
 ---
@@ -84,7 +84,7 @@ metadata:
     "helm.sh/hook-weight": "2"
     "helm.sh/hook-delete-policy": hook-succeeded, before-hook-creation, hook-failed
 spec:
-  backoffLimit: 3
+  backoffLimit: {{ .Values.hooks.backoffLimit }}
   template:
     metadata:
       name: {{ template "zookeeper-operator.fullname" . }}-post-install-upgrade
