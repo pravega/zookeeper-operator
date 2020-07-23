@@ -39,9 +39,10 @@ persistence:
     reclaimPolicy: Delete
     volumeSize: 20Gi
 
-emptydirvolumesource: {}
-   #medium: ""/Memory
-   #sizeLimit: 15Gi
+ephemeral:
+  emptydirvolumesource: {}
+    #medium: ""/Memory
+    #sizeLimit: 15Gi
 
 hooks:
   image:

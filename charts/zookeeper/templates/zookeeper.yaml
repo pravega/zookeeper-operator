@@ -49,8 +49,8 @@ spec:
     ephemeral:
       {{- if .Values.emptydirvolumesource }}
       emptydirvolumesource:
-        medium: {{ .Values.emptydirvolumesource.medium }}
-        sizeLimit: {{ .Values.emptydirvolumesource.sizeLimit }}
+        medium: {{ .Values.ephemeral.emptydirvolumesource.medium }}
+        sizeLimit: {{ .Values.ephemeral.emptydirvolumesource.sizeLimit }}
        {{- end }}
     {{- else }}
     persistence:
