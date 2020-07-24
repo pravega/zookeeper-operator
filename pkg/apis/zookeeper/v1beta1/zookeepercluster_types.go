@@ -12,6 +12,7 @@ package v1beta1
 
 import (
 	"fmt"
+	"strings"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -62,7 +63,7 @@ type ZookeeperClusterSpec struct {
 	// Updating the Pod does not take effect on any existing pods.
 	Pod PodPolicy `json:"pod,omitempty"`
 
-	//storage is used to define which storagetype we will be using
+	//storage is used to define which StorageType we will be using
 	Storage *Storage `json:"storage,omitempty"`
 
 	// Conf is the zookeeper configuration, which will be used to generate the
@@ -155,13 +156,13 @@ func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) 
 	if s.Pod.withDefaults(z) {
 		changed = true
 	}
-	if s.Storage == nil || (s.Storage.Persistence == nil && s.Storage.Storagetype != "ephemeral") {
+	if s.Storage == nil || (s.Storage.Persistence == nil && !strings.EqualFold(s.Storage.StorageType, "ephemeral")) {
 		s.Storage = &Storage{}
-		s.Storage.Storagetype = "persistence"
+		s.Storage.StorageType = "persistence"
 		s.Storage.Persistence = &Persistence{}
 		changed = true
 	}
-	if s.Storage != nil && s.Storage.Storagetype == "ephemeral" && s.Storage.Ephemeral == nil {
+	if s.Storage != nil && strings.EqualFold(s.Storage.StorageType, "ephemeral") && s.Storage.Ephemeral == nil {
 		s.Storage.Ephemeral = &Ephemeral{}
 		s.Storage.Ephemeral.EmptyDirVolumeSource = v1.EmptyDirVolumeSource{}
 		changed = true
@@ -388,10 +389,10 @@ func (c *ZookeeperConfig) withDefaults() (changed bool) {
 }
 
 type Storage struct {
-	//storagetype is used to tell which type of storage we will be using
+	//StorageType is used to tell which type of storage we will be using
 	//It can take either Ephemeral or persistence
-	//Default Storagetype is Persistence storage
-	Storagetype string `json:"storagetype,omitempty"`
+	//Default StorageType is Persistence storage
+	StorageType string `json:"storageType,omitempty"`
 	// Persistence is the configuration for zookeeper persistent layer.
 	// PersistentVolumeClaimSpec and VolumeReclaimPolicy can be specified in here.
 	Persistence *Persistence `json:"persistence,omitempty"`
@@ -406,7 +407,7 @@ type Persistence struct {
 	// The default value is Retain.
 	VolumeReclaimPolicy VolumeReclaimPolicy `json:"reclaimPolicy,omitempty"`
 	// PersistentVolumeClaimSpec is the spec to describe PVC for the container
-	// This field is optional. If no PVC is specified by default persistentvolume
+	// This field is optional. If no PVC is specified default persistentvolume
 	// will get created.
 	PersistentVolumeClaimSpec v1.PersistentVolumeClaimSpec `json:"spec,omitempty"`
 }

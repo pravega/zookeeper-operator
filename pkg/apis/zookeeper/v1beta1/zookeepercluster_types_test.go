@@ -103,7 +103,7 @@ var _ = Describe("ZookeeperCluster Types", func() {
 			var z1 v1beta1.ZookeeperCluster
 			BeforeEach(func() {
 				z1 = *z.DeepCopy()
-				z1.Spec.Storage.Storagetype = "ephemeral"
+				z1.Spec.Storage.StorageType = "ephemeral"
 				z1.WithDefaults()
 			})
 

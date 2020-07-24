@@ -62,7 +62,7 @@ func testZookeeperCluster(t *testing.T) {
 		"testUpgradeCluster":        testUpgradeCluster,
 		"testCreateRecreateCluster": testCreateRecreateCluster,
 		"testScaleCluster":          testScaleCluster,
-		"testephemeralstorage":      testephemeralstorage,
+		"testEphemeralStorage":      testEphemeralStorage,
 	}
 
 	for name, f := range testFuncs {

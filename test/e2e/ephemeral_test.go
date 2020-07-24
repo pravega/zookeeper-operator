@@ -19,7 +19,7 @@ import (
 )
 
 // Test create and recreate a Zookeeper cluster with the same name
-func testephemeralstorage(t *testing.T) {
+func testEphemeralStorage(t *testing.T) {
 	g := NewGomegaWithT(t)
 
 	doCleanup := true

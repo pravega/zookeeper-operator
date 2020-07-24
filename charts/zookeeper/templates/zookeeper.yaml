@@ -44,20 +44,22 @@ spec:
     quorumListenOnAllIPs: {{ .Values.config.quorumListenOnAllIPs }}
   {{- end }}
   storage:
-    storagetype: {{ .Values.storage.type }}
+    storageType: {{ .Values.storage.type }}
     {{- if eq .Values.storage.type "ephemeral" }}
     ephemeral:
-      {{- if .Values.ephemeral.emptydirvolumesource }}
+      {{- if .Values.storage.ephemeral.emptydirvolumesource }}
       emptydirvolumesource:
-        medium: {{ .Values.ephemeral.emptydirvolumesource.medium }}
-        sizeLimit: {{ .Values.ephemeral.emptydirvolumesource.sizeLimit }}
+        medium: {{ .Values.storage.ephemeral.emptydirvolumesource.medium }}
+        {{- if .Values.storage.ephemeral.emptydirvolumesource.sizeLimit }}
+        sizeLimit: {{ .Values.storage.ephemeral.emptydirvolumesource.sizeLimit }}
+        {{- end }}
        {{- end }}
     {{- else }}
     persistence:
-      reclaimPolicy: {{ .Values.persistence.reclaimPolicy }}
+      reclaimPolicy: {{ .Values.storage.persistence.reclaimPolicy }}
       spec:
-        storageClassName: {{ .Values.persistence.storageClassName }}
+        storageClassName: {{ .Values.storage.persistence.storageClassName }}
         resources:
           requests:
-            storage: {{ .Values.persistence.volumeSize }}
+            storage: {{ .Values.storage.persistence.volumeSize }}
     {{- end }}
