@@ -2,7 +2,7 @@ replicas: 3
 
 image:
   repository: pravega/zookeeper
-  tag: 0.2.7
+  tag: 0.2.8
   pullPolicy: IfNotPresent
 
 domainName:
@@ -37,3 +37,4 @@ hooks:
   image:
     repository: lachlanevenson/k8s-kubectl
     tag: v1.16.10
+  backoffLimit: 10

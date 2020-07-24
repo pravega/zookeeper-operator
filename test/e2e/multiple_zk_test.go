@@ -57,8 +57,8 @@ func testMultiZKCluster(t *testing.T) {
 	defaultCluster.Status.Init()
 	defaultCluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
 	defaultCluster.ObjectMeta.Name = "zk2"
-	initialVersion := "0.2.5"
-	upgradeVersion := "0.2.7"
+	initialVersion := "0.2.7"
+	upgradeVersion := "0.2.8-rc0"
 	defaultCluster.Spec.Image = api.ContainerImage{
 		Repository: "pravega/zookeeper",
 		Tag:        initialVersion,
@@ -111,6 +111,10 @@ func testMultiZKCluster(t *testing.T) {
 	g.Expect(err).NotTo(HaveOccurred())
 
 	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk1, podSize)
+	g.Expect(err).NotTo(HaveOccurred())
+
+	// This is to get the latest Zookeeper cluster object
+	zk2, err = zk_e2eutil.GetCluster(t, f, ctx, zk2)
 	g.Expect(err).NotTo(HaveOccurred())
 
 	//upgrade the image in second Cluster

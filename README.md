@@ -20,24 +20,36 @@ The project is currently alpha. While no breaking API changes are currently plan
     * [Direct Access to Cluster](#direct-access-to-the-cluster)
     * [Run the Operator Locally](#run-the-operator-locally)
     * [Installation on GKE](#installation-on-google-kubernetes-engine)
-
+    * [Installation on Minikube](#installation-on-minikube)
 
 
 ### Overview
 
-This operator runs a Zookeeper 3.5 cluster, and uses Zookeeper dynamic reconfiguration to handle node membership.
+This operator runs a Zookeeper 3.6.1 cluster, and uses Zookeeper dynamic reconfiguration to handle node membership.
 
 The operator itself is built with the [Operator framework](https://github.com/operator-framework/operator-sdk).
 
 ## Requirements
 
-- Access to a Kubernetes v1.9.0+ cluster
+- Access to a Kubernetes v1.15.0+ cluster
 
 ## Usage
+
+We recommend using our [helm charts](charts) for all installation and upgrades. However there are manual deployment and upgrade options available as well.
 
 ### Install the operator
 
 > Note: if you are running on Google Kubernetes Engine (GKE), please [check this first](#installation-on-google-kubernetes-engine).
+
+#### Install via helm
+
+Use helm to quickly deploy a zookeeper operator with the release name `zookeeper-operator`.
+
+```
+$ helm install zookeeper-operator charts/zookeeper-operator
+```
+
+#### Manual deployment
 
 Register the `ZookeeperCluster` custom resource definition (CRD).
 
@@ -77,13 +89,25 @@ zookeeper-operator   1         1         1            1           12m
 
 ### Deploy a sample Zookeeper cluster
 
+#### Install via helm
+
+Helm can be used to install a sample zookeeper cluster with the release name `zookeeper`.
+
+```
+$ helm install zookeeper charts/zookeeper
+```
+
+Check out the [zookeeper helm charts](charts/zookeeper) for the complete list of configurable parameters.
+
+#### Manual deployment
+
 Create a Yaml file called `zk.yaml` with the following content to install a 3-node Zookeeper cluster.
 
 ```yaml
 apiVersion: "zookeeper.pravega.io/v1beta1"
 kind: "ZookeeperCluster"
 metadata:
-  name: "example"
+  name: "zookeeper"
 spec:
   replicas: 3
 ```
@@ -97,8 +121,8 @@ After a couple of minutes, all cluster members should become ready.
 ```
 $ kubectl get zk
 
-NAME      REPLICAS   READY REPLICAS   VERSION   DESIRED VERSION   INTERNAL ENDPOINT    EXTERNAL ENDPOINT   AGE
-example   3          3                 0.2.7     0.2.7             10.100.200.18:2181   N/A                 94s
+NAME        REPLICAS   READY REPLICAS    VERSION   DESIRED VERSION   INTERNAL ENDPOINT    EXTERNAL ENDPOINT   AGE
+zookeeper   3          3                 0.2.8     0.2.8             10.100.200.18:2181   N/A                 94s
 ```
 >Note: when the Version field is set as well as Ready Replicas are equal to Replicas that signifies our cluster is in Ready state
 
@@ -117,18 +141,18 @@ Conditions:
 >Note: User should wait for the Pods Ready condition to be True
 
 ```
-$ kubectl get all -l app=example
-NAME                   DESIRED   CURRENT   AGE
-statefulsets/example   3         3         2m
+$ kubectl get all -l app=zookeeper
+NAME                     DESIRED   CURRENT   AGE
+statefulsets/zookeeper   3         3         2m
 
-NAME           READY     STATUS    RESTARTS   AGE
-po/example-0   1/1       Running   0          2m
-po/example-1   1/1       Running   0          1m
-po/example-2   1/1       Running   0          1m
+NAME             READY     STATUS    RESTARTS   AGE
+po/zookeeper-0   1/1       Running   0          2m
+po/zookeeper-1   1/1       Running   0          1m
+po/zookeeper-2   1/1       Running   0          1m
 
-NAME                   TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)             AGE
-svc/example-client     ClusterIP   10.31.243.173   <none>        2181/TCP            2m
-svc/example-headless   ClusterIP   None            <none>        2888/TCP,3888/TCP   2m
+NAME                     TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)             AGE
+svc/zookeeper-client     ClusterIP   10.31.243.173   <none>        2181/TCP            2m
+svc/zookeeper-headless   ClusterIP   None            <none>        2888/TCP,3888/TCP   2m
 ```
 
 ### Deploy a sample Zookeeper cluster with Istio
@@ -154,7 +178,17 @@ $ kubectl create -f zk-with-istio.yaml
 
 ### Upgrade a Zookeeper cluster
 
-To initiate an upgrade process, a user has to update the `spec.image.tag` field of the `ZookeeperCluster` custom resource. This can be done in three different ways using the `kubectl` command.
+#### Trigger the upgrade via helm
+
+The upgrade can be triggered via helm using the following command
+```
+$ helm upgrade zookeeper <location of modified charts> --timeout 600s
+```
+Here `zookeeper` is the release name of the zookeeper cluster.
+
+#### Trigger the upgrade manually
+
+To initiate an upgrade process manually, a user has to update the `spec.image.tag` field of the `ZookeeperCluster` custom resource. This can be done in three different ways using the `kubectl` command.
 1. `kubectl edit zk <name>`, modify the `tag` value in the YAML resource, save, and exit.
 2. If you have the custom resource defined in a local YAML file, e.g. `zk.yaml`, you can modify the `tag` value, and reapply the resource with `kubectl apply -f zk.yaml`.
 3. `kubectl patch zk <name> --type='json' -p='[{"op": "replace", "path": "/spec/image/tag", "value": "X.Y.Z"}]'`.
@@ -179,8 +213,8 @@ Additionally, the Desired Version will be set to the version that we are upgradi
 ```
 $ kubectl get zk
 
-NAME         REPLICAS   READY REPLICAS   VERSION   DESIRED VERSION   INTERNAL ENDPOINT     EXTERNAL ENDPOINT   AGE
-example       3          3                0.2.6     0.2.7             10.100.200.126:2181   N/A                 11m
+NAME            REPLICAS   READY REPLICAS   VERSION   DESIRED VERSION   INTERNAL ENDPOINT     EXTERNAL ENDPOINT   AGE
+zookeeper       3          3                0.2.6     0.2.7             10.100.200.126:2181   N/A                 11m
 
 ```
 Once the upgrade completes, the Version field is set to the Desired Version, as shown below
@@ -188,8 +222,8 @@ Once the upgrade completes, the Version field is set to the Desired Version, as 
 ```
 $ kubectl get zk
 
-NAME         REPLICAS   READY REPLICAS   VERSION   DESIRED VERSION   INTERNAL ENDPOINT     EXTERNAL ENDPOINT   AGE
-example        3          3               0.2.7     0.2.7            10.100.200.126:2181   N/A                 11m
+NAME            REPLICAS   READY REPLICAS   VERSION   DESIRED VERSION   INTERNAL ENDPOINT     EXTERNAL ENDPOINT   AGE
+zookeeper       3          3                0.2.7     0.2.7             10.100.200.126:2181   N/A                 11m
 
 
 ```
@@ -213,6 +247,15 @@ Status:
 
 ### Uninstall the Zookeeper cluster
 
+#### Uninstall via helm
+
+```
+$ helm uninstall zookeeper
+```
+Here `zookeeper` is the zookeeper cluster release name.
+
+#### Manual uninstall
+
 ```
 $ kubectl delete -f zk.yaml
 ```
@@ -220,6 +263,15 @@ $ kubectl delete -f zk.yaml
 ### Uninstall the operator
 
 > Note that the Zookeeper clusters managed by the Zookeeper operator will NOT be deleted even if the operator is uninstalled.
+
+#### Uninstall via helm
+
+```
+$ helm uninstall zookeeper-operator
+```
+Here `zookeeper-operator` is the operator release name.
+
+#### Manual uninstall
 
 To delete all clusters, delete all cluster CR objects before uninstalling the operator.
 
@@ -272,10 +324,10 @@ where:
 
 ### Direct access to the cluster
 
-For debugging and development you might want to access the Zookeeper cluster directly. For example, if you created the cluster with name `example` in the `default` namespace you can forward the Zookeeper port from any of the pods (e.g. `example-0`) as follows:
+For debugging and development you might want to access the Zookeeper cluster directly. For example, if you created the cluster with name `zookeeper` in the `default` namespace you can forward the Zookeeper port from any of the pods (e.g. `zookeeper-0`) as follows:
 
 ```
-$ kubectl port-forward -n default example-0 2181:2181
+$ kubectl port-forward -n default zookeeper-0 2181:2181
 ```
 
 ### Run the operator locally
@@ -304,6 +356,21 @@ On GKE, the following command must be run before installing the operator, replac
 
 ```
 $ kubectl create clusterrolebinding your-user-cluster-admin-binding --clusterrole=cluster-admin --user=your.google.cloud.email@example.org
+```
+
+### Installation on Minikube
+
+#### Minikube Setup
+To setup minikube locally you can follow the steps mentioned [here](https://github.com/pravega/pravega/wiki/Kubernetes-Based-System-Test-Framework#minikube-setup).
+
+Once minikube setup is complete, `minikube start` will create a minikube VM.
+
+#### Cluster Deployment
+First install the zookeeper operator in either of the ways mentioned [here](#install-the-operator).
+Since minikube provides a single node Kubernetes cluster which has a low resource provisioning, we provide a simple way to install a small zookeeper cluster on a minikube environment using the following command.
+
+```
+helm install zookeeper charts/zookeeper --values charts/zookeeper/values/minikube.yaml
 ```
 
 #### Zookeeper YAML  Exporter

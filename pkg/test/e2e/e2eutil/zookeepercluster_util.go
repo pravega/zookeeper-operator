@@ -30,12 +30,12 @@ import (
 var (
 	RetryInterval        = time.Second * 5
 	Timeout              = time.Second * 60
-	CleanupRetryInterval = time.Second * 1
+	CleanupRetryInterval = time.Second * 5
 	CleanupTimeout       = time.Second * 5
 	ReadyTimeout         = time.Minute * 5
 	UpgradeTimeout       = time.Minute * 10
-	TerminateTimeout     = time.Minute * 2
-	VerificationTimeout  = time.Minute * 3
+	TerminateTimeout     = time.Minute * 5
+	VerificationTimeout  = time.Minute * 5
 )
 
 // CreateCluster creates a ZookeeperCluster CR with the desired spec
@@ -93,7 +93,6 @@ func GetCluster(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z 
 // WaitForClusterToBecomeReady will wait until all cluster pods are ready
 func WaitForClusterToBecomeReady(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z *api.ZookeeperCluster, size int) error {
 	t.Logf("waiting for cluster pods to become ready: %s", z.Name)
-
 	err := wait.Poll(RetryInterval, ReadyTimeout, func() (done bool, err error) {
 		cluster, err := GetCluster(t, f, ctx, z)
 		if err != nil {
@@ -161,7 +160,7 @@ func WaitForClusterToTerminate(t *testing.T, f *framework.Framework, ctx *framew
 
 	// Wait for Pods to terminate
 	err := wait.Poll(RetryInterval, TerminateTimeout, func() (done bool, err error) {
-		podList, err := f.KubeClient.Core().Pods(z.Namespace).List(listOptions)
+		podList, err := f.KubeClient.CoreV1().Pods(z.Namespace).List(listOptions)
 		if err != nil {
 			return false, err
 		}
@@ -184,7 +183,7 @@ func WaitForClusterToTerminate(t *testing.T, f *framework.Framework, ctx *framew
 
 	// Wait for PVCs to terminate
 	err = wait.Poll(RetryInterval, TerminateTimeout, func() (done bool, err error) {
-		pvcList, err := f.KubeClient.Core().PersistentVolumeClaims(z.Namespace).List(listOptions)
+		pvcList, err := f.KubeClient.CoreV1().PersistentVolumeClaims(z.Namespace).List(listOptions)
 		if err != nil {
 			return false, err
 		}
@@ -213,7 +212,7 @@ func DeletePods(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z 
 	listOptions := metav1.ListOptions{
 		LabelSelector: labels.SelectorFromSet(map[string]string{"app": z.GetName()}).String(),
 	}
-	podList, err := f.KubeClient.Core().Pods(z.Namespace).List(listOptions)
+	podList, err := f.KubeClient.CoreV1().Pods(z.Namespace).List(listOptions)
 	if err != nil {
 		return err
 	}
