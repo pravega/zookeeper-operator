@@ -9,7 +9,7 @@ global:
 
 image:
   repository: pravega/zookeeper-operator
-  tag: 0.2.7
+  tag: 0.2.8
   pullPolicy: IfNotPresent
 
 ## Install RBAC roles and bindings.
@@ -27,8 +27,9 @@ serviceAccount:
 crd:
   create: true
 
-## Specifies which namespace the Operator should watch over.
-## An empty string means all namespaces.
+## Specifies which namespace(s) the Operator should watch over.
+## Default: An empty string means all namespaces.
+## Multiple namespaces can be configured using a comma separated list of namespaces
 watchNamespace: ""
 
 ## Operator pod resources
@@ -39,3 +40,10 @@ resources: {}
   # requests:
   #   cpu: 1
   #   memory: 128Mi
+
+hooks:
+  backoffLimit: 10
+  image:
+    repository: lachlanevenson/k8s-kubectl
+    tag: v1.16.10
+

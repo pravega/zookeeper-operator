@@ -40,7 +40,7 @@ The following table lists the configurable parameters of the Zookeeper chart and
 | ----- | ----------- | ------ |
 | `replicas` | Expected size of the zookeeper cluster (valid range is from 1 to 7) | `3` |
 | `image.repository` | Image repository | `pravega/zookeeper` |
-| `image.tag` | Image tag | `0.2.7` |
+| `image.tag` | Image tag | `0.2.8` |
 | `image.pullPolicy` | Image pull policy | `IfNotPresent` |
 | `domainName` | Domain name to be used for DNS | |
 | `labels` | Specifies the labels to be attached | `{}` |
