@@ -144,7 +144,7 @@ metadata:
 spec:
   replicas: 3
   storage:        
-    storagetype: ephemeral
+    storageType: ephemeral
 ```
 
 ```
