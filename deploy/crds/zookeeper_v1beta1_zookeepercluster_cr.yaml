@@ -7,13 +7,11 @@ spec:
   image:
     repository: pravega/zookeeper
     tag: 0.2.8
-  storage:
-    storageType: persistence
-    persistence:
-        reclaimPolicy: Delete
-        spec:
-          storageClassName: "standard"
-          resources:
-            requests:
-              storage: 20Gi
-
+  storageType: persistence
+  persistence:
+    reclaimPolicy: Retain
+    spec:
+      storageClassName: "standard"
+      resources:
+        requests:
+          storage: 20Gi

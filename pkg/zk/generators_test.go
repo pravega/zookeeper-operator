@@ -136,9 +136,7 @@ var _ = Describe("Generators Spec", func() {
 					Spec: v1beta1.ZookeeperClusterSpec{},
 				}
 				z.Spec = v1beta1.ZookeeperClusterSpec{
-					Storage: &v1beta1.Storage{
-						StorageType: "ephemeral",
-					},
+					StorageType: "ephemeral",
 				}
 				z.WithDefaults()
 				sts = zk.MakeStatefulSet(z)

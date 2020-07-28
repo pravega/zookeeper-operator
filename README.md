@@ -166,9 +166,8 @@ kind: "ZookeeperCluster"
 metadata:
   name: "example"
 spec:
-  replicas: 3
-  storage:        
-    storageType: ephemeral
+  replicas: 3        
+  storageType: ephemeral
 ```
 
 ```

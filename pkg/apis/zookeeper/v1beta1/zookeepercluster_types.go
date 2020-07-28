@@ -63,8 +63,16 @@ type ZookeeperClusterSpec struct {
 	// Updating the Pod does not take effect on any existing pods.
 	Pod PodPolicy `json:"pod,omitempty"`
 
-	//storage is used to define which StorageType we will be using
-	Storage *Storage `json:"storage,omitempty"`
+	//StorageType is used to tell which type of storage we will be using
+	//It can take either Ephemeral or persistence
+	//Default StorageType is Persistence storage
+	StorageType string `json:"storageType,omitempty"`
+	// Persistence is the configuration for zookeeper persistent layer.
+	// PersistentVolumeClaimSpec and VolumeReclaimPolicy can be specified in here.
+	Persistence *Persistence `json:"persistence,omitempty"`
+	// Ephemeral is the configuration which helps create ephemeral storage
+	// At anypoint only one of Persistence or Ephemeral should be present in the manifest
+	Ephemeral *Ephemeral `json:"ephemeral,omitempty"`
 
 	// Conf is the zookeeper configuration, which will be used to generate the
 	// static zookeeper configuration. If no configuration is provided required
@@ -156,18 +164,18 @@ func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) 
 	if s.Pod.withDefaults(z) {
 		changed = true
 	}
-	if s.Storage == nil || (s.Storage.Persistence == nil && !strings.EqualFold(s.Storage.StorageType, "ephemeral")) {
-		s.Storage = &Storage{}
-		s.Storage.StorageType = "persistence"
-		s.Storage.Persistence = &Persistence{}
+	if s.Persistence == nil && !strings.EqualFold(s.StorageType, "ephemeral") {
+		s.StorageType = "persistence"
+		s.Persistence = &Persistence{}
 		changed = true
 	}
-	if s.Storage != nil && strings.EqualFold(s.Storage.StorageType, "ephemeral") && s.Storage.Ephemeral == nil {
-		s.Storage.Ephemeral = &Ephemeral{}
-		s.Storage.Ephemeral.EmptyDirVolumeSource = v1.EmptyDirVolumeSource{}
+	if strings.EqualFold(s.StorageType, "ephemeral") && s.Ephemeral == nil {
+		s.Ephemeral = &Ephemeral{}
+		s.Ephemeral.EmptyDirVolumeSource = v1.EmptyDirVolumeSource{}
 		changed = true
 	}
-	if s.Storage != nil && s.Storage.Persistence != nil && s.Storage.Persistence.withDefaults() {
+	if !strings.EqualFold(s.StorageType, "ephemeral") && s.Persistence != nil && s.Persistence.withDefaults() {
+		s.StorageType = "persistence"
 		changed = true
 	}
 	return changed
@@ -386,19 +394,6 @@ func (c *ZookeeperConfig) withDefaults() (changed bool) {
 		c.SyncLimit = 2
 	}
 	return changed
-}
-
-type Storage struct {
-	//StorageType is used to tell which type of storage we will be using
-	//It can take either Ephemeral or persistence
-	//Default StorageType is Persistence storage
-	StorageType string `json:"storageType,omitempty"`
-	// Persistence is the configuration for zookeeper persistent layer.
-	// PersistentVolumeClaimSpec and VolumeReclaimPolicy can be specified in here.
-	Persistence *Persistence `json:"persistence,omitempty"`
-	// Ephemeral is the configuration which helps create ephemeral storage
-	// At anypoint only one of Persistence or Ephemeral should be present in the manifest
-	Ephemeral *Ephemeral `json:"ephemeral,omitempty"`
 }
 
 type Persistence struct {

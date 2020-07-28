@@ -90,12 +90,12 @@ var _ = Describe("ZookeeperCluster Types", func() {
 			var z1 v1beta1.ZookeeperCluster
 			BeforeEach(func() {
 				z1 = *z.DeepCopy()
-				z1.Spec.Storage.Persistence.VolumeReclaimPolicy = "Delete"
+				z1.Spec.Persistence.VolumeReclaimPolicy = "Delete"
 				z1.WithDefaults()
 			})
 
 			It("should set the Volumeclaimpolicy to Delete", func() {
-				Ω(fmt.Sprintf("%s", z1.Spec.Storage.Persistence.VolumeReclaimPolicy)).To(Equal("Delete"))
+				Ω(fmt.Sprintf("%s", z1.Spec.Persistence.VolumeReclaimPolicy)).To(Equal("Delete"))
 			})
 		})
 
@@ -103,12 +103,12 @@ var _ = Describe("ZookeeperCluster Types", func() {
 			var z1 v1beta1.ZookeeperCluster
 			BeforeEach(func() {
 				z1 = *z.DeepCopy()
-				z1.Spec.Storage.StorageType = "ephemeral"
+				z1.Spec.StorageType = "ephemeral"
 				z1.WithDefaults()
 			})
 
 			It("should set the ephemeralstorage and value for EmptyDirVolumeSource.Medium to ''", func() {
-				Ω(fmt.Sprintf("%s", z1.Spec.Storage.Ephemeral.EmptyDirVolumeSource.Medium)).To(Equal(""))
+				Ω(fmt.Sprintf("%s", z1.Spec.Ephemeral.EmptyDirVolumeSource.Medium)).To(Equal(""))
 			})
 		})
 
@@ -217,7 +217,7 @@ var _ = Describe("ZookeeperCluster Types", func() {
 			var p corev1.PersistentVolumeClaimSpec
 
 			BeforeEach(func() {
-				p = z.Spec.Storage.Persistence.PersistentVolumeClaimSpec
+				p = z.Spec.Persistence.PersistentVolumeClaimSpec
 			})
 
 			It("should be an RWO volume", func() {

@@ -42,22 +42,22 @@ var zkDataVolume = "data"
 // MakeStatefulSet return a zookeeper stateful set from the zk spec
 func MakeStatefulSet(z *v1beta1.ZookeeperCluster) *appsv1.StatefulSet {
 	extraVolumes := []v1.Volume{}
-	persistence := z.Spec.Storage.Persistence
+	persistence := z.Spec.Persistence
 	pvcs := []v1.PersistentVolumeClaim{}
-	if persistence != nil {
+	if strings.EqualFold(z.Spec.StorageType, "ephemeral") {
+		extraVolumes = append(extraVolumes, v1.Volume{
+			Name: zkDataVolume,
+			VolumeSource: v1.VolumeSource{
+				EmptyDir: &z.Spec.Ephemeral.EmptyDirVolumeSource,
+			},
+		})
+	} else {
 		pvcs = append(pvcs, v1.PersistentVolumeClaim{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:   zkDataVolume,
 				Labels: map[string]string{"app": z.GetName()},
 			},
 			Spec: persistence.PersistentVolumeClaimSpec,
-		})
-	} else {
-		extraVolumes = append(extraVolumes, v1.Volume{
-			Name: zkDataVolume,
-			VolumeSource: v1.VolumeSource{
-				EmptyDir: &z.Spec.Storage.Ephemeral.EmptyDirVolumeSource,
-			},
 		})
 	}
 	return &appsv1.StatefulSet{

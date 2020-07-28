@@ -38,7 +38,7 @@ func testUpgradeCluster(t *testing.T) {
 
 	cluster.WithDefaults()
 	cluster.Status.Init()
-	cluster.Spec.Storage.Persistence.VolumeReclaimPolicy = "Delete"
+	cluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
 	initialVersion := "0.2.7"
 	upgradeVersion := "0.2.8-rc0"
 	cluster.Spec.Image = api.ContainerImage{

@@ -489,7 +489,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				Ω(count).To(Equal(0))
 			})
 			It("should not raise an error", func() {
-				z.Spec.Storage.Persistence.VolumeReclaimPolicy = v1beta1.VolumeReclaimPolicyDelete
+				z.Spec.Persistence.VolumeReclaimPolicy = v1beta1.VolumeReclaimPolicyDelete
 				cl.Update(context.TODO(), z)
 				err = r.reconcileFinalizers(z)
 				Ω(err).To(BeNil())

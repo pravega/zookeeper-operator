@@ -59,9 +59,9 @@ The following table lists the configurable parameters of the Zookeeper chart and
 | `config.tickTime` | Length of a single tick which is the basic time unit used by Zookeeper (measured in milliseconds) | `2000` |
 | `config.syncLimit` | Amount of time (in ticks) to allow followers to sync with Zookeeper | `2` |
 | `config.quorumListenOnAllIPs` | Whether Zookeeper server will listen for connections from its peers on all available IP addresses | `false` |
-| `storage.type` | Type of storage that can be used it can take either ephemeral or persistence as value | `persistence` |
-| `storage.persistence.reclaimPolicy` | Reclaim policy for persistent volumes | `Delete` |
-| `storage.persistence.storageClassName` | Storage class for persistent volumes | `standard` |
+| `storageType` | Type of storage that can be used it can take either ephemeral or persistence as value | `persistence` |
+| `persistence.reclaimPolicy` | Reclaim policy for persistent volumes | `Delete` |
+| `persistence.storageClassName` | Storage class for persistent volumes | `standard` |
 | `storage.persistence.volumeSize` | Size of the volume requested for persistent volumes | `20Gi` |
-| `storage.ephemeral.emptydirvolumesource.medium` |  What type of storage medium should back the directory. | `""` |
-| `storage.ephemeral.emptydirvolumesource.sizeLimit` | Total amount of local storage required for the EmptyDir volume. | `` |
+| `ephemeral.emptydirvolumesource.medium` |  What type of storage medium should back the directory. | `""` |
+| `ephemeral.emptydirvolumesource.sizeLimit` | Total amount of local storage required for the EmptyDir volume. | |

@@ -43,23 +43,22 @@ spec:
     syncLimit: {{ .Values.config.syncLimit }}
     quorumListenOnAllIPs: {{ .Values.config.quorumListenOnAllIPs }}
   {{- end }}
-  storage:
-    storageType: {{ .Values.storage.type }}
-    {{- if eq .Values.storage.type "ephemeral" }}
-    ephemeral:
-      {{- if .Values.storage.ephemeral.emptydirvolumesource }}
-      emptydirvolumesource:
-        medium: {{ .Values.storage.ephemeral.emptydirvolumesource.medium }}
-        {{- if .Values.storage.ephemeral.emptydirvolumesource.sizeLimit }}
-        sizeLimit: {{ .Values.storage.ephemeral.emptydirvolumesource.sizeLimit }}
-        {{- end }}
-       {{- end }}
-    {{- else }}
-    persistence:
-      reclaimPolicy: {{ .Values.storage.persistence.reclaimPolicy }}
-      spec:
-        storageClassName: {{ .Values.storage.persistence.storageClassName }}
-        resources:
-          requests:
-            storage: {{ .Values.storage.persistence.volumeSize }}
-    {{- end }}
+  storageType: {{ .Values.storageType }}
+  {{- if eq .Values.storageType "ephemeral" }}
+  ephemeral:
+    {{- if .Values.ephemeral.emptydirvolumesource }}
+    emptydirvolumesource:
+      medium: {{ .Values.ephemeral.emptydirvolumesource.medium }}
+      {{- if .Values.ephemeral.emptydirvolumesource.sizeLimit }}
+      sizeLimit: {{ .Values.ephemeral.emptydirvolumesource.sizeLimit }}
+      {{- end }}
+      {{- end }}
+  {{- else }}
+  persistence:
+    reclaimPolicy: {{ .Values.persistence.reclaimPolicy }}
+    spec:
+      storageClassName: {{ .Values.persistence.storageClassName }}
+      resources:
+        requests:
+          storage: {{ .Values.persistence.volumeSize }}
+  {{- end }}

@@ -38,7 +38,7 @@ func testCreateRecreateCluster(t *testing.T) {
 
 	defaultCluster.WithDefaults()
 	defaultCluster.Status.Init()
-	defaultCluster.Spec.Storage.Persistence.VolumeReclaimPolicy = "Delete"
+	defaultCluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
 
 	zk, err := zk_e2eutil.CreateCluster(t, f, ctx, defaultCluster)
 	g.Expect(err).NotTo(HaveOccurred())
@@ -57,7 +57,7 @@ func testCreateRecreateCluster(t *testing.T) {
 	defaultCluster = zk_e2eutil.NewDefaultCluster(namespace)
 	defaultCluster.WithDefaults()
 	defaultCluster.Status.Init()
-	defaultCluster.Spec.Storage.Persistence.VolumeReclaimPolicy = "Delete"
+	defaultCluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
 
 	zk, err = zk_e2eutil.CreateCluster(t, f, ctx, defaultCluster)
 	g.Expect(err).NotTo(HaveOccurred())
