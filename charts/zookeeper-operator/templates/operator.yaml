@@ -21,22 +21,6 @@ spec:
       - name: {{ template "zookeeper-operator.fullname" . }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
-        {{- if default "" (coalesce .Values.imagePullSecrets .Values.global.imagePullSecrets) }}
-        imagePullSecrets:
-          - name: {{ coalesce .Values.imagePullSecrets .Values.global.imagePullSecrets }}
-        {{- end }}
-        {{- if .Values.nodeSelector }}
-        nodeSelector:
-{{ toYaml .Values.nodeSelector | indent 10 }}
-        {{- end }}
-        {{- if .Values.affinity }}
-        affinity:
-{{ toYaml .Values.affinity | indent 10 }}
-        {{- end }}
-        {{- if .Values.tolerations }}
-        tolerations:
-{{ toYaml .Values.tolerations | indent 10 }}
-        {{- end }}
         ports:
         - containerPort: 6000
           name: metrics
@@ -51,5 +35,23 @@ spec:
               fieldPath: metadata.name
         - name: OPERATOR_NAME
           value: {{ template "zookeeper-operator.fullname" . }}
+        {{- if .Values.resources }}
         resources:
 {{ toYaml .Values.resources | indent 10 }}
+        {{- end }}
+{{- if default "" (coalesce .Values.imagePullSecrets .Values.global.imagePullSecrets) }}
+        imagePullSecrets:
+{{ coalesce .Values.imagePullSecrets .Values.global.imagePullSecrets | toYaml | indent 10 }}
+        {{- end }}
+        {{- if .Values.nodeSelector }}
+        nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 10 }}
+        {{- end }}
+        {{- if .Values.affinity }}
+        affinity:
+{{ toYaml .Values.affinity | indent 10 }}
+        {{- end }}
+        {{- if .Values.tolerations }}
+        tolerations:
+{{ toYaml .Values.tolerations | indent 10 }}
+        {{- end }}
