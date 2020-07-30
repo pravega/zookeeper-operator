@@ -39,19 +39,19 @@ spec:
         resources:
 {{ toYaml .Values.resources | indent 10 }}
         {{- end }}
-{{- if default "" (coalesce .Values.imagePullSecrets .Values.global.imagePullSecrets) }}
-        imagePullSecrets:
-{{ coalesce .Values.imagePullSecrets .Values.global.imagePullSecrets | toYaml | indent 10 }}
-        {{- end }}
-        {{- if .Values.nodeSelector }}
-        nodeSelector:
-{{ toYaml .Values.nodeSelector | indent 10 }}
-        {{- end }}
-        {{- if .Values.affinity }}
-        affinity:
-{{ toYaml .Values.affinity | indent 10 }}
-        {{- end }}
-        {{- if .Values.tolerations }}
-        tolerations:
-{{ toYaml .Values.tolerations | indent 10 }}
-        {{- end }}
+      {{- if default "" (coalesce .Values.imagePullSecrets .Values.global.imagePullSecrets) }}
+      imagePullSecrets:
+{{ coalesce .Values.imagePullSecrets .Values.global.imagePullSecrets | toYaml | indent 8 }}
+      {{- end }}
+      {{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+      {{- end }}
+      {{- if .Values.affinity }}
+      affinity:
+{{ toYaml .Values.affinity | indent 8 }}
+      {{- end }}
+      {{- if .Values.tolerations }}
+      tolerations:
+{{ toYaml .Values.tolerations | indent 8 }}
+      {{- end }}
