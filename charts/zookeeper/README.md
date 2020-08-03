@@ -62,6 +62,6 @@ The following table lists the configurable parameters of the Zookeeper chart and
 | `storageType` | Type of storage that can be used it can take either ephemeral or persistence as value | `persistence` |
 | `persistence.reclaimPolicy` | Reclaim policy for persistent volumes | `Delete` |
 | `persistence.storageClassName` | Storage class for persistent volumes | `standard` |
-| `storage.persistence.volumeSize` | Size of the volume requested for persistent volumes | `20Gi` |
+| `persistence.volumeSize` | Size of the volume requested for persistent volumes | `20Gi` |
 | `ephemeral.emptydirvolumesource.medium` |  What type of storage medium should back the directory. | `""` |
 | `ephemeral.emptydirvolumesource.sizeLimit` | Total amount of local storage required for the EmptyDir volume. | |
