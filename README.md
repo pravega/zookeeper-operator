@@ -184,6 +184,8 @@ example   3          3                 0.2.7     0.2.7             10.100.200.18
 ```
 >Note: User should only provide either persistence or ephemeral in the spec, if none of the values is specified default is persistence
 
+>Note: We don't guarantee Data Recovery in case of Ephemeral Storage, so the users should keep in mind that in the case of zookeeper pod restarts user might lose the data.
+
 ### Deploy a sample Zookeeper cluster with Istio
 Create a Yaml file called `zk-with-istio.yaml` with the following content to install a 3-node Zookeeper cluster.
 
