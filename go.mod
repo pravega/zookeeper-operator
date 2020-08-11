@@ -7,14 +7,12 @@ require (
 	github.com/go-logr/logr v0.1.0
 	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.9.0
-	github.com/opennota/check v0.0.0-20180911053232-0c771f5545ff // indirect
 	github.com/operator-framework/operator-sdk v0.17.0
 	github.com/pkg/errors v0.9.1
 	github.com/samuel/go-zookeeper v0.0.0-20190923202752-2cc03de413da
 	k8s.io/api v0.17.5
 	k8s.io/apimachinery v0.17.5
 	k8s.io/client-go v12.0.0+incompatible
-	k8s.io/kubernetes v1.17.5 // indirect
 	sigs.k8s.io/controller-runtime v0.5.2
 )
 
