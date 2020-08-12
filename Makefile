@@ -48,6 +48,7 @@ build-go:
 	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build \
 	-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
 	-o bin/$(EXPORTER_NAME)-windows-amd64.exe cmd/exporter/main.go
+
 build-image:
 	docker build --build-arg VERSION=$(VERSION) --build-arg GIT_SHA=$(GIT_SHA) -t $(REPO):$(VERSION) .
 	docker tag $(REPO):$(VERSION) $(REPO):latest
@@ -57,7 +58,7 @@ build-zk-image:
 	docker tag $(APP_REPO):$(VERSION) $(APP_REPO):latest
 
 build-zk-image-swarm:
-	docker build --build-arg VERSION=$(VERSION)-swarm --build-arg GIT_SHA=$(GIT_SHA) -f ./docker/Dockerfile-swarm  -t $(APP_REPO):$(VERSION)-swarm  ./docker
+	docker build --build-arg VERSION=$(VERSION)-swarm --build-arg GIT_SHA=$(GIT_SHA) -f ./docker/Dockerfile-swarm -t $(APP_REPO):$(VERSION)-swarm ./docker
 
 test:
 	go test $$(go list ./... | grep -v /vendor/ | grep -v /test/e2e) -race -coverprofile=coverage.txt -covermode=atomic
@@ -67,10 +68,13 @@ test-e2e: test-e2e-remote
 test-e2e-remote: test-login
 	operator-sdk build $(TEST_IMAGE)
 	docker push $(TEST_IMAGE)
-	operator-sdk test local ./test/e2e --operator-namespace default --namespaced-manifest ./test/e2e/resources/rbac-operator.yaml --global-manifest  deploy/crds/zookeeper_v1beta1_zookeepercluster_crd.yaml  --image $(TEST_IMAGE) --go-test-flags "-v -timeout 0"
+	operator-sdk test local ./test/e2e --operator-namespace default \
+		--namespaced-manifest ./test/e2e/resources/rbac-operator.yaml \
+		--global-manifest deploy/crds/zookeeper.pravega.io_zookeeperclusters.yaml \
+		--image $(TEST_IMAGE) --go-test-flags "-v -timeout 0"
 
 test-e2e-local:
-		operator-sdk test local ./test/e2e --operator-namespace default --up-local --go-test-flags "-v -timeout 0"
+	operator-sdk test local ./test/e2e --operator-namespace default --up-local --go-test-flags "-v -timeout 0"
 
 run-local:
 	operator-sdk up local
@@ -81,7 +85,7 @@ login:
 test-login:
 	echo "$(DOCKER_TEST_PASS)" | docker login -u "$(DOCKER_TEST_USER)" --password-stdin
 
-push: build-image build-zk-image  build-zk-image-swarm login
+push: build-image build-zk-image build-zk-image-swarm login
 	docker push $(REPO):$(VERSION)
 	docker push $(REPO):latest
 	docker push $(APP_REPO):$(VERSION)
@@ -109,3 +113,22 @@ check-license:
 
 update-kube-version:
 	./scripts/update_kube_version.sh ${KUBE_VERSION}
+
+manifests: controller-gen
+	$(CONTROLLER_GEN) crd paths="./..." output:crd:artifacts:config=deploy/crds
+	$(CONTROLLER_GEN) crd paths="./..." output:crd:artifacts:config=charts/zookeeper-operator/crds
+
+controller-gen:
+ifeq (, $(shell which controller-gen))
+	@{ \
+	set -e ;\
+	CONTROLLER_GEN_TMP_DIR=$$(mktemp -d) ;\
+	cd $$CONTROLLER_GEN_TMP_DIR ;\
+	go mod init tmp ;\
+	go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.3.0 ;\
+	rm -rf $$CONTROLLER_GEN_TMP_DIR ;\
+	}
+CONTROLLER_GEN=$(GOPATH)/bin/controller-gen
+else
+CONTROLLER_GEN=$(shell which controller-gen)
+endif
