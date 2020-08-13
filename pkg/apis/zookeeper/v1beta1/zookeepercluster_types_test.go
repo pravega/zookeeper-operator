@@ -123,6 +123,10 @@ var _ = Describe("ZookeeperCluster Types", func() {
 				Ω(z.ConfigMapName()).To(Equal("example-configmap"))
 			})
 
+			It("should give cluster.local as cluster domain", func() {
+				Ω(z.GetKubernetesClusterDomain()).To(Equal("cluster.local"))
+			})
+
 			It("should give clientservicename as example-client", func() {
 				Ω(z.GetClientServiceName()).To(Equal("example-client"))
 			})
@@ -137,6 +141,21 @@ var _ = Describe("ZookeeperCluster Types", func() {
 
 			It("should set SyncLimit to 2", func() {
 				Ω(c.SyncLimit).To(Equal(2))
+			})
+		})
+
+		Context("Overriden cluster domain", func() {
+
+			var z2 v1beta1.ZookeeperCluster
+
+			BeforeEach(func() {
+				z2 = *z.DeepCopy()
+				z2.Spec.KubernetesClusterDomain = "foo.bar"
+				z2.WithDefaults()
+			})
+
+			It("should give cluster.local as foo.bar", func() {
+				Ω(z2.GetKubernetesClusterDomain()).To(Equal("foo.bar"))
 			})
 		})
 

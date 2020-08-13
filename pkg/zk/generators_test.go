@@ -120,6 +120,36 @@ var _ = Describe("Generators Spec", func() {
 
 			})
 		})
+		Context("with overridden kubernetes cluster domain", func() {
+			var cfg string
+
+			BeforeEach(func() {
+				z := &v1beta1.ZookeeperCluster{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "example",
+						Namespace: "default",
+					},
+					Spec: v1beta1.ZookeeperClusterSpec{
+						KubernetesClusterDomain: "foo.bar",
+					},
+				}
+				z.WithDefaults()
+				cm = zk.MakeConfigMap(z)
+			})
+
+			Context("env.sh", func() {
+				BeforeEach(func() {
+					cfg = cm.Data["env.sh"]
+				})
+
+				It("should set the DOMAIN to the overridden headless domain", func() {
+					Ω(cfg).
+						To(ContainSubstring(
+							"DOMAIN=example-headless.default.svc.foo.bar\n"))
+				})
+
+			})
+		})
 	})
 
 	Context("#MakeStatefulSet with Ephemeral storage", func() {
