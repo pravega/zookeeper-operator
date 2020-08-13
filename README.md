@@ -182,9 +182,9 @@ $ kubectl get zk
 NAME      REPLICAS   READY REPLICAS   VERSION   DESIRED VERSION   INTERNAL ENDPOINT    EXTERNAL ENDPOINT   AGE
 example   3          3                 0.2.7     0.2.7             10.100.200.18:2181   N/A                 94s
 ```
->Note: User should only provide either persistence or ephemeral in the spec, if none of the values is specified default is persistence
+>Note: User should only provide value for either the field persistence or ephemeral in the spec if none of the values is specified default is persistence
 
->Note: We don't guarantee Data Recovery in case of Ephemeral Storage, so the users should keep in mind that in the case of zookeeper pod restarts user might lose the data.
+>Note: In case of ephemeral storage, the cluster may not be able to come back up if more than quorum number of nodes are restarted simultaneously.
 
 ### Deploy a sample Zookeeper cluster with Istio
 Create a Yaml file called `zk-with-istio.yaml` with the following content to install a 3-node Zookeeper cluster.

@@ -164,19 +164,22 @@ func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) 
 	if s.Pod.withDefaults(z) {
 		changed = true
 	}
-	if s.Persistence == nil && !strings.EqualFold(s.StorageType, "ephemeral") {
-		s.StorageType = "persistence"
-		s.Persistence = &Persistence{}
-		changed = true
-	}
-	if strings.EqualFold(s.StorageType, "ephemeral") && s.Ephemeral == nil {
-		s.Ephemeral = &Ephemeral{}
-		s.Ephemeral.EmptyDirVolumeSource = v1.EmptyDirVolumeSource{}
-		changed = true
-	}
-	if !strings.EqualFold(s.StorageType, "ephemeral") && s.Persistence != nil && s.Persistence.withDefaults() {
-		s.StorageType = "persistence"
-		changed = true
+	if strings.EqualFold(s.StorageType, "ephemeral") {
+		if s.Ephemeral == nil {
+			s.Ephemeral = &Ephemeral{}
+			s.Ephemeral.EmptyDirVolumeSource = v1.EmptyDirVolumeSource{}
+			changed = true
+		}
+	} else {
+		if s.Persistence == nil {
+			s.StorageType = "persistence"
+			s.Persistence = &Persistence{}
+			changed = true
+		}
+		if s.Persistence.withDefaults() {
+			s.StorageType = "persistence"
+			changed = true
+		}
 	}
 	return changed
 }
@@ -420,7 +423,6 @@ func (p *Persistence) withDefaults() (changed bool) {
 		changed = true
 		p.VolumeReclaimPolicy = VolumeReclaimPolicyRetain
 	}
-
 	p.PersistentVolumeClaimSpec.AccessModes = []v1.PersistentVolumeAccessMode{
 		v1.ReadWriteOnce,
 	}
