@@ -186,6 +186,8 @@ example   3          3                 0.2.7     0.2.7             10.100.200.18
 
 >Note: In case of ephemeral storage, the cluster may not be able to come back up if more than quorum number of nodes are restarted simultaneously.
 
+>Note: In case of ephemeral storage, there will be loss of data when the node gets restarted.
+
 ### Deploy a sample Zookeeper cluster with Istio
 Create a Yaml file called `zk-with-istio.yaml` with the following content to install a 3-node Zookeeper cluster.
 
