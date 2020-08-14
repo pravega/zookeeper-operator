@@ -26,12 +26,24 @@ config: {}
   # syncLimit: 2
   # quorumListenOnAllIPs: false
 
+## configure the storage type
+## accepted values : persistence/ephemeral
+## default option is persistence
+storageType: persistence
+
 persistence:
   storageClassName: standard
   ## specifying reclaim policy for PersistentVolumes
   ## accepted values - Delete / Retain
   reclaimPolicy: Delete
   volumeSize: 20Gi
+
+ephemeral:
+  emptydirvolumesource:
+    ## specifying Medium for emptydirvolumesource
+    ## accepted values - ""/Memory
+    #medium: ""
+    #sizeLimit: 20Gi
 
 hooks:
   image:

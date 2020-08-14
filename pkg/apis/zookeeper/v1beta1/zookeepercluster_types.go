@@ -12,6 +12,7 @@ package v1beta1
 
 import (
 	"fmt"
+	"strings"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -59,13 +60,19 @@ type ZookeeperClusterSpec struct {
 	Ports []v1.ContainerPort `json:"ports,omitempty"`
 
 	// Pod defines the policy to create pod for the zookeeper cluster.
-	//
 	// Updating the Pod does not take effect on any existing pods.
 	Pod PodPolicy `json:"pod,omitempty"`
 
+	//StorageType is used to tell which type of storage we will be using
+	//It can take either Ephemeral or persistence
+	//Default StorageType is Persistence storage
+	StorageType string `json:"storageType,omitempty"`
 	// Persistence is the configuration for zookeeper persistent layer.
 	// PersistentVolumeClaimSpec and VolumeReclaimPolicy can be specified in here.
 	Persistence *Persistence `json:"persistence,omitempty"`
+	// Ephemeral is the configuration which helps create ephemeral storage
+	// At anypoint only one of Persistence or Ephemeral should be present in the manifest
+	Ephemeral *Ephemeral `json:"ephemeral,omitempty"`
 
 	// Conf is the zookeeper configuration, which will be used to generate the
 	// static zookeeper configuration. If no configuration is provided required
@@ -160,18 +167,27 @@ func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) 
 	if s.Pod.withDefaults(z) {
 		changed = true
 	}
-	if s.Persistence == nil {
-		s.Persistence = &Persistence{}
-		changed = true
-	}
-	if s.Persistence.withDefaults() {
-		changed = true
+	if strings.EqualFold(s.StorageType, "ephemeral") {
+		if s.Ephemeral == nil {
+			s.Ephemeral = &Ephemeral{}
+			s.Ephemeral.EmptyDirVolumeSource = v1.EmptyDirVolumeSource{}
+			changed = true
+		}
+	} else {
+		if s.Persistence == nil {
+			s.StorageType = "persistence"
+			s.Persistence = &Persistence{}
+			changed = true
+		}
+		if s.Persistence.withDefaults() {
+			s.StorageType = "persistence"
+			changed = true
+		}
 	}
 	return changed
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
 // ZookeeperCluster is the Schema for the zookeeperclusters API
 // +k8s:openapi-gen=true
 type ZookeeperCluster struct {
@@ -400,9 +416,17 @@ type Persistence struct {
 	// The default value is Retain.
 	VolumeReclaimPolicy VolumeReclaimPolicy `json:"reclaimPolicy,omitempty"`
 	// PersistentVolumeClaimSpec is the spec to describe PVC for the container
-	// This field is optional. If no PVC spec, stateful containers will use
-	// emptyDir as volume.
+	// This field is optional. If no PVC is specified default persistentvolume
+	// will get created.
 	PersistentVolumeClaimSpec v1.PersistentVolumeClaimSpec `json:"spec,omitempty"`
+}
+
+type Ephemeral struct {
+	//EmptyDirVolumeSource is optional and this will create the emptydir volume
+	//It has two parameters Medium and SizeLimit which are optional as well
+	//Medium specifies What type of storage medium should back this directory.
+	//SizeLimit specifies Total amount of local storage required for this EmptyDir volume.
+	EmptyDirVolumeSource v1.EmptyDirVolumeSource `json:"emptydirvolumesource,omitempty"`
 }
 
 func (p *Persistence) withDefaults() (changed bool) {
@@ -410,7 +434,6 @@ func (p *Persistence) withDefaults() (changed bool) {
 		changed = true
 		p.VolumeReclaimPolicy = VolumeReclaimPolicyRetain
 	}
-
 	p.PersistentVolumeClaimSpec.AccessModes = []v1.PersistentVolumeAccessMode{
 		v1.ReadWriteOnce,
 	}

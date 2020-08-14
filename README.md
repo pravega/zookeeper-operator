@@ -11,6 +11,7 @@ The project is currently alpha. While no breaking API changes are currently plan
  * [Usage](#usage)    
     * [Installation of the Operator](#install-the-operator)
     * [Deploy a sample Zookeeper Cluster](#deploy-a-sample-zookeeper-cluster)
+    * [Deploy a sample ZooKeeper Cluster with Ephemeral Storage](#Deploy-a-sample-zookeeper-cluster-with-ephemeral-storage)
     * [Deploy a sample Zookeeper Cluster to a cluster using Istio](#deploy-a-sample-zookeeper-cluster-with-istio)
     * [Upgrade a Zookeeper Cluster](#upgrade-a-zookeeper-cluster)
     * [Uninstall the Zookeeper Cluster](#uninstall-the-zookeeper-cluster)
@@ -154,6 +155,38 @@ NAME                     TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)      
 svc/zookeeper-client     ClusterIP   10.31.243.173   <none>        2181/TCP            2m
 svc/zookeeper-headless   ClusterIP   None            <none>        2888/TCP,3888/TCP   2m
 ```
+
+### Deploy a sample Zookeeper cluster with Ephemeral storage
+
+Create a Yaml file called `zk.yaml` with the following content to install a 3-node Zookeeper cluster.
+
+```yaml
+apiVersion: "zookeeper.pravega.io/v1beta1"
+kind: "ZookeeperCluster"
+metadata:
+  name: "example"
+spec:
+  replicas: 3        
+  storageType: ephemeral
+```
+
+```
+$ kubectl create -f zk.yaml
+```
+
+After a couple of minutes, all cluster members should become ready.
+
+```
+$ kubectl get zk
+
+NAME      REPLICAS   READY REPLICAS   VERSION   DESIRED VERSION   INTERNAL ENDPOINT    EXTERNAL ENDPOINT   AGE
+example   3          3                 0.2.7     0.2.7             10.100.200.18:2181   N/A                 94s
+```
+>Note: User should only provide value for either the field persistence or ephemeral in the spec if none of the values is specified default is persistence
+
+>Note: In case of ephemeral storage, the cluster may not be able to come back up if more than quorum number of nodes are restarted simultaneously.
+
+>Note: In case of ephemeral storage, there will be loss of data when the node gets restarted.
 
 ### Deploy a sample Zookeeper cluster with Istio
 Create a Yaml file called `zk-with-istio.yaml` with the following content to install a 3-node Zookeeper cluster.

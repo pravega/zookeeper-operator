@@ -11,11 +11,14 @@
 package zk_test
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	"github.com/pravega/zookeeper-operator/pkg/utils"
 	"github.com/pravega/zookeeper-operator/pkg/zk"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -145,6 +148,31 @@ var _ = Describe("Generators Spec", func() {
 							"DOMAIN=example-headless.default.svc.foo.bar\n"))
 				})
 
+			})
+		})
+	})
+
+	Context("#MakeStatefulSet with Ephemeral storage", func() {
+		var sts *appsv1.StatefulSet
+
+		Context("with defaults", func() {
+
+			BeforeEach(func() {
+				z := &v1beta1.ZookeeperCluster{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "example",
+						Namespace: "default",
+					},
+					Spec: v1beta1.ZookeeperClusterSpec{},
+				}
+				z.Spec = v1beta1.ZookeeperClusterSpec{
+					StorageType: "ephemeral",
+				}
+				z.WithDefaults()
+				sts = zk.MakeStatefulSet(z)
+			})
+			It("Checking the sts spec contains volumesource as EmptyDir", func() {
+				Ω(strings.ContainsAny(fmt.Sprintf("%v", sts.Spec.Template.Spec.Volumes), "EmptyDirVolumeSource")).Should(Equal(true))
 			})
 		})
 	})

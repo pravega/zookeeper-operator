@@ -37,8 +37,29 @@ func headlessSvcName(z *v1beta1.ZookeeperCluster) string {
 	return fmt.Sprintf("%s-headless", z.GetName())
 }
 
+var zkDataVolume = "data"
+
 // MakeStatefulSet return a zookeeper stateful set from the zk spec
 func MakeStatefulSet(z *v1beta1.ZookeeperCluster) *appsv1.StatefulSet {
+	extraVolumes := []v1.Volume{}
+	persistence := z.Spec.Persistence
+	pvcs := []v1.PersistentVolumeClaim{}
+	if strings.EqualFold(z.Spec.StorageType, "ephemeral") {
+		extraVolumes = append(extraVolumes, v1.Volume{
+			Name: zkDataVolume,
+			VolumeSource: v1.VolumeSource{
+				EmptyDir: &z.Spec.Ephemeral.EmptyDirVolumeSource,
+			},
+		})
+	} else {
+		pvcs = append(pvcs, v1.PersistentVolumeClaim{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:   zkDataVolume,
+				Labels: map[string]string{"app": z.GetName()},
+			},
+			Spec: persistence.PersistentVolumeClaimSpec,
+		})
+	}
 	return &appsv1.StatefulSet{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "StatefulSet",
@@ -69,23 +90,14 @@ func MakeStatefulSet(z *v1beta1.ZookeeperCluster) *appsv1.StatefulSet {
 						"kind": "ZookeeperMember",
 					},
 				},
-				Spec: makeZkPodSpec(z),
+				Spec: makeZkPodSpec(z, extraVolumes),
 			},
-			VolumeClaimTemplates: []v1.PersistentVolumeClaim{
-				{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "data",
-						Namespace: z.Namespace,
-						Labels:    map[string]string{"app": z.GetName()},
-					},
-					Spec: z.Spec.Persistence.PersistentVolumeClaimSpec,
-				},
-			},
+			VolumeClaimTemplates: pvcs,
 		},
 	}
 }
 
-func makeZkPodSpec(z *v1beta1.ZookeeperCluster) v1.PodSpec {
+func makeZkPodSpec(z *v1beta1.ZookeeperCluster, volumes []v1.Volume) v1.PodSpec {
 	zkContainer := v1.Container{
 		Name:  "zookeeper",
 		Image: z.Spec.Image.ToString(),
@@ -131,30 +143,29 @@ func makeZkPodSpec(z *v1beta1.ZookeeperCluster) v1.PodSpec {
 	if z.Spec.Pod.Resources.Limits != nil || z.Spec.Pod.Resources.Requests != nil {
 		zkContainer.Resources = z.Spec.Pod.Resources
 	}
+	volumes = append(volumes, v1.Volume{
+		Name: "conf",
+		VolumeSource: v1.VolumeSource{
+			ConfigMap: &v1.ConfigMapVolumeSource{
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: z.ConfigMapName(),
+				},
+			},
+		},
+	})
+
 	zkContainer.Env = append(zkContainer.Env, z.Spec.Pod.Env...)
 	podSpec := v1.PodSpec{
 		Containers: []v1.Container{zkContainer},
 		Affinity:   z.Spec.Pod.Affinity,
-		Volumes: []v1.Volume{
-			{
-				Name: "conf",
-				VolumeSource: v1.VolumeSource{
-					ConfigMap: &v1.ConfigMapVolumeSource{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: z.ConfigMapName(),
-						},
-					},
-				},
-			},
-		},
-		TerminationGracePeriodSeconds: &z.Spec.Pod.TerminationGracePeriodSeconds,
+		Volumes:    volumes,
 	}
 	if reflect.DeepEqual(v1.PodSecurityContext{}, z.Spec.Pod.SecurityContext) {
 		podSpec.SecurityContext = z.Spec.Pod.SecurityContext
 	}
 	podSpec.NodeSelector = z.Spec.Pod.NodeSelector
 	podSpec.Tolerations = z.Spec.Pod.Tolerations
-
+	podSpec.TerminationGracePeriodSeconds = &z.Spec.Pod.TerminationGracePeriodSeconds
 	return podSpec
 }
 

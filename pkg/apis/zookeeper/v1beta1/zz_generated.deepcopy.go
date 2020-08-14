@@ -225,9 +225,8 @@ func (in *ZookeeperClusterSpec) DeepCopyInto(out *ZookeeperClusterSpec) {
 	}
 	in.Pod.DeepCopyInto(&out.Pod)
 	if in.Persistence != nil {
-		in, out := &in.Persistence, &out.Persistence
-		*out = new(Persistence)
-		(*in).DeepCopyInto(*out)
+		in, out := *in.Persistence, *out.Persistence
+		(in).DeepCopyInto(&out)
 	}
 	out.Conf = in.Conf
 	return

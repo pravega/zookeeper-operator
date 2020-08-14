@@ -99,6 +99,19 @@ var _ = Describe("ZookeeperCluster Types", func() {
 			})
 		})
 
+		Context(" Ephemeral Storage", func() {
+			var z1 v1beta1.ZookeeperCluster
+			BeforeEach(func() {
+				z1 = *z.DeepCopy()
+				z1.Spec.StorageType = "ephemeral"
+				z1.WithDefaults()
+			})
+
+			It("should set the ephemeralstorage and value for EmptyDirVolumeSource.Medium to ''", func() {
+				Ω(fmt.Sprintf("%s", z1.Spec.Ephemeral.EmptyDirVolumeSource.Medium)).To(Equal(""))
+			})
+		})
+
 		Context("Conf", func() {
 			var c v1beta1.ZookeeperConfig
 
