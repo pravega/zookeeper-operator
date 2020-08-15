@@ -95,11 +95,6 @@ spec:
                     the basic time unit used by Zookeeper, as measured in milliseconds
                     \n The default value is 2000."
                   type: integer
-              required:
-              - initLimit
-              - quorumListenOnAllIPs
-              - syncLimit
-              - tickTime
               type: object
             domainName:
               description: Domain Name to be used for DNS
@@ -147,10 +142,6 @@ spec:
                   type: string
                 tag:
                   type: string
-              required:
-              - pullPolicy
-              - repository
-              - tag
               type: object
             kubernetesClusterDomain:
               description: Domain of the kubernetes cluster, defaults to cluster.local
@@ -1220,8 +1211,6 @@ spec:
                         type: string
                     type: object
                   type: array
-              required:
-              - terminationGracePeriodSeconds
               type: object
             ports:
               items:
@@ -1267,8 +1256,6 @@ spec:
                 be using It can take either Ephemeral or persistence Default StorageType
                 is Persistence storage
               type: string
-          required:
-          - replicas
           type: object
         status:
           description: ZookeeperClusterStatus defines the observed state of ZookeeperCluster
@@ -1299,9 +1286,6 @@ spec:
                   type:
                     description: Type of Zookeeper cluster condition.
                     type: string
-                required:
-                - status
-                - type
                 type: object
               type: array
             currentVersion:
@@ -1324,9 +1308,6 @@ spec:
                   items:
                     type: string
                   type: array
-              required:
-              - ready
-              - unready
               type: object
             metaRootCreated:
               type: boolean
@@ -1342,15 +1323,6 @@ spec:
               type: integer
             targetVersion:
               type: string
-          required:
-          - currentVersion
-          - externalClientEndpoint
-          - internalClientEndpoint
-          - members
-          - metaRootCreated
-          - readyReplicas
-          - replicas
-          - targetVersion
           type: object
       type: object
   version: v1beta1

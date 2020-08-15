@@ -31,26 +31,26 @@ const (
 // ZookeeperClusterStatus defines the observed state of ZookeeperCluster
 type ZookeeperClusterStatus struct {
 	// Members is the zookeeper members in the cluster
-	Members MembersStatus `json:"members"`
+	Members MembersStatus `json:"members,omitempty"`
 
 	// Replicas is the number of number of desired replicas in the cluster
-	Replicas int32 `json:"replicas"`
+	Replicas int32 `json:"replicas,omitempty"`
 
 	// ReadyReplicas is the number of number of ready replicas in the cluster
-	ReadyReplicas int32 `json:"readyReplicas"`
+	ReadyReplicas int32 `json:"readyReplicas,omitempty"`
 
 	// InternalClientEndpoint is the internal client IP and port
-	InternalClientEndpoint string `json:"internalClientEndpoint"`
+	InternalClientEndpoint string `json:"internalClientEndpoint,omitempty"`
 
 	// ExternalClientEndpoint is the internal client IP and port
-	ExternalClientEndpoint string `json:"externalClientEndpoint"`
+	ExternalClientEndpoint string `json:"externalClientEndpoint,omitempty"`
 
-	MetaRootCreated bool `json:"metaRootCreated"`
+	MetaRootCreated bool `json:"metaRootCreated,omitempty"`
 
 	// CurrentVersion is the current cluster version
-	CurrentVersion string `json:"currentVersion"`
+	CurrentVersion string `json:"currentVersion,omitempty"`
 
-	TargetVersion string `json:"targetVersion"`
+	TargetVersion string `json:"targetVersion,omitempty"`
 
 	// Conditions list all the applied conditions
 	Conditions []ClusterCondition `json:"conditions,omitempty"`
@@ -59,18 +59,18 @@ type ZookeeperClusterStatus struct {
 // MembersStatus is the status of the members of the cluster with both
 // ready and unready node membership lists
 type MembersStatus struct {
-	Ready   []string `json:"ready"`
-	Unready []string `json:"unready"`
+	Ready   []string `json:"ready,omitempty"`
+	Unready []string `json:"unready,omitempty"`
 }
 
 // ClusterCondition shows the current condition of a Zookeeper cluster.
 // Comply with k8s API conventions
 type ClusterCondition struct {
 	// Type of Zookeeper cluster condition.
-	Type ClusterConditionType `json:"type"`
+	Type ClusterConditionType `json:"type,omitempty"`
 
 	// Status of the condition, one of True, False, Unknown.
-	Status v1.ConditionStatus `json:"status"`
+	Status v1.ConditionStatus `json:"status,omitempty"`
 
 	// The reason for the condition's last transition.
 	Reason string `json:"reason,omitempty"`
