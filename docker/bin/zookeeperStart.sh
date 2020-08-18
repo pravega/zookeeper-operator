@@ -144,14 +144,17 @@ fi
 
 ZOOCFGDIR=/data/conf
 export ZOOCFGDIR
+echo Copying /conf contents to writable directory, to support Zookeeper dynamic reconfiguration
 if [[ ! -d "$ZOOCFGDIR" ]]; then
-  echo Copying /conf contents to writable directory, to support Zookeeper dynamic reconfiguration
   mkdir $ZOOCFGDIR
   cp -f /conf/zoo.cfg $ZOOCFGDIR
-  cp -f /conf/log4j.properties $ZOOCFGDIR
-  cp -f /conf/log4j-quiet.properties $ZOOCFGDIR
-  cp -f /conf/env.sh $ZOOCFGDIR
+else
+  echo Copying the /conf/zoo.cfg contents except the dynamic config file during restart
+  echo -e "$( head -n -1 /conf/zoo.cfg )""\n""$( tail -n 1 "$STATIC_CONFIG" )" > $STATIC_CONFIG
 fi
+cp -f /conf/log4j.properties $ZOOCFGDIR
+cp -f /conf/log4j-quiet.properties $ZOOCFGDIR
+cp -f /conf/env.sh $ZOOCFGDIR
 
 if [ -f $DYNCONFIG ]; then
   # Node registered, start server
