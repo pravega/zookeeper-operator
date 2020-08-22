@@ -1,0 +1,6 @@
+{{- if .Values.crd.create }}
+{{- range $path, $_ := .Files.Glob "crds/*.yaml" }}
+{{ $.Files.Get $path }}
+---
+{{- end }}
+{{- end }}
