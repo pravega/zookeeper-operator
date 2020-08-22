@@ -31,23 +31,23 @@ build: test build-go build-image
 
 build-go:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
-	-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
-	-o bin/$(PROJECT_NAME)-linux-amd64 cmd/manager/main.go
+		-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
+		-o bin/$(PROJECT_NAME)-linux-amd64 cmd/manager/main.go
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
-	-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
-	-o bin/$(EXPORTER_NAME)-linux-amd64 cmd/exporter/main.go
+		-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
+		-o bin/$(EXPORTER_NAME)-linux-amd64 cmd/exporter/main.go
 	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build \
-	-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
-	-o bin/$(PROJECT_NAME)-darwin-amd64 cmd/manager/main.go
+		-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
+		-o bin/$(PROJECT_NAME)-darwin-amd64 cmd/manager/main.go
 	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build \
-	-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
-	-o bin/$(EXPORTER_NAME)-darwin-amd64 cmd/exporter/main.go
+		-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
+		-o bin/$(EXPORTER_NAME)-darwin-amd64 cmd/exporter/main.go
 	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build \
-	-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
-	-o bin/$(PROJECT_NAME)-windows-amd64.exe cmd/manager/main.go
+		-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
+		-o bin/$(PROJECT_NAME)-windows-amd64.exe cmd/manager/main.go
 	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build \
-	-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
-	-o bin/$(EXPORTER_NAME)-windows-amd64.exe cmd/exporter/main.go
+		-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
+		-o bin/$(EXPORTER_NAME)-windows-amd64.exe cmd/exporter/main.go
 
 build-image:
 	docker build --build-arg VERSION=$(VERSION) --build-arg GIT_SHA=$(GIT_SHA) -t $(REPO):$(VERSION) .
@@ -58,7 +58,8 @@ build-zk-image:
 	docker tag $(APP_REPO):$(VERSION) $(APP_REPO):latest
 
 build-zk-image-swarm:
-	docker build --build-arg VERSION=$(VERSION)-swarm --build-arg GIT_SHA=$(GIT_SHA) -f ./docker/Dockerfile-swarm -t $(APP_REPO):$(VERSION)-swarm ./docker
+	docker build --build-arg VERSION=$(VERSION)-swarm --build-arg GIT_SHA=$(GIT_SHA) \
+		-f ./docker/Dockerfile-swarm -t $(APP_REPO):$(VERSION)-swarm ./docker
 
 test:
 	go test $$(go list ./... | grep -v /vendor/ | grep -v /test/e2e) -race -coverprofile=coverage.txt -covermode=atomic
