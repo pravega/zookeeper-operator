@@ -55,7 +55,7 @@ type ZookeeperClusterSpec struct {
 	// equal to the expected size.
 	//
 	// The valid range of size is from 1 to 7.
-	Replicas int32 `json:"replicas"`
+	Replicas int32 `json:"replicas,omitempty"`
 
 	Ports []v1.ContainerPort `json:"ports,omitempty"`
 
@@ -188,8 +188,21 @@ func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) 
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-// ZookeeperCluster is the Schema for the zookeeperclusters API
 // +k8s:openapi-gen=true
+
+// Generate CRD using kubebuilder
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:shortName=zk
+// +kubebuilder:printcolumn:name="Replicas",type=integer,JSONPath=`.spec.replicas`,description="The number of ZooKeeper servers in the ensemble"
+// +kubebuilder:printcolumn:name="Ready Replicas",type=integer,JSONPath=`.status.readyReplicas`,description="The number of ZooKeeper servers in the ensemble that are in a Ready state"
+// +kubebuilder:printcolumn:name="Version",type=string,JSONPath=`.status.currentVersion`,description="The current Zookeeper version"
+// +kubebuilder:printcolumn:name="Desired Version",type=string,JSONPath=`.spec.image.tag`,description="The desired Zookeeper version"
+// +kubebuilder:printcolumn:name="Internal Endpoint",type=string,JSONPath=`.status.internalClientEndpoint`,description="Client endpoint internal to cluster network"
+// +kubebuilder:printcolumn:name="External Endpoint",type=string,JSONPath=`.status.externalClientEndpoint`,description="Client endpoint external to cluster network via LoadBalancer"
+// +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
+
+// ZookeeperCluster is the Schema for the zookeeperclusters API
 type ZookeeperCluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -249,9 +262,9 @@ type Ports struct {
 // ContainerImage defines the fields needed for a Docker repository image. The
 // format here matches the predominant format used in Helm charts.
 type ContainerImage struct {
-	Repository string        `json:"repository"`
-	Tag        string        `json:"tag"`
-	PullPolicy v1.PullPolicy `json:"pullPolicy"`
+	Repository string        `json:"repository,omitempty"`
+	Tag        string        `json:"tag,omitempty"`
+	PullPolicy v1.PullPolicy `json:"pullPolicy,omitempty"`
 }
 
 func (c *ContainerImage) withDefaults() (changed bool) {
@@ -313,7 +326,7 @@ type PodPolicy struct {
 	// TerminationGracePeriodSeconds is the amount of time that kubernetes will
 	// give for a pod instance to shutdown normally.
 	// The default value is 30.
-	TerminationGracePeriodSeconds int64 `json:"terminationGracePeriodSeconds"`
+	TerminationGracePeriodSeconds int64 `json:"terminationGracePeriodSeconds,omitempty"`
 }
 
 func (p *PodPolicy) withDefaults(z *ZookeeperCluster) (changed bool) {
@@ -371,19 +384,19 @@ type ZookeeperConfig struct {
 	// and sync to a leader.
 	//
 	// Default value is 10.
-	InitLimit int `json:"initLimit"`
+	InitLimit int `json:"initLimit,omitempty"`
 
 	// TickTime is the length of a single tick, which is the basic time unit used
 	// by Zookeeper, as measured in milliseconds
 	//
 	// The default value is 2000.
-	TickTime int `json:"tickTime"`
+	TickTime int `json:"tickTime,omitempty"`
 
 	// SyncLimit is the amount of time, in ticks, to allow followers to sync with
 	// Zookeeper.
 	//
 	// The default value is 2.
-	SyncLimit int `json:"syncLimit"`
+	SyncLimit int `json:"syncLimit,omitempty"`
 
 	// QuorumListenOnAllIPs when set to true the ZooKeeper server will listen for
 	// connections from its peers on all available IP addresses, and not only the
@@ -391,7 +404,7 @@ type ZookeeperConfig struct {
 	// the connections handling the ZAB protocol and the Fast Leader Election protocol.
 	//
 	// The default value is false.
-	QuorumListenOnAllIPs bool `json:"quorumListenOnAllIPs"`
+	QuorumListenOnAllIPs bool `json:"quorumListenOnAllIPs,omitempty"`
 }
 
 func (c *ZookeeperConfig) withDefaults() (changed bool) {

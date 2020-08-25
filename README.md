@@ -55,10 +55,10 @@ $ helm install zookeeper-operator charts/zookeeper-operator
 Register the `ZookeeperCluster` custom resource definition (CRD).
 
 ```
-$ kubectl create -f deploy/crds/zookeeper_v1beta1_zookeepercluster_crd.yaml
+$ kubectl create -f deploy/crds
 ```
 
-You can choose to enable Zookeeper operator for all namespaces or just for the a specific namespace. The example is using the `default` namespace, but feel free to edit the Yaml files and use a different namespace.
+You can choose to enable Zookeeper operator for all namespaces or just for a specific namespace. The example is using the `default` namespace, but feel free to edit the Yaml files and use a different namespace.
 
 Create the operator role and role binding.
 

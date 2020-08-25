@@ -39,7 +39,6 @@ The following table lists the configurable parameters of the Zookeeper operator 
 | `image.repository` | Image repository | `pravega/zookeeper-operator` |
 | `image.tag` | Image tag | `0.2.8` |
 | `image.pullPolicy` | Image pull policy | `IfNotPresent` |
-| `crd.create` | Create zookeeper CRD | `true` |
 | `rbac.create` | Create RBAC resources | `true` |
 | `serviceAccount.create` | Create service account | `true` |
 | `serviceAccount.name` | Name for the service account | `zookeeper-operator` |
