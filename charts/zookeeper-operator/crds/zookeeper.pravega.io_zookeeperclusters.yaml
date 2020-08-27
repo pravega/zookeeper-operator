@@ -97,7 +97,7 @@ spec:
                   type: integer
               type: object
             domainName:
-              description: Domain Name to be used for DNS
+              description: External host name appended for dns annotation
               type: string
             ephemeral:
               description: Ephemeral is the configuration which helps create ephemeral
@@ -1297,18 +1297,6 @@ spec:
             internalClientEndpoint:
               description: InternalClientEndpoint is the internal client IP and port
               type: string
-            members:
-              description: Members is the zookeeper members in the cluster
-              properties:
-                ready:
-                  items:
-                    type: string
-                  type: array
-                unready:
-                  items:
-                    type: string
-                  type: array
-              type: object
             metaRootCreated:
               type: boolean
             readyReplicas:

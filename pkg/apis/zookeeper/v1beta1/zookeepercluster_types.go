@@ -79,7 +79,7 @@ type ZookeeperClusterSpec struct {
 	// default values will be provided, and optional values will be excluded.
 	Conf ZookeeperConfig `json:"config,omitempty"`
 
-	// Domain Name to be used for DNS
+	// External host name appended for dns annotation
 	DomainName string `json:"domainName,omitempty"`
 
 	// Domain of the kubernetes cluster, defaults to cluster.local

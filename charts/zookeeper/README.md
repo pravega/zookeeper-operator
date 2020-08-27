@@ -42,7 +42,7 @@ The following table lists the configurable parameters of the Zookeeper chart and
 | `image.repository` | Image repository | `pravega/zookeeper` |
 | `image.tag` | Image tag | `0.2.8` |
 | `image.pullPolicy` | Image pull policy | `IfNotPresent` |
-| `domainName` | Domain name to be used for DNS | |
+| `domainName` | External host name appended for dns annotation | |
 | `labels` | Specifies the labels to be attached | `{}` |
 | `ports` | Groups the ports for a zookeeper cluster node for easy access | `[]` |
 | `pod` | Defines the policy to create new pods for the zookeeper cluster | `{}` |

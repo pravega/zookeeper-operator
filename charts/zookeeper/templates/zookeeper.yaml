@@ -11,7 +11,9 @@ spec:
     repository: {{ .Values.image.repository }}
     tag: {{ .Values.image.tag }}
     pullPolicy: {{ .Values.image.pullPolicy }}
+  {{- if .Values.domainName }}
   domainName: {{ .Values.domainName }}
+  {{- end }}
   labels:
 {{ toYaml .Values.labels | indent 4 }}
   ports:
