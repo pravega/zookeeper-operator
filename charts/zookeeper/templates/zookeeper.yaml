@@ -14,6 +14,7 @@ spec:
   {{- if .Values.domainName }}
   domainName: {{ .Values.domainName }}
   {{- end }}
+  kubernetesClusterDomain: {{ .Values.kubernetesClusterDomain }}
   labels:
 {{ toYaml .Values.labels | indent 4 }}
   ports:
