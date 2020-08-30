@@ -195,6 +195,7 @@ func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:shortName=zk
+
 // ZookeeperCluster is the Schema for the zookeeperclusters API
 type ZookeeperCluster struct {
 	metav1.TypeMeta   `json:",inline"`
