@@ -8,35 +8,6 @@ metadata:
   creationTimestamp: null
   name: zookeeperclusters.zookeeper.pravega.io
 spec:
-  additionalPrinterColumns:
-  - JSONPath: .spec.replicas
-    description: The number of ZooKeeper servers in the ensemble
-    name: Replicas
-    type: integer
-  - JSONPath: .status.readyReplicas
-    description: The number of ZooKeeper servers in the ensemble that are in a Ready
-      state
-    name: Ready Replicas
-    type: integer
-  - JSONPath: .status.currentVersion
-    description: The current Zookeeper version
-    name: Version
-    type: string
-  - JSONPath: .spec.image.tag
-    description: The desired Zookeeper version
-    name: Desired Version
-    type: string
-  - JSONPath: .status.internalClientEndpoint
-    description: Client endpoint internal to cluster network
-    name: Internal Endpoint
-    type: string
-  - JSONPath: .status.externalClientEndpoint
-    description: Client endpoint external to cluster network via LoadBalancer
-    name: External Endpoint
-    type: string
-  - JSONPath: .metadata.creationTimestamp
-    name: Age
-    type: date
   group: zookeeper.pravega.io
   names:
     kind: ZookeeperCluster
@@ -50,7 +21,8 @@ spec:
     status: {}
   validation:
     openAPIV3Schema:
-      description: ZookeeperCluster is the Schema for the zookeeperclusters API
+      description: Generate CRD using kubebuilder ZookeeperCluster is the Schema for
+        the zookeeperclusters API
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -1170,6 +1142,7 @@ spec:
                     that kubernetes will give for a pod instance to shutdown normally.
                     The default value is 30.
                   format: int64
+                  minimum: 0
                   type: integer
                 tolerations:
                   description: Tolerations specifies the pod's tolerations.
@@ -1250,6 +1223,7 @@ spec:
                 cluster equal to the expected size. \n The valid range of size is
                 from 1 to 7."
               format: int32
+              minimum: 1
               type: integer
             storageType:
               description: StorageType is used to tell which type of storage we will

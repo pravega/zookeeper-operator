@@ -50,6 +50,7 @@ type ZookeeperClusterSpec struct {
 	// the zookeeper cluster.
 	Labels map[string]string `json:"labels,omitempty"`
 
+	// +kubebuilder:validation:Minimum=1
 	// Replicas is the expected size of the zookeeper cluster.
 	// The pravega-operator will eventually make the size of the running cluster
 	// equal to the expected size.
@@ -194,14 +195,6 @@ func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:shortName=zk
-// +kubebuilder:printcolumn:name="Replicas",type=integer,JSONPath=`.spec.replicas`,description="The number of ZooKeeper servers in the ensemble"
-// +kubebuilder:printcolumn:name="Ready Replicas",type=integer,JSONPath=`.status.readyReplicas`,description="The number of ZooKeeper servers in the ensemble that are in a Ready state"
-// +kubebuilder:printcolumn:name="Version",type=string,JSONPath=`.status.currentVersion`,description="The current Zookeeper version"
-// +kubebuilder:printcolumn:name="Desired Version",type=string,JSONPath=`.spec.image.tag`,description="The desired Zookeeper version"
-// +kubebuilder:printcolumn:name="Internal Endpoint",type=string,JSONPath=`.status.internalClientEndpoint`,description="Client endpoint internal to cluster network"
-// +kubebuilder:printcolumn:name="External Endpoint",type=string,JSONPath=`.status.externalClientEndpoint`,description="Client endpoint external to cluster network via LoadBalancer"
-// +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
-
 // ZookeeperCluster is the Schema for the zookeeperclusters API
 type ZookeeperCluster struct {
 	metav1.TypeMeta   `json:",inline"`
@@ -323,6 +316,7 @@ type PodPolicy struct {
 	// More info: https://kubernetes.io/docs/tasks/configure-pod-container/security-context
 	SecurityContext *v1.PodSecurityContext `json:"securityContext,omitempty"`
 
+	// +kubebuilder:validation:Minimum=0
 	// TerminationGracePeriodSeconds is the amount of time that kubernetes will
 	// give for a pod instance to shutdown normally.
 	// The default value is 30.
