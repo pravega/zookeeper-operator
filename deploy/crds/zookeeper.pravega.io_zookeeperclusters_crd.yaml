@@ -108,6 +108,10 @@ spec:
                 pullPolicy:
                   description: PullPolicy describes a policy for if/when to pull a
                     container image
+                  enum:
+                    - Always
+                    - Never
+                    - IfNotPresent
                   type: string
                 repository:
                   type: string
@@ -133,6 +137,9 @@ spec:
                     If it's set to Delete, the corresponding PVCs will be deleted
                     by the operator when zookeeper cluster is deleted. The default
                     value is Retain.
+                  enum:
+                    - Delete
+                    - Retain
                   type: string
                 spec:
                   description: PersistentVolumeClaimSpec is the spec to describe PVC
@@ -219,6 +226,11 @@ spec:
                                 description: operator represents a key's relationship
                                   to a set of values. Valid operators are In, NotIn,
                                   Exists and DoesNotExist.
+                                enum:
+                                    - In
+                                    - NotIn
+                                    - Exists
+                                    - DoesNotExist
                                 type: string
                               values:
                                 description: values is an array of string values.
@@ -309,6 +321,13 @@ spec:
                                             to a set of values. Valid operators are
                                             In, NotIn, Exists, DoesNotExist. Gt, and
                                             Lt.
+                                          enum:
+                                            - In
+                                            - NotIn
+                                            - Exists
+                                            - DoesNotExist
+                                            - Gt
+                                            - Lt
                                           type: string
                                         values:
                                           description: An array of string values.
@@ -345,6 +364,13 @@ spec:
                                             to a set of values. Valid operators are
                                             In, NotIn, Exists, DoesNotExist. Gt, and
                                             Lt.
+                                          enum:
+                                            - In
+                                            - NotIn
+                                            - Exists
+                                            - DoesNotExist
+                                            - Gt
+                                            - Lt
                                           type: string
                                         values:
                                           description: An array of string values.
@@ -410,6 +436,13 @@ spec:
                                             to a set of values. Valid operators are
                                             In, NotIn, Exists, DoesNotExist. Gt, and
                                             Lt.
+                                          enum:
+                                            - In
+                                            - NotIn
+                                            - Exists
+                                            - DoesNotExist
+                                            - Gt
+                                            - Lt
                                           type: string
                                         values:
                                           description: An array of string values.
@@ -446,6 +479,13 @@ spec:
                                             to a set of values. Valid operators are
                                             In, NotIn, Exists, DoesNotExist. Gt, and
                                             Lt.
+                                          enum:
+                                            - In
+                                            - NotIn
+                                            - Exists
+                                            - DoesNotExist
+                                            - Gt
+                                            - Lt
                                           type: string
                                         values:
                                           description: An array of string values.
@@ -519,6 +559,11 @@ spec:
                                                 relationship to a set of values. Valid
                                                 operators are In, NotIn, Exists and
                                                 DoesNotExist.
+                                              enum:
+                                                - In
+                                                - NotIn
+                                                - Exists
+                                                - DoesNotExist
                                               type: string
                                             values:
                                               description: values is an array of string
@@ -617,6 +662,11 @@ spec:
                                           description: operator represents a key's
                                             relationship to a set of values. Valid
                                             operators are In, NotIn, Exists and DoesNotExist.
+                                          enum:
+                                            - In
+                                            - NotIn
+                                            - Exists
+                                            - DoesNotExist
                                           type: string
                                         values:
                                           description: values is an array of string
@@ -715,6 +765,11 @@ spec:
                                                 relationship to a set of values. Valid
                                                 operators are In, NotIn, Exists and
                                                 DoesNotExist.
+                                              enum:
+                                                - In
+                                                - NotIn
+                                                - Exists
+                                                - DoesNotExist
                                               type: string
                                             values:
                                               description: values is an array of string
@@ -813,6 +868,11 @@ spec:
                                           description: operator represents a key's
                                             relationship to a set of values. Valid
                                             operators are In, NotIn, Exists and DoesNotExist.
+                                          enum:
+                                            - In
+                                            - NotIn
+                                            - Exists
+                                            - DoesNotExist
                                           type: string
                                         values:
                                           description: values is an array of string
@@ -1192,6 +1252,8 @@ spec:
                     description: Number of port to expose on the pod's IP address.
                       This must be a valid port number, 0 < x < 65536.
                     format: int32
+                    minimum: 1
+                    maximum: 65535
                     type: integer
                   hostIP:
                     description: What host IP to bind the external port to.
@@ -1202,6 +1264,8 @@ spec:
                       is specified, this must match ContainerPort. Most containers
                       do not need this.
                     format: int32
+                    minimum: 1
+                    maximum: 65535
                     type: integer
                   name:
                     description: If specified, this must be an IANA_SVC_NAME and unique
@@ -1211,6 +1275,10 @@ spec:
                   protocol:
                     description: Protocol for port. Must be UDP, TCP, or SCTP. Defaults
                       to "TCP".
+                    enum:
+                      - UDP
+                      - TCP
+                      - SCTP
                     type: string
                 required:
                 - containerPort
@@ -1270,6 +1338,20 @@ spec:
             internalClientEndpoint:
               description: InternalClientEndpoint is the internal client IP and port
               type: string
+            members:
+              description: Members is the zookeeper members in the cluster
+              properties:
+                ready:
+                  items:
+                    type: string
+                  nullable: true
+                  type: array
+                unready:
+                  items:
+                    type: string
+                  nullable: true
+                  type: array
+              type: object
             metaRootCreated:
               type: boolean
             readyReplicas:

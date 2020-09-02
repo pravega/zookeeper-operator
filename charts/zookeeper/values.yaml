@@ -1,4 +1,4 @@
-replicas: 3
+replicas: 5
 
 image:
   repository: pravega/zookeeper

@@ -50,12 +50,12 @@ type ZookeeperClusterSpec struct {
 	// the zookeeper cluster.
 	Labels map[string]string `json:"labels,omitempty"`
 
-	// +kubebuilder:validation:Minimum=1
 	// Replicas is the expected size of the zookeeper cluster.
 	// The pravega-operator will eventually make the size of the running cluster
 	// equal to the expected size.
 	//
 	// The valid range of size is from 1 to 7.
+	// +kubebuilder:validation:Minimum=1
 	Replicas int32 `json:"replicas,omitempty"`
 
 	Ports []v1.ContainerPort `json:"ports,omitempty"`
@@ -256,8 +256,9 @@ type Ports struct {
 // ContainerImage defines the fields needed for a Docker repository image. The
 // format here matches the predominant format used in Helm charts.
 type ContainerImage struct {
-	Repository string        `json:"repository,omitempty"`
-	Tag        string        `json:"tag,omitempty"`
+	Repository string `json:"repository,omitempty"`
+	Tag        string `json:"tag,omitempty"`
+	// +kubebuilder:validation:Enum="Always";"Never";"IfNotPresent"
 	PullPolicy v1.PullPolicy `json:"pullPolicy,omitempty"`
 }
 
@@ -422,6 +423,7 @@ type Persistence struct {
 	// VolumeReclaimPolicy is a zookeeper operator configuration. If it's set to Delete,
 	// the corresponding PVCs will be deleted by the operator when zookeeper cluster is deleted.
 	// The default value is Retain.
+	// +kubebuilder:validation:Enum="Delete";"Retain"
 	VolumeReclaimPolicy VolumeReclaimPolicy `json:"reclaimPolicy,omitempty"`
 	// PersistentVolumeClaimSpec is the spec to describe PVC for the container
 	// This field is optional. If no PVC is specified default persistentvolume
