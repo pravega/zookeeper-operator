@@ -43,6 +43,7 @@ The following table lists the configurable parameters of the Zookeeper chart and
 | `image.tag` | Image tag | `0.2.8` |
 | `image.pullPolicy` | Image pull policy | `IfNotPresent` |
 | `domainName` | External host name appended for dns annotation | |
+| `kubernetesClusterDomain` | Domain of the kubernetes cluster | `cluster.local` |
 | `labels` | Specifies the labels to be attached | `{}` |
 | `ports` | Groups the ports for a zookeeper cluster node for easy access | `[]` |
 | `pod` | Defines the policy to create new pods for the zookeeper cluster | `{}` |
