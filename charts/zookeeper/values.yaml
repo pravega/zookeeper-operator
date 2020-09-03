@@ -8,6 +8,7 @@ image:
 domainName:
 labels: {}
 ports: []
+kubernetesClusterDomain: "cluster.local"
 
 pod: {}
   # labels: {}

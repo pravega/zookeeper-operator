@@ -8,35 +8,6 @@ metadata:
   creationTimestamp: null
   name: zookeeperclusters.zookeeper.pravega.io
 spec:
-  additionalPrinterColumns:
-  - JSONPath: .spec.replicas
-    description: The number of ZooKeeper servers in the ensemble
-    name: Replicas
-    type: integer
-  - JSONPath: .status.readyReplicas
-    description: The number of ZooKeeper servers in the ensemble that are in a Ready
-      state
-    name: Ready Replicas
-    type: integer
-  - JSONPath: .status.currentVersion
-    description: The current Zookeeper version
-    name: Version
-    type: string
-  - JSONPath: .spec.image.tag
-    description: The desired Zookeeper version
-    name: Desired Version
-    type: string
-  - JSONPath: .status.internalClientEndpoint
-    description: Client endpoint internal to cluster network
-    name: Internal Endpoint
-    type: string
-  - JSONPath: .status.externalClientEndpoint
-    description: Client endpoint external to cluster network via LoadBalancer
-    name: External Endpoint
-    type: string
-  - JSONPath: .metadata.creationTimestamp
-    name: Age
-    type: date
   group: zookeeper.pravega.io
   names:
     kind: ZookeeperCluster
@@ -97,7 +68,7 @@ spec:
                   type: integer
               type: object
             domainName:
-              description: Domain Name to be used for DNS
+              description: External host name appended for dns annotation
               type: string
             ephemeral:
               description: Ephemeral is the configuration which helps create ephemeral
@@ -137,6 +108,10 @@ spec:
                 pullPolicy:
                   description: PullPolicy describes a policy for if/when to pull a
                     container image
+                  enum:
+                    - Always
+                    - Never
+                    - IfNotPresent
                   type: string
                 repository:
                   type: string
@@ -162,6 +137,9 @@ spec:
                     If it's set to Delete, the corresponding PVCs will be deleted
                     by the operator when zookeeper cluster is deleted. The default
                     value is Retain.
+                  enum:
+                    - Delete
+                    - Retain
                   type: string
                 spec:
                   description: PersistentVolumeClaimSpec is the spec to describe PVC
@@ -172,6 +150,10 @@ spec:
                       description: 'AccessModes contains the desired access modes
                         the volume should have. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access-modes-1'
                       items:
+                        enum:
+                          - ReadWriteOnce
+                          - ReadOnlyMany
+                          - ReadWriteMany
                         type: string
                       type: array
                     dataSource:
@@ -248,6 +230,11 @@ spec:
                                 description: operator represents a key's relationship
                                   to a set of values. Valid operators are In, NotIn,
                                   Exists and DoesNotExist.
+                                enum:
+                                    - In
+                                    - NotIn
+                                    - Exists
+                                    - DoesNotExist
                                 type: string
                               values:
                                 description: values is an array of string values.
@@ -338,6 +325,13 @@ spec:
                                             to a set of values. Valid operators are
                                             In, NotIn, Exists, DoesNotExist. Gt, and
                                             Lt.
+                                          enum:
+                                            - In
+                                            - NotIn
+                                            - Exists
+                                            - DoesNotExist
+                                            - Gt
+                                            - Lt
                                           type: string
                                         values:
                                           description: An array of string values.
@@ -374,6 +368,13 @@ spec:
                                             to a set of values. Valid operators are
                                             In, NotIn, Exists, DoesNotExist. Gt, and
                                             Lt.
+                                          enum:
+                                            - In
+                                            - NotIn
+                                            - Exists
+                                            - DoesNotExist
+                                            - Gt
+                                            - Lt
                                           type: string
                                         values:
                                           description: An array of string values.
@@ -439,6 +440,13 @@ spec:
                                             to a set of values. Valid operators are
                                             In, NotIn, Exists, DoesNotExist. Gt, and
                                             Lt.
+                                          enum:
+                                            - In
+                                            - NotIn
+                                            - Exists
+                                            - DoesNotExist
+                                            - Gt
+                                            - Lt
                                           type: string
                                         values:
                                           description: An array of string values.
@@ -475,6 +483,13 @@ spec:
                                             to a set of values. Valid operators are
                                             In, NotIn, Exists, DoesNotExist. Gt, and
                                             Lt.
+                                          enum:
+                                            - In
+                                            - NotIn
+                                            - Exists
+                                            - DoesNotExist
+                                            - Gt
+                                            - Lt
                                           type: string
                                         values:
                                           description: An array of string values.
@@ -548,6 +563,11 @@ spec:
                                                 relationship to a set of values. Valid
                                                 operators are In, NotIn, Exists and
                                                 DoesNotExist.
+                                              enum:
+                                                - In
+                                                - NotIn
+                                                - Exists
+                                                - DoesNotExist
                                               type: string
                                             values:
                                               description: values is an array of string
@@ -646,6 +666,11 @@ spec:
                                           description: operator represents a key's
                                             relationship to a set of values. Valid
                                             operators are In, NotIn, Exists and DoesNotExist.
+                                          enum:
+                                            - In
+                                            - NotIn
+                                            - Exists
+                                            - DoesNotExist
                                           type: string
                                         values:
                                           description: values is an array of string
@@ -744,6 +769,11 @@ spec:
                                                 relationship to a set of values. Valid
                                                 operators are In, NotIn, Exists and
                                                 DoesNotExist.
+                                              enum:
+                                                - In
+                                                - NotIn
+                                                - Exists
+                                                - DoesNotExist
                                               type: string
                                             values:
                                               description: values is an array of string
@@ -842,6 +872,11 @@ spec:
                                           description: operator represents a key's
                                             relationship to a set of values. Valid
                                             operators are In, NotIn, Exists and DoesNotExist.
+                                          enum:
+                                            - In
+                                            - NotIn
+                                            - Exists
+                                            - DoesNotExist
                                           type: string
                                         values:
                                           description: values is an array of string
@@ -1170,6 +1205,7 @@ spec:
                     that kubernetes will give for a pod instance to shutdown normally.
                     The default value is 30.
                   format: int64
+                  minimum: 0
                   type: integer
                 tolerations:
                   description: Tolerations specifies the pod's tolerations.
@@ -1220,6 +1256,8 @@ spec:
                     description: Number of port to expose on the pod's IP address.
                       This must be a valid port number, 0 < x < 65536.
                     format: int32
+                    minimum: 1
+                    maximum: 65535
                     type: integer
                   hostIP:
                     description: What host IP to bind the external port to.
@@ -1230,6 +1268,8 @@ spec:
                       is specified, this must match ContainerPort. Most containers
                       do not need this.
                     format: int32
+                    minimum: 1
+                    maximum: 65535
                     type: integer
                   name:
                     description: If specified, this must be an IANA_SVC_NAME and unique
@@ -1239,6 +1279,10 @@ spec:
                   protocol:
                     description: Protocol for port. Must be UDP, TCP, or SCTP. Defaults
                       to "TCP".
+                    enum:
+                      - UDP
+                      - TCP
+                      - SCTP
                     type: string
                 required:
                 - containerPort
@@ -1250,11 +1294,15 @@ spec:
                 cluster equal to the expected size. \n The valid range of size is
                 from 1 to 7."
               format: int32
+              minimum: 1
               type: integer
             storageType:
               description: StorageType is used to tell which type of storage we will
                 be using It can take either Ephemeral or persistence Default StorageType
                 is Persistence storage
+              enum:
+                  - ephemeral
+                  - persistence
               type: string
           type: object
         status:
@@ -1303,10 +1351,12 @@ spec:
                 ready:
                   items:
                     type: string
+                  nullable: true
                   type: array
                 unready:
                   items:
                     type: string
+                  nullable: true
                   type: array
               type: object
             metaRootCreated:

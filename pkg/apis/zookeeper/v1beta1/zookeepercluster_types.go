@@ -55,6 +55,7 @@ type ZookeeperClusterSpec struct {
 	// equal to the expected size.
 	//
 	// The valid range of size is from 1 to 7.
+	// +kubebuilder:validation:Minimum=1
 	Replicas int32 `json:"replicas,omitempty"`
 
 	Ports []v1.ContainerPort `json:"ports,omitempty"`
@@ -79,7 +80,7 @@ type ZookeeperClusterSpec struct {
 	// default values will be provided, and optional values will be excluded.
 	Conf ZookeeperConfig `json:"config,omitempty"`
 
-	// Domain Name to be used for DNS
+	// External host name appended for dns annotation
 	DomainName string `json:"domainName,omitempty"`
 
 	// Domain of the kubernetes cluster, defaults to cluster.local
@@ -194,13 +195,6 @@ func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:shortName=zk
-// +kubebuilder:printcolumn:name="Replicas",type=integer,JSONPath=`.spec.replicas`,description="The number of ZooKeeper servers in the ensemble"
-// +kubebuilder:printcolumn:name="Ready Replicas",type=integer,JSONPath=`.status.readyReplicas`,description="The number of ZooKeeper servers in the ensemble that are in a Ready state"
-// +kubebuilder:printcolumn:name="Version",type=string,JSONPath=`.status.currentVersion`,description="The current Zookeeper version"
-// +kubebuilder:printcolumn:name="Desired Version",type=string,JSONPath=`.spec.image.tag`,description="The desired Zookeeper version"
-// +kubebuilder:printcolumn:name="Internal Endpoint",type=string,JSONPath=`.status.internalClientEndpoint`,description="Client endpoint internal to cluster network"
-// +kubebuilder:printcolumn:name="External Endpoint",type=string,JSONPath=`.status.externalClientEndpoint`,description="Client endpoint external to cluster network via LoadBalancer"
-// +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 
 // ZookeeperCluster is the Schema for the zookeeperclusters API
 type ZookeeperCluster struct {
@@ -262,8 +256,9 @@ type Ports struct {
 // ContainerImage defines the fields needed for a Docker repository image. The
 // format here matches the predominant format used in Helm charts.
 type ContainerImage struct {
-	Repository string        `json:"repository,omitempty"`
-	Tag        string        `json:"tag,omitempty"`
+	Repository string `json:"repository,omitempty"`
+	Tag        string `json:"tag,omitempty"`
+	// +kubebuilder:validation:Enum="Always";"Never";"IfNotPresent"
 	PullPolicy v1.PullPolicy `json:"pullPolicy,omitempty"`
 }
 
@@ -323,6 +318,7 @@ type PodPolicy struct {
 	// More info: https://kubernetes.io/docs/tasks/configure-pod-container/security-context
 	SecurityContext *v1.PodSecurityContext `json:"securityContext,omitempty"`
 
+	// +kubebuilder:validation:Minimum=0
 	// TerminationGracePeriodSeconds is the amount of time that kubernetes will
 	// give for a pod instance to shutdown normally.
 	// The default value is 30.
@@ -427,6 +423,7 @@ type Persistence struct {
 	// VolumeReclaimPolicy is a zookeeper operator configuration. If it's set to Delete,
 	// the corresponding PVCs will be deleted by the operator when zookeeper cluster is deleted.
 	// The default value is Retain.
+	// +kubebuilder:validation:Enum="Delete";"Retain"
 	VolumeReclaimPolicy VolumeReclaimPolicy `json:"reclaimPolicy,omitempty"`
 	// PersistentVolumeClaimSpec is the spec to describe PVC for the container
 	// This field is optional. If no PVC is specified default persistentvolume

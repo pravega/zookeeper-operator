@@ -59,7 +59,9 @@ type ZookeeperClusterStatus struct {
 // MembersStatus is the status of the members of the cluster with both
 // ready and unready node membership lists
 type MembersStatus struct {
-	Ready   []string `json:"ready,omitempty"`
+	//+nullable
+	Ready []string `json:"ready,omitempty"`
+	//+nullable
 	Unready []string `json:"unready,omitempty"`
 }
 

@@ -5,11 +5,14 @@ go 1.13
 require (
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
 	github.com/go-logr/logr v0.1.0
+	github.com/mdempsky/maligned v0.0.0-20180708014732-6e39bd26a8c8 // indirect
+	github.com/mibk/dupl v1.0.0 // indirect
 	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.9.0
 	github.com/operator-framework/operator-sdk v0.17.0
 	github.com/pkg/errors v0.9.1
 	github.com/samuel/go-zookeeper v0.0.0-20190923202752-2cc03de413da
+	github.com/stripe/safesql v0.2.0 // indirect
 	golang.org/x/lint v0.0.0-20191125180803-fdd1cda4f05f // indirect
 	golang.org/x/tools v0.0.0-20200331202046-9d5940d49312 // indirect
 	k8s.io/api v0.17.5
