@@ -36,7 +36,11 @@ The operator itself is built with the [Operator framework](https://github.com/op
 
 ## Usage
 
-We recommend using our [helm charts](charts) for all installation and upgrades. However there are manual deployment and upgrade options available as well.
+We recommend using our [helm charts](charts) for all installation and upgrades. Since version 0.2.8 onwards, the helm charts for zookeeper operator and zookeeper cluster are published in [https://charts.pravega.io/](https://charts.pravega.io/). To add this repository to your Helm repos, use the following command
+```
+helm repo add pravega https://charts.pravega.io
+```
+However there are manual deployment and upgrade options available as well.
 
 ### Install the operator
 
@@ -44,11 +48,7 @@ We recommend using our [helm charts](charts) for all installation and upgrades. 
 
 #### Install via helm
 
-Use helm to quickly deploy a zookeeper operator with the release name `zookeeper-operator`.
-
-```
-$ helm install zookeeper-operator charts/zookeeper-operator
-```
+To understand how to deploy the zookeeper operator using helm, refer to [this](charts/zookeeper-operator#installing-the-chart).
 
 #### Manual deployment
 
@@ -92,13 +92,7 @@ zookeeper-operator   1         1         1            1           12m
 
 #### Install via helm
 
-Helm can be used to install a sample zookeeper cluster with the release name `zookeeper`.
-
-```
-$ helm install zookeeper charts/zookeeper
-```
-
-Check out the [zookeeper helm charts](charts/zookeeper) for the complete list of configurable parameters.
+To understand how to deploy a sample zookeeper cluster using helm, refer to [this](charts/zookeeper#installing-the-chart).
 
 #### Manual deployment
 
@@ -213,11 +207,7 @@ $ kubectl create -f zk-with-istio.yaml
 
 #### Trigger the upgrade via helm
 
-The upgrade can be triggered via helm using the following command
-```
-$ helm upgrade zookeeper <location of modified charts> --timeout 600s
-```
-Here `zookeeper` is the release name of the zookeeper cluster.
+To understand how to upgrade the zookeeper cluster using helm, refer to [this](charts/zookeeper#upgrading-the-chart).
 
 #### Trigger the upgrade manually
 
@@ -282,10 +272,7 @@ Status:
 
 #### Uninstall via helm
 
-```
-$ helm uninstall zookeeper
-```
-Here `zookeeper` is the zookeeper cluster release name.
+Refer to [this](charts/zookeeper#uninstalling-the-chart).
 
 #### Manual uninstall
 
@@ -299,10 +286,7 @@ $ kubectl delete -f zk.yaml
 
 #### Uninstall via helm
 
-```
-$ helm uninstall zookeeper-operator
-```
-Here `zookeeper-operator` is the operator release name.
+Refer to [this](charts/zookeeper-operator#uninstalling-the-chart).
 
 #### Manual uninstall
 
