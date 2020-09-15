@@ -14,7 +14,7 @@ spec:
   {{- if .Values.domainName }}
   domainName: {{ .Values.domainName }}
   {{- end }}
-  kubernetesClusterDomain: {{ .Values.kubernetesClusterDomain }}
+  kubernetesClusterDomain: {{ default "cluster.local" .Values.kubernetesClusterDomain }}
   labels:
 {{ toYaml .Values.labels | indent 4 }}
   ports:
@@ -46,8 +46,8 @@ spec:
     syncLimit: {{ .Values.config.syncLimit }}
     quorumListenOnAllIPs: {{ .Values.config.quorumListenOnAllIPs }}
   {{- end }}
-  storageType: {{ .Values.storageType }}
-  {{- if eq .Values.storageType "ephemeral" }}
+  storageType: {{ default "persistence" .Values.storageType }}
+  {{- if eq (default .Values.storageType "persistence") "ephemeral" }}
   ephemeral:
     {{- if .Values.ephemeral.emptydirvolumesource }}
     emptydirvolumesource:
