@@ -25,8 +25,8 @@ OK=$(echo ruok | nc 127.0.0.1 $CLIENT_PORT)
 # Check to see if zookeeper service answers
 if [[ "$OK" == "imok" ]]; then
   set +e
-  nslookup $DOMAIN
-  if [[ $? -eq 1 ]]; then
+  getent hosts $DOMAIN
+  if [[ $? -ne 0 ]]; then
     set -e
     echo "There is no active ensemble, skipping readiness probe..."
     exit 0
