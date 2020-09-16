@@ -51,3 +51,6 @@ hooks:
     repository: lachlanevenson/k8s-kubectl
     tag: v1.16.10
   backoffLimit: 10
+
+containers: []
+volumes: []
