@@ -85,6 +85,12 @@ type ZookeeperClusterSpec struct {
 
 	// Domain of the kubernetes cluster, defaults to cluster.local
 	KubernetesClusterDomain string `json:"kubernetesClusterDomain,omitempty"`
+
+	// Containers defines to support multi containers
+	Containers []v1.Container `json:"containers,omitempty"`
+
+	// Volumes defines to support customized volumes
+	Volumes []v1.Volume `json:"volumes,omitempty"`
 }
 
 func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) {
