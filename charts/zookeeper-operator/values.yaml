@@ -37,6 +37,11 @@ resources: {}
   #   cpu: 1
   #   memory: 128Mi
 
+# Scheduling constraints
+nodeSelector: {}
+affinity: {}
+tolerations: []
+
 hooks:
   backoffLimit: 10
   image:
