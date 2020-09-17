@@ -23,6 +23,10 @@ serviceAccount:
   ## Optionally specify an array of imagePullSecrets. Will override the global parameter if set
   # imagePullSecrets:
 
+## Whether to create the CRD.
+crd:
+  create: true
+
 ## Specifies which namespace(s) the Operator should watch over.
 ## Default: An empty string means all namespaces.
 ## Multiple namespaces can be configured using a comma separated list of namespaces
@@ -47,4 +51,3 @@ hooks:
   image:
     repository: lachlanevenson/k8s-kubectl
     tag: v1.16.10
-
