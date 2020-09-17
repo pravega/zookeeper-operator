@@ -1,11 +1,37 @@
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
-  annotations:
-    controller-gen.kubebuilder.io/version: v0.3.0
-  creationTimestamp: null
   name: zookeeperclusters.zookeeper.pravega.io
 spec:
+  additionalPrinterColumns:
+  - JSONPath: .spec.replicas
+    description: The number of ZooKeeper servers in the ensemble
+    name: Replicas
+    type: integer
+  - JSONPath: .status.readyReplicas
+    description: The number of ZooKeeper servers in the ensemble that are in a Ready
+      state
+    name: Ready Replicas
+    type: integer
+  - JSONPath: .status.currentVersion
+    description: The current Zookeeper version
+    name: Version
+    type: string
+  - JSONPath: .spec.image.tag
+    description: The desired Zookeeper version
+    name: Desired Version
+    type: string
+  - JSONPath: .status.internalClientEndpoint
+    description: Client endpoint internal to cluster network
+    name: Internal Endpoint
+    type: string
+  - JSONPath: .status.externalClientEndpoint
+    description: Client endpoint external to cluster network via LoadBalancer
+    name: External Endpoint
+    type: string
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
   group: zookeeper.pravega.io
   names:
     kind: ZookeeperCluster
@@ -14,34 +40,6 @@ spec:
     shortNames:
     - zk
     singular: zookeepercluster
-  additionalPrinterColumns:
-  - name: Replicas
-    type: integer
-    description: The number of ZooKeeper servers in the ensemble
-    JSONPath: .spec.replicas
-  - name: Ready Replicas
-    type: integer
-    description: The number of ZooKeeper servers in the ensemble that are in a Ready state
-    JSONPath: .status.readyReplicas
-  - name: Version
-    type: string
-    description: The current Zookeeper version
-    JSONPath: .status.currentVersion
-  - name: Desired Version
-    type: string
-    description: The desired Zookeeper version
-    JSONPath: .spec.image.tag
-  - name: Internal Endpoint
-    type: string
-    description: Client endpoint internal to cluster network
-    JSONPath: .status.internalClientEndpoint
-  - name: External Endpoint
-    type: string
-    description: Client endpoint external to cluster network via LoadBalancer
-    JSONPath: .status.externalClientEndpoint
-  - name: Age
-    type: date
-    JSONPath: .metadata.creationTimestamp  
   scope: Namespaced
   subresources:
     status: {}
@@ -1185,9 +1183,9 @@ spec:
                   description: PullPolicy describes a policy for if/when to pull a
                     container image
                   enum:
-                    - Always
-                    - Never
-                    - IfNotPresent
+                  - Always
+                  - Never
+                  - IfNotPresent
                   type: string
                 repository:
                   type: string
@@ -1214,8 +1212,8 @@ spec:
                     by the operator when zookeeper cluster is deleted. The default
                     value is Retain.
                   enum:
-                    - Delete
-                    - Retain
+                  - Delete
+                  - Retain
                   type: string
                 spec:
                   description: PersistentVolumeClaimSpec is the spec to describe PVC
@@ -1227,9 +1225,9 @@ spec:
                         the volume should have. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access-modes-1'
                       items:
                         enum:
-                          - ReadWriteOnce
-                          - ReadOnlyMany
-                          - ReadWriteMany
+                        - ReadWriteOnce
+                        - ReadOnlyMany
+                        - ReadWriteMany
                         type: string
                       type: array
                     dataSource:
@@ -1307,10 +1305,10 @@ spec:
                                   to a set of values. Valid operators are In, NotIn,
                                   Exists and DoesNotExist.
                                 enum:
-                                    - In
-                                    - NotIn
-                                    - Exists
-                                    - DoesNotExist
+                                - In
+                                - NotIn
+                                - Exists
+                                - DoesNotExist
                                 type: string
                               values:
                                 description: values is an array of string values.
@@ -1402,12 +1400,12 @@ spec:
                                             In, NotIn, Exists, DoesNotExist. Gt, and
                                             Lt.
                                           enum:
-                                            - In
-                                            - NotIn
-                                            - Exists
-                                            - DoesNotExist
-                                            - Gt
-                                            - Lt
+                                          - In
+                                          - NotIn
+                                          - Exists
+                                          - DoesNotExist
+                                          - Gt
+                                          - Lt
                                           type: string
                                         values:
                                           description: An array of string values.
@@ -1445,12 +1443,12 @@ spec:
                                             In, NotIn, Exists, DoesNotExist. Gt, and
                                             Lt.
                                           enum:
-                                            - In
-                                            - NotIn
-                                            - Exists
-                                            - DoesNotExist
-                                            - Gt
-                                            - Lt
+                                          - In
+                                          - NotIn
+                                          - Exists
+                                          - DoesNotExist
+                                          - Gt
+                                          - Lt
                                           type: string
                                         values:
                                           description: An array of string values.
@@ -1517,12 +1515,12 @@ spec:
                                             In, NotIn, Exists, DoesNotExist. Gt, and
                                             Lt.
                                           enum:
-                                            - In
-                                            - NotIn
-                                            - Exists
-                                            - DoesNotExist
-                                            - Gt
-                                            - Lt
+                                          - In
+                                          - NotIn
+                                          - Exists
+                                          - DoesNotExist
+                                          - Gt
+                                          - Lt
                                           type: string
                                         values:
                                           description: An array of string values.
@@ -1560,12 +1558,12 @@ spec:
                                             In, NotIn, Exists, DoesNotExist. Gt, and
                                             Lt.
                                           enum:
-                                            - In
-                                            - NotIn
-                                            - Exists
-                                            - DoesNotExist
-                                            - Gt
-                                            - Lt
+                                          - In
+                                          - NotIn
+                                          - Exists
+                                          - DoesNotExist
+                                          - Gt
+                                          - Lt
                                           type: string
                                         values:
                                           description: An array of string values.
@@ -1640,10 +1638,10 @@ spec:
                                                 operators are In, NotIn, Exists and
                                                 DoesNotExist.
                                               enum:
-                                                - In
-                                                - NotIn
-                                                - Exists
-                                                - DoesNotExist
+                                              - In
+                                              - NotIn
+                                              - Exists
+                                              - DoesNotExist
                                               type: string
                                             values:
                                               description: values is an array of string
@@ -1743,10 +1741,10 @@ spec:
                                             relationship to a set of values. Valid
                                             operators are In, NotIn, Exists and DoesNotExist.
                                           enum:
-                                            - In
-                                            - NotIn
-                                            - Exists
-                                            - DoesNotExist
+                                          - In
+                                          - NotIn
+                                          - Exists
+                                          - DoesNotExist
                                           type: string
                                         values:
                                           description: values is an array of string
@@ -1846,10 +1844,10 @@ spec:
                                                 operators are In, NotIn, Exists and
                                                 DoesNotExist.
                                               enum:
-                                                - In
-                                                - NotIn
-                                                - Exists
-                                                - DoesNotExist
+                                              - In
+                                              - NotIn
+                                              - Exists
+                                              - DoesNotExist
                                               type: string
                                             values:
                                               description: values is an array of string
@@ -1949,10 +1947,10 @@ spec:
                                             relationship to a set of values. Valid
                                             operators are In, NotIn, Exists and DoesNotExist.
                                           enum:
-                                            - In
-                                            - NotIn
-                                            - Exists
-                                            - DoesNotExist
+                                          - In
+                                          - NotIn
+                                          - Exists
+                                          - DoesNotExist
                                           type: string
                                         values:
                                           description: values is an array of string
@@ -2356,9 +2354,9 @@ spec:
                     description: Protocol for port. Must be UDP, TCP, or SCTP. Defaults
                       to "TCP".
                     enum:
-                      - UDP
-                      - TCP
-                      - SCTP
+                    - UDP
+                    - TCP
+                    - SCTP
                     type: string
                 required:
                 - containerPort
@@ -2377,8 +2375,8 @@ spec:
                 be using It can take either Ephemeral or persistence Default StorageType
                 is Persistence storage
               enum:
-                  - ephemeral
-                  - persistence
+              - ephemeral
+              - persistence
               type: string
             volumes:
               description: Volumes defines to support customized volumes
@@ -3646,9 +3644,3 @@ spec:
   - name: v1beta1
     served: true
     storage: true
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []
