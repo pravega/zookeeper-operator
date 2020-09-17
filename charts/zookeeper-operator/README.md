@@ -47,3 +47,7 @@ The following table lists the configurable parameters of the Zookeeper operator 
 | `serviceAccount.create` | Create service account | `true` |
 | `serviceAccount.name` | Name for the service account | `zookeeper-operator` |
 | `watchNamespace` | Namespaces to be watched  | `""` |
+| `resources` | Specifies resource requirements for the container | `{}` |
+| `nodeSelector` | Map of key-value pairs to be present as labels in the node in which the pod should run | `{}` |
+| `affinity` | Specifies scheduling constraints on pods | `{}` |
+| `tolerations` | Specifies the pod's tolerations | `[]` |
