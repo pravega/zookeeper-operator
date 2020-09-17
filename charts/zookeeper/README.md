@@ -9,7 +9,7 @@ This chart creates a Zookeeper cluster in [Kubernetes](http://kubernetes.io) usi
 ## Prerequisites
 
   - Kubernetes 1.15+ with Beta APIs
-  - Helm 3+
+  - Helm 3.2.1+
   - Zookeeper Operator. You can install it using its own [Helm chart](https://github.com/pravega/zookeeper-operator/tree/master/charts/zookeeper-operator)
 
 ## Installing the Chart
@@ -17,14 +17,26 @@ This chart creates a Zookeeper cluster in [Kubernetes](http://kubernetes.io) usi
 To install the chart with the release name `my-release`:
 
 ```
-$ helm install my-release zookeeper
+$ helm repo add pravega https://charts.pravega.io
+$ helm repo update
+$ helm install my-release pravega/zookeeper --version=`version`
 ```
+Note: `version` can be any stable release version for zookeeper from 0.2.8 onwards.
 
-The command deploys zookeeper on the Kubernetes cluster in the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
+The above command deploys zookeeper on the Kubernetes cluster in the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
+
+## Upgrading the Chart
+
+To upgrade the zookeeper cluster `my-release` from a version `x` to `y`:
+
+```
+$ helm upgrade my-release pravega/zookeeper --version=y --set image.tag=y --reuse-values --timeout 600s
+```
+Note: By specifying the `--reuse-values` option, the values of all parameters are retained across upgrades. However if some values need to be modified during the upgrade, the `--set` flag can be used to specify the new values of these parameters. Also, by skipping the `reuse-values` flag, the values of all parameters are reset to their default values specified in the charts published for version `y`.
 
 ## Uninstalling the Chart
 
-To uninstall/delete the `my-release` deployment:
+To uninstall/delete the zookeeper cluster `my-release`:
 
 ```
 $ helm uninstall my-release
