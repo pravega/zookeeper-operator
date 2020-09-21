@@ -72,13 +72,18 @@ set -e
 # Determine if there is a ensemble available to join by checking the service domain
 set +e
 nslookup $DOMAIN
-if [[ $? -eq 1 ]]; then
+if [[ $? -eq 0 ]]; then
+  ACTIVE_ENSEMBLE=true
+elif nslookup $DOMAIN | grep -q "server can't find $DOMAIN"; then
+   echo "there is no active ensemble"
+   ACTIVE_ENSEMBLE=false
+else
   # If an nslookup of the headless service domain fails, then there is no
   # active ensemble yet, but in certain cases nslookup of headless service
   # takes a while to come up even if there is active ensemble
   ACTIVE_ENSEMBLE=false
   declare -i count=20
-  while [[ $count -ge 0 && $MYID -ne 1 ]]
+  while [[ $count -ge 0 ]]
   do
     sleep 2
     ((count=count-1))
@@ -88,8 +93,6 @@ if [[ $? -eq 1 ]]; then
       break
     fi
   done
-else
-  ACTIVE_ENSEMBLE=true
 fi
 
 if [[ "$ONDISK_MYID_CONFIG" == true && "$ONDISK_DYN_CONFIG" == true ]]; then
