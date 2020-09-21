@@ -93,7 +93,6 @@ else
       break
     fi
   done
-
 fi
 
 if [[ "$ONDISK_MYID_CONFIG" == true && "$ONDISK_DYN_CONFIG" == true ]]; then
