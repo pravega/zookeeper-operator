@@ -14,39 +14,41 @@ This chart creates a Zookeeper cluster in [Kubernetes](http://kubernetes.io) usi
 
 ## Installing the Chart
 
-To install the chart with the release name `my-release`:
+To install the zookeeper chart, use the following commands:
 
 ```
 $ helm repo add pravega https://charts.pravega.io
 $ helm repo update
-$ helm install my-release pravega/zookeeper --version=`version`
+$ helm install [RELEASE_NAME] pravega/zookeeper --version=[VERSION]
 ```
-Note: `version` can be any stable release version for zookeeper from 0.2.8 onwards.
+where:
+- **[RELEASE_NAME]** is the release name for the zookeeper chart. (**[CLUSTER_NAME]** is the name of the zookeeper cluster so created. If [RELEASE_NAME] contains the string `zookeeper`, `[CLUSTER_NAME] = [RELEASE_NAME]`, else `[CLUSTER_NAME] = [RELEASE_NAME]-zookeeper`. The [CLUSTER_NAME] can however be overridden by providing `--set fullnameOverride=[CLUSTER_NAME]` along with the helm install command)
+- **[VERSION]** can be any stable release version for zookeeper from 0.2.8 onwards.
 
-The above command deploys zookeeper on the Kubernetes cluster in the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
+This command deploys zookeeper on the Kubernetes cluster in its default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
 
 ## Upgrading the Chart
 
-To upgrade the zookeeper cluster `my-release` from a version `x` to `y`:
+To upgrade the zookeeper chart from version **[OLD_VERSION]** to version **[NEW_VERSION]**, use the following command:
 
 ```
-$ helm upgrade my-release pravega/zookeeper --version=y --set image.tag=y --reuse-values --timeout 600s
+$ helm upgrade [RELEASE_NAME] pravega/zookeeper --version=[NEW_VERSION] --set image.tag=[NEW_VERSION] --reuse-values --timeout 600s
 ```
-Note: By specifying the `--reuse-values` option, the values of all parameters are retained across upgrades. However if some values need to be modified during the upgrade, the `--set` flag can be used to specify the new values of these parameters. Also, by skipping the `reuse-values` flag, the values of all parameters are reset to their default values specified in the charts published for version `y`.
+Note: By specifying the `--reuse-values` option, the configuration of all parameters are retained across upgrades. However if some values need to be modified during the upgrade, the `--set` flag can be used to specify the new configuration for these parameters. Also, by skipping the `reuse-values` flag, the values of all parameters are reset to the default configuration that has been specified in the published charts for version [NEW_VERSION].
 
 ## Uninstalling the Chart
 
-To uninstall/delete the zookeeper cluster `my-release`:
+To uninstall/delete the zookeeper chart, use the following command:
 
 ```
-$ helm uninstall my-release
+$ helm uninstall [RELEASE_NAME]
 ```
 
-The command removes all the Kubernetes components associated with the chart and deletes the release.
+This command removes all the Kubernetes components associated with the chart and deletes the release.
 
 ## Configuration
 
-The following table lists the configurable parameters of the Zookeeper chart and their default values.
+The following table lists the configurable parameters of the zookeeper chart and their default values.
 
 | Parameter | Description | Default |
 | ----- | ----------- | ------ |
@@ -67,7 +69,7 @@ The following table lists the configurable parameters of the Zookeeper chart and
 | `pod.env` | List of environment variables to set in the container | `[]` |
 | `pod.annotations` | Specifies the annotations to attach to pods | `{}` |
 | `pod.securityContext` | Specifies the security context for the entire pod | `{}` |
-| `pod.terminationGracePeriodSeconds` | Amount of time given to the pod to shutdown normally | `180` |
+| `pod.terminationGracePeriodSeconds` | Amount of time given to the pod to shutdown normally | `30` |
 | `config.initLimit` | Amount of time (in ticks) to allow followers to connect and sync to a leader | `10` |
 | `config.tickTime` | Length of a single tick which is the basic time unit used by Zookeeper (measured in milliseconds) | `2000` |
 | `config.syncLimit` | Amount of time (in ticks) to allow followers to sync with Zookeeper | `2` |
