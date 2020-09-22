@@ -539,5 +539,28 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				Ω(err).ToNot(HaveOccurred())
 			})
 		})
+
+		Context("reconcileFinalizers", func() {
+			var (
+				cl  client.Client
+				err error
+			)
+			BeforeEach(func() {
+				z.WithDefaults()
+				z.Spec.Persistence = nil
+				cl = fake.NewFakeClient(z)
+				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				res, err = r.Reconcile(req)
+				cl.Update(context.TODO(), z)
+				err = r.reconcileFinalizers(z)
+				now := metav1.Now()
+				z.SetDeletionTimestamp(&now)
+				cl.Update(context.TODO(), z)
+				err = r.reconcileFinalizers(z)
+			})
+			It("should not raise an error", func() {
+				Ω(err).To(BeNil())
+			})
+		})
 	})
 })

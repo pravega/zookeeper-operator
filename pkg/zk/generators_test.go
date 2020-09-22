@@ -273,6 +273,31 @@ var _ = Describe("Generators Spec", func() {
 				"example-headless.zk.com."))
 		})
 	})
+	Context("#MakeHeadlessService dnsname without dot", func() {
+		var s *v1.Service
+		var domainName string
+
+		BeforeEach(func() {
+			domainName = "zkcom"
+			z := &v1beta1.ZookeeperCluster{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "example",
+					Namespace: "default",
+				},
+				Spec: v1beta1.ZookeeperClusterSpec{
+					DomainName: domainName,
+				},
+			}
+			z.WithDefaults()
+			s = zk.MakeHeadlessService(z)
+		})
+
+		It("should set the dns annotation", func() {
+			Expect(s.GetAnnotations()).To(HaveKeyWithValue(
+				"external-dns.alpha.kubernetes.io/hostname",
+				"example-headless.zkcom."))
+		})
+	})
 
 	Context("#MakePodDisruptionBudget", func() {
 		var pdb *policyv1beta1.PodDisruptionBudget

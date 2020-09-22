@@ -28,17 +28,34 @@ func TestDeepcopy(t *testing.T) {
 
 var _ = Describe("ZookeeperCluster DeepCopy", func() {
 	Context("with defaults", func() {
-		var str1, str2, str3, str4, str5, str6, str7, str8, str9, str10 string
-		var checkport int32
-		var z2 *v1beta1.ZookeeperCluster
+		var (
+			str1, str2, str3, str4, str5, str6, str7, str8, str9, str10 string
+			checkport                                                   int32
+			z1, z2                                                      *v1beta1.ZookeeperCluster
+		)
 		BeforeEach(func() {
-			z1 := &v1beta1.ZookeeperCluster{
+			z1 = &v1beta1.ZookeeperCluster{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "example",
 					Namespace: "default",
 				},
 			}
+			z1.Spec = v1beta1.ZookeeperClusterSpec{
+				Containers: []v1.Container{
+					{Name: "testcontainer1",
+						Image: "testimg",
+					},
+				},
+				Volumes: []v1.Volume{
+					{
+						Name: "testvolume",
+					},
+				},
+			}
+
 			z1.WithDefaults()
+			z1.Status.Init()
+
 			m := make(map[string]string)
 			m["key"] = "value"
 			z1.Annotations = m
@@ -70,6 +87,7 @@ var _ = Describe("ZookeeperCluster DeepCopy", func() {
 			z1.SetAnnotations(m)
 			z2.Spec.Pod.Annotations = z1.Spec.Pod.Annotations
 			z2.Spec.Persistence = z1.Spec.Persistence.DeepCopy()
+			z2.Spec.Ephemeral = z1.Spec.Ephemeral.DeepCopy()
 			z1.Spec.Pod.DeepCopyInto(&z2.Spec.Pod)
 			z1.Status.Members.Ready = []string{"zk-0", "zk-1"}
 			z1.Status.Members.Unready = []string{"zk-2"}
@@ -89,6 +107,8 @@ var _ = Describe("ZookeeperCluster DeepCopy", func() {
 			port := z1.ZookeeperPorts()
 			tempPort := port.DeepCopy()
 			checkport = tempPort.Client
+			z1.Status.SetPodsReadyConditionTrue()
+			z2.Status.Conditions[0] = *z1.Status.Conditions[0].DeepCopy()
 		})
 		It("value of str1 and str2 should be equal", func() {
 			Ω(str2).To(Equal(str1))
@@ -128,6 +148,9 @@ var _ = Describe("ZookeeperCluster DeepCopy", func() {
 
 		It("value of Tol should be example", func() {
 			Ω(z2.Spec.Pod.Tolerations[0].Key).To(Equal("tol"))
+		})
+		It("checking status conditions", func() {
+			Ω(z2.Status.Conditions[0].Reason).To(Equal(z1.Status.Conditions[0].Reason))
 		})
 
 		It("checking for nil container image", func() {
@@ -207,15 +230,33 @@ var _ = Describe("ZookeeperCluster DeepCopy", func() {
 			clusterlist2 := clusterlist.DeepCopyObject()
 			Ω(clusterlist2).ShouldNot(BeNil())
 		})
-		It("checking for nil pravega cluster deepcopyobject", func() {
+		It("checking for nil zookeeper cluster deepcopyobject", func() {
 			var cluster *v1beta1.ZookeeperCluster
 			cluster2 := cluster.DeepCopyObject()
 			Ω(cluster2).To(BeNil())
 		})
-		It("checking for nil pravega clusterlist deepcopyobject", func() {
+		It("checking for nil zookeeper clusterlist deepcopyobject", func() {
 			var clusterlist *v1beta1.ZookeeperClusterList
 			clusterlist2 := clusterlist.DeepCopyObject()
 			Ω(clusterlist2).To(BeNil())
+		})
+		It("checking for nil cluster condition", func() {
+			var clustercond *v1beta1.ClusterCondition
+			clustercond2 := clustercond.DeepCopy()
+			Ω(clustercond2).To(BeNil())
+		})
+		It("checking Ephemeral deep copy", func() {
+			z1.Spec.StorageType = "ephemeral"
+			z1.WithDefaults()
+			z2.Spec.Ephemeral = z1.Spec.Ephemeral.DeepCopy()
+			Ω(fmt.Sprintf("%s", z2.Spec.Ephemeral.EmptyDirVolumeSource.Medium)).To(Equal(""))
+		})
+		It("checking Ephemeral deep copy into", func() {
+			z1.Spec.StorageType = "ephemeral"
+			z1.WithDefaults()
+			z1.Spec.Ephemeral.EmptyDirVolumeSource.Medium = "Memory"
+			z1.Spec.DeepCopyInto(&z2.Spec)
+			Ω(fmt.Sprintf("%s", z2.Spec.Ephemeral.EmptyDirVolumeSource.Medium)).To(Equal("Memory"))
 		})
 	})
 })
