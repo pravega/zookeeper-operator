@@ -22,7 +22,8 @@ $ helm repo update
 $ helm install [RELEASE_NAME] pravega/zookeeper --version=[VERSION]
 ```
 where:
-- **[RELEASE_NAME]** is the release name for the zookeeper chart. (**[CLUSTER_NAME]** is the name of the zookeeper cluster so created. If [RELEASE_NAME] contains the string `zookeeper`, `[CLUSTER_NAME] = [RELEASE_NAME]`, else `[CLUSTER_NAME] = [RELEASE_NAME]-zookeeper`. The [CLUSTER_NAME] can however be overridden by providing `--set fullnameOverride=[CLUSTER_NAME]` along with the helm install command)
+- **[RELEASE_NAME]** is the release name for the zookeeper chart.
+- **[CLUSTER_NAME]** is the name of the zookeeper cluster so created. (If [RELEASE_NAME] contains the string `zookeeper`, `[CLUSTER_NAME] = [RELEASE_NAME]`, else `[CLUSTER_NAME] = [RELEASE_NAME]-zookeeper`. The [CLUSTER_NAME] can however be overridden by providing `--set fullnameOverride=[CLUSTER_NAME]` along with the helm install command)
 - **[VERSION]** can be any stable release version for zookeeper from 0.2.8 onwards.
 
 This command deploys zookeeper on the Kubernetes cluster in its default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
