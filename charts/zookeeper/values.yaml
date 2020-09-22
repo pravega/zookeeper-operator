@@ -19,7 +19,7 @@ pod: {}
   # env: []
   # annotations: {}
   # securityContext: {}
-  # terminationGracePeriodSeconds: 180
+  # terminationGracePeriodSeconds: 30
 
 config: {}
   # initLimit: 10
