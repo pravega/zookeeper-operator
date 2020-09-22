@@ -35,7 +35,7 @@ To upgrade the zookeeper chart from version **[OLD_VERSION]** to version **[NEW_
 ```
 $ helm upgrade [RELEASE_NAME] pravega/zookeeper --version=[NEW_VERSION] --set image.tag=[NEW_VERSION] --reuse-values --timeout 600s
 ```
-Note: By specifying the `--reuse-values` option, the configuration of all parameters are retained across upgrades. However if some values need to be modified during the upgrade, the `--set` flag can be used to specify the new configuration for these parameters. Also, by skipping the `reuse-values` flag, the values of all parameters are reset to the default configuration that has been specified in the published charts for version [NEW_VERSION].
+**Note:** By specifying the `--reuse-values` option, the configuration of all parameters are retained across upgrades. However if some values need to be modified during the upgrade, the `--set` flag can be used to specify the new configuration for these parameters. Also, by skipping the `reuse-values` flag, the values of all parameters are reset to the default configuration that has been specified in the published charts for version [NEW_VERSION].
 
 ## Uninstalling the Chart
 
