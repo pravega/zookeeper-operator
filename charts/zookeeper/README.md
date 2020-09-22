@@ -66,7 +66,7 @@ The following table lists the configurable parameters of the Zookeeper chart and
 | `pod.tolerations` | Specifies the pod's tolerations | `[]` |
 | `pod.env` | List of environment variables to set in the container | `[]` |
 | `pod.annotations` | Specifies the annotations to attach to pods | `{}` |
-| `pod.securityContext` | Specifies the security context for the entire pod | |
+| `pod.securityContext` | Specifies the security context for the entire pod | `{}` |
 | `pod.terminationGracePeriodSeconds` | Amount of time given to the pod to shutdown normally | `180` |
 | `config.initLimit` | Amount of time (in ticks) to allow followers to connect and sync to a leader | `10` |
 | `config.tickTime` | Length of a single tick which is the basic time unit used by Zookeeper (measured in milliseconds) | `2000` |
@@ -77,6 +77,6 @@ The following table lists the configurable parameters of the Zookeeper chart and
 | `persistence.storageClassName` | Storage class for persistent volumes | `standard` |
 | `persistence.volumeSize` | Size of the volume requested for persistent volumes | `20Gi` |
 | `ephemeral.emptydirvolumesource.medium` |  What type of storage medium should back the directory. | `""` |
-| `ephemeral.emptydirvolumesource.sizeLimit` | Total amount of local storage required for the EmptyDir volume. | |
+| `ephemeral.emptydirvolumesource.sizeLimit` | Total amount of local storage required for the EmptyDir volume. | `20Gi` |
 | `containers` | Application containers run with the zookeeper pod | `[]` |
 | `volumes` | Named volumes that may be accessed by any container in the pod | `[]` |

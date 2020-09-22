@@ -15,36 +15,70 @@ spec:
   domainName: {{ .Values.domainName }}
   {{- end }}
   kubernetesClusterDomain: {{ default "cluster.local" .Values.kubernetesClusterDomain }}
+  {{- if .Values.containers }}
+  containers:
+{{ toYaml .Values.containers | indent 4 }}
+  {{- end }}
+  {{- if .Values.volumes }}
+  volumes:
+{{ toYaml .Values.volumes | indent 4 }}
+  {{- end }}
   labels:
 {{ toYaml .Values.labels | indent 4 }}
   ports:
 {{ toYaml .Values.ports | indent 4 }}
   {{- if .Values.pod }}
   pod:
+    {{- if .Values.pod.labels }}
     labels:
 {{ toYaml .Values.pod.labels | indent 6 }}
+    {{- end }}
+    {{- if .Values.pod.nodeSelector }}
     nodeSelector:
 {{ toYaml .Values.pod.nodeSelector | indent 6 }}
+    {{- end }}
+    {{- if .Values.pod.affinity }}
     affinity:
 {{ toYaml .Values.pod.affinity | indent 6 }}
+    {{- end }}
+    {{- if .Values.pod.resources }}
     resources:
 {{ toYaml .Values.pod.resources | indent 6 }}
+    {{- end }}
+    {{- if .Values.pod.tolerations }}
     tolerations:
 {{ toYaml .Values.pod.tolerations | indent 6 }}
+    {{- end }}
+    {{- if .Values.pod.env }}
     env:
 {{ toYaml .Values.pod.env | indent 6 }}
+    {{- end }}
+    {{- if .Values.pod.annotations }}
     annotations:
 {{ toYaml .Values.pod.annotations | indent 6 }}
+    {{- end }}
+    {{- if .Values.pod.securityContext }}
     securityContext:
 {{ toYaml .Values.pod.securityContext | indent 6 }}
+    {{- end }}
+    {{- if .Values.pod.terminationGracePeriodSeconds }}
     terminationGracePeriodSeconds: {{ .Values.pod.terminationGracePeriodSeconds }}
+    {{- end }}
   {{- end }}
   {{- if .Values.config }}
   config:
+    {{- if .Values.config.initLimit }}
     initLimit: {{ .Values.config.initLimit }}
+    {{- end }}
+    {{- if .Values.config.tickTime }}
     tickTime: {{ .Values.config.tickTime }}
+    {{- end }}
+    {{- if .Values.config.syncLimit }}
     syncLimit: {{ .Values.config.syncLimit }}
+    {{- end }}
+    {{- if .Values.config.quorumListenOnAllIPs }}
     quorumListenOnAllIPs: {{ .Values.config.quorumListenOnAllIPs }}
+    {{- end }}
   {{- end }}
   storageType: {{ default "persistence" .Values.storageType }}
   {{- if eq (default .Values.storageType "persistence") "ephemeral" }}

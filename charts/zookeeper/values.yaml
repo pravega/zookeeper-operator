@@ -18,7 +18,7 @@ pod: {}
   # tolerations: []
   # env: []
   # annotations: {}
-  # securityContext:
+  # securityContext: {}
   # terminationGracePeriodSeconds: 180
 
 config: {}
@@ -43,8 +43,8 @@ ephemeral:
   emptydirvolumesource:
     ## specifying Medium for emptydirvolumesource
     ## accepted values - ""/Memory
-    #medium: ""
-    #sizeLimit: 20Gi
+    medium: ""
+    sizeLimit: 20Gi
 
 hooks:
   image:
