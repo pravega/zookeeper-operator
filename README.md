@@ -36,7 +36,7 @@ The operator itself is built with the [Operator framework](https://github.com/op
 
 ## Usage
 
-We recommend using our [helm charts](charts) for all installation and upgrades. Since version 0.2.8 onwards, the helm charts for zookeeper operator and zookeeper cluster are published in [https://charts.pravega.io/](https://charts.pravega.io/). To add this repository to your Helm repos, use the following command
+We recommend using our [helm charts](charts) for all installation and upgrades. Since version 0.2.8 onwards, the helm charts for zookeeper operator and zookeeper cluster are published in [https://charts.pravega.io](https://charts.pravega.io/). To add this repository to your Helm repos, use the following command
 ```
 helm repo add pravega https://charts.pravega.io
 ```
