@@ -19,9 +19,8 @@ $ helm repo add pravega https://charts.pravega.io
 $ helm repo update
 $ helm install [RELEASE_NAME] pravega/zookeeper-operator --version=[VERSION]
 ```
-where:
 - **[RELEASE_NAME]** is the release name for the zookeeper-operator chart.
-- **[RESOURCE_NAME]** is the name of the zookeeper-operator resource so created. (If [RELEASE_NAME] contains the string `zookeeper-operator`, `[RESOURCE_NAME] = [RELEASE_NAME]`, else `[RESOURCE_NAME] = [RELEASE_NAME]-zookeeper-operator`. The [RESOURCE_NAME] can however be overridden by providing `--set fullnameOverride=[RESOURCE_NAME]` along with the helm install command)
+- **[DEPLOYMENT_NAME]** is the name of the zookeeper-operator deployment so created. (If [RELEASE_NAME] contains the string `zookeeper-operator`, `[DEPLOYMENT_NAME] = [RELEASE_NAME]`, else `[DEPLOYMENT_NAME] = [RELEASE_NAME]-zookeeper-operator`. The [DEPLOYMENT_NAME] can however be overridden by providing `--set fullnameOverride=[DEPLOYMENT_NAME]` along with the helm install command)
 - **[VERSION]** can be any stable release version for zookeeper-operator from 0.2.8 onwards.
 
 This command deploys a zookeeper-operator on the Kubernetes cluster in its default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
