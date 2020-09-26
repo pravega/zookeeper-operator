@@ -74,12 +74,9 @@ set +e
 getent hosts $DOMAIN  # This only performs a dns lookup
 if [[ $? -eq 0 ]]; then
   ACTIVE_ENSEMBLE=true
-elif nslookup $DOMAIN | grep -q "server can't find $DOMAIN"; then
-   echo "there is no active ensemble"
-   ACTIVE_ENSEMBLE=false
-else
-  # If an nslookup of the headless service domain fails, then there is no
-  # active ensemble yet, but in certain cases nslookup of headless service
+else 
+  # If dns lookup of the headless service domain fails, then there is no
+  # active ensemble yet, but in certain cases the dns lookup of headless service
   # takes a while to come up even if there is active ensemble
   ACTIVE_ENSEMBLE=false
   declare -i count=20
