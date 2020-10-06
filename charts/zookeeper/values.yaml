@@ -33,7 +33,7 @@ config: {}
 storageType: persistence
 
 persistence:
-  storageClassName: standard
+  storageClassName:
   ## specifying reclaim policy for PersistentVolumes
   ## accepted values - Delete / Retain
   reclaimPolicy: Delete
