@@ -8,8 +8,8 @@ global:
   # - private-registry-key
 
 image:
-  repository: pravega/zookeeper-operator
-  tag: 0.2.8
+  repository: kjanisha/zookeeper-operator
+  tag: openshift2 
   pullPolicy: IfNotPresent
 
 ## Install RBAC roles and bindings.

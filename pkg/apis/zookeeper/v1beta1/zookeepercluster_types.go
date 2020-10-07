@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"strings"
 
+	log1 "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -336,15 +337,23 @@ type PodPolicy struct {
 	// give for a pod instance to shutdown normally.
 	// The default value is 30.
 	TerminationGracePeriodSeconds int64 `json:"terminationGracePeriodSeconds,omitempty"`
+	// Service Account to be used in pods
+	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 }
 
 func (p *PodPolicy) withDefaults(z *ZookeeperCluster) (changed bool) {
+	log1.Info("I amin pod policy defaults")
+	log1.Printf("service account is %v", p.ServiceAccountName)
 	if p.Labels == nil {
 		p.Labels = map[string]string{}
 		changed = true
 	}
 	if p.TerminationGracePeriodSeconds == 0 {
 		p.TerminationGracePeriodSeconds = DefaultTerminationGracePeriod
+		changed = true
+	}
+	if p.ServiceAccountName == "" {
+		p.ServiceAccountName = "default"
 		changed = true
 	}
 	if z.Spec.Pod.Labels == nil {

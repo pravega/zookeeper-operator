@@ -10,7 +10,7 @@ labels: {}
 ports: []
 kubernetesClusterDomain: "cluster.local"
 
-pod: {}
+pod:
   # labels: {}
   # nodeSelector: {}
   # affinity: {}
@@ -20,6 +20,7 @@ pod: {}
   # annotations: {}
   # securityContext: {}
   # terminationGracePeriodSeconds: 30
+  serviceAccountName: zookeeper-operator
 
 config: {}
   # initLimit: 10

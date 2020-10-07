@@ -64,6 +64,9 @@ spec:
     {{- if .Values.pod.terminationGracePeriodSeconds }}
     terminationGracePeriodSeconds: {{ .Values.pod.terminationGracePeriodSeconds }}
     {{- end }}
+    {{- if .Values.pod.serviceAccountName }}
+    serviceAccountName: {{ .Values.pod.serviceAccountName }}
+    {{- end }}
   {{- end }}
   {{- if .Values.config }}
   config:
