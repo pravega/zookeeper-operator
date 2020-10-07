@@ -93,9 +93,15 @@ spec:
   {{- else }}
   persistence:
     reclaimPolicy: {{ .Values.persistence.reclaimPolicy }}
+    {{- if or .Values.persistence.storageClassName .Values.persistence.volumeSize }}
     spec:
+      {{- if .Values.persistence.storageClassName }}
       storageClassName: {{ .Values.persistence.storageClassName }}
+      {{- end }}
+      {{- if .Values.persistence.volumeSize }}
       resources:
         requests:
           storage: {{ .Values.persistence.volumeSize }}
+      {{- end }}
+    {{- end }}
   {{- end }}
