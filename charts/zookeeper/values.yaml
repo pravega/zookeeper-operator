@@ -20,7 +20,7 @@ pod:
   # annotations: {}
   # securityContext: {}
   # terminationGracePeriodSeconds: 30
-  serviceAccountName: zookeeper-operator
+  serviceAccountName: zookeeper
 
 config: {}
   # initLimit: 10
