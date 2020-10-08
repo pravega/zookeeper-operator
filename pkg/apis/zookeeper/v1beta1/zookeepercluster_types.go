@@ -350,7 +350,7 @@ func (p *PodPolicy) withDefaults(z *ZookeeperCluster) (changed bool) {
 		changed = true
 	}
 	if p.ServiceAccountName == "" {
-		p.ServiceAccountName = "zookeeper"
+		p.ServiceAccountName = "default"
 		changed = true
 	}
 	if z.Spec.Pod.Labels == nil {
