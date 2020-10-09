@@ -636,7 +636,9 @@ spec:
                     type: array
                     x-kubernetes-list-map-keys:
                     - containerPort
+                    {{- if semverCompare "< 1.18-0" .Capabilities.KubeVersion.GitVersion }}
                     - protocol
+                    {{- end }}
                     x-kubernetes-list-type: map
                   readinessProbe:
                     description: 'Periodic probe of container service readiness. Container
@@ -2275,6 +2277,9 @@ spec:
                           type: string
                       type: object
                   type: object
+                serviceAccountName:
+                  description: Service Account to be used in pods
+                  type: string
                 terminationGracePeriodSeconds:
                   description: TerminationGracePeriodSeconds is the amount of time
                     that kubernetes will give for a pod instance to shutdown normally.

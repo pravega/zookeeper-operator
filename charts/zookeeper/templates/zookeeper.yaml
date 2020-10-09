@@ -27,7 +27,6 @@ spec:
 {{ toYaml .Values.labels | indent 4 }}
   ports:
 {{ toYaml .Values.ports | indent 4 }}
-  {{- if .Values.pod }}
   pod:
     {{- if .Values.pod.labels }}
     labels:
@@ -64,7 +63,7 @@ spec:
     {{- if .Values.pod.terminationGracePeriodSeconds }}
     terminationGracePeriodSeconds: {{ .Values.pod.terminationGracePeriodSeconds }}
     {{- end }}
-  {{- end }}
+    serviceAccountName: {{ default "zookeeper" .Values.pod.serviceAccountName }}
   {{- if .Values.config }}
   config:
     {{- if .Values.config.initLimit }}

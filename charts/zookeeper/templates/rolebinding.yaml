@@ -1,0 +1,15 @@
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ default "zookeeper" .Values.pod.serviceAccountName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "zookeeper.commonLabels" . | indent 4 }}
+subjects:
+- kind: ServiceAccount
+  name: {{ default "zookeeper" .Values.pod.serviceAccountName }}
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: {{ default "zookeeper" .Values.pod.serviceAccountName }}
+  apiGroup: rbac.authorization.k8s.io

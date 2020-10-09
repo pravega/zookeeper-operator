@@ -635,7 +635,6 @@ spec:
                     type: array
                     x-kubernetes-list-map-keys:
                     - containerPort
-                    - protocol
                     x-kubernetes-list-type: map
                   readinessProbe:
                     description: 'Periodic probe of container service readiness. Container
@@ -2274,6 +2273,9 @@ spec:
                           type: string
                       type: object
                   type: object
+                serviceAccountName:
+                  description: Service Account to be used in pods
+                  type: string
                 terminationGracePeriodSeconds:
                   description: TerminationGracePeriodSeconds is the amount of time
                     that kubernetes will give for a pod instance to shutdown normally.

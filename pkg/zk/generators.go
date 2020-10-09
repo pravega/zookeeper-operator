@@ -166,6 +166,8 @@ func makeZkPodSpec(z *v1beta1.ZookeeperCluster, volumes []v1.Volume) v1.PodSpec 
 	podSpec.NodeSelector = z.Spec.Pod.NodeSelector
 	podSpec.Tolerations = z.Spec.Pod.Tolerations
 	podSpec.TerminationGracePeriodSeconds = &z.Spec.Pod.TerminationGracePeriodSeconds
+	podSpec.ServiceAccountName = z.Spec.Pod.ServiceAccountName
+
 	return podSpec
 }
 

@@ -336,6 +336,8 @@ type PodPolicy struct {
 	// give for a pod instance to shutdown normally.
 	// The default value is 30.
 	TerminationGracePeriodSeconds int64 `json:"terminationGracePeriodSeconds,omitempty"`
+	// Service Account to be used in pods
+	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 }
 
 func (p *PodPolicy) withDefaults(z *ZookeeperCluster) (changed bool) {
@@ -345,6 +347,10 @@ func (p *PodPolicy) withDefaults(z *ZookeeperCluster) (changed bool) {
 	}
 	if p.TerminationGracePeriodSeconds == 0 {
 		p.TerminationGracePeriodSeconds = DefaultTerminationGracePeriod
+		changed = true
+	}
+	if p.ServiceAccountName == "" {
+		p.ServiceAccountName = "default"
 		changed = true
 	}
 	if z.Spec.Pod.Labels == nil {

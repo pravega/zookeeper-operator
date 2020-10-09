@@ -150,6 +150,8 @@ svc/zookeeper-client     ClusterIP   10.31.243.173   <none>        2181/TCP     
 svc/zookeeper-headless   ClusterIP   None            <none>        2888/TCP,3888/TCP   2m
 ```
 
+>Note: If you want to configure non deafult service accounts to zookeeper pods, refer to [this](doc/rbac.md).
+
 ### Deploy a sample Zookeeper cluster with Ephemeral storage
 
 Create a Yaml file called `zk.yaml` with the following content to install a 3-node Zookeeper cluster.
