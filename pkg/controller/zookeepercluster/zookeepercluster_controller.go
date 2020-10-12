@@ -170,6 +170,22 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 		return nil
 	}
 
+	serviceAccount := zk.MakeServiceAccount(instance)
+	if err = controllerutil.SetControllerReference(instance, serviceAccount, r.scheme); err != nil {
+		return err
+	}
+	// Check if this ServiceAccount already exists
+	foundServiceAccount := &corev1.ServiceAccount{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: serviceAccount.Name, Namespace: serviceAccount.Namespace}, foundServiceAccount)
+	if err != nil && errors.IsNotFound(err) {
+		r.log.Info("Creating a new ServiceAccount", "ServiceAccount.Namespace", serviceAccount.Namespace, "ServiceAccount.Name", serviceAccount.Name)
+		err = r.client.Create(context.TODO(), serviceAccount)
+		if err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
 	sts := zk.MakeStatefulSet(instance)
 	if err = controllerutil.SetControllerReference(instance, sts, r.scheme); err != nil {
 		return err
