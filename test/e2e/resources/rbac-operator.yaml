@@ -3,8 +3,6 @@ kind: ServiceAccount
 metadata:
   name: zookeeper-operator
 
-
-
 ---
 
 kind: ClusterRole
@@ -28,6 +26,7 @@ rules:
   - events
   - configmaps
   - secrets
+  - serviceaccounts
   verbs:
   - "*"
 - apiGroups:
@@ -37,7 +36,6 @@ rules:
   - daemonsets
   - replicasets
   - statefulsets
-  - serviceaccounts
   verbs:
   - "*"
 - apiGroups:
@@ -47,10 +45,8 @@ rules:
   verbs:
   - "*"
 
-
-
-
 ---
+
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
@@ -64,10 +60,8 @@ roleRef:
   name: zookeeper-operator
   apiGroup: rbac.authorization.k8s.io
 
-
-
-
 ---
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -96,7 +90,7 @@ spec:
               fieldPath: metadata.name
         - name: OPERATOR_NAME
           value: zookeeper-operator
-        image: pravega/zookeeper-operator:latest
+        image: testzkop/zookeeper-operator-testimages:v0.2.9-rc1-4-dirty
         imagePullPolicy: Always
         name: zookeeper-operator
         ports:
