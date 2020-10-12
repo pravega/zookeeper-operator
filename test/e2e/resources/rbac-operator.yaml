@@ -37,6 +37,7 @@ rules:
   - daemonsets
   - replicasets
   - statefulsets
+  - serviceaccounts
   verbs:
   - "*"
 - apiGroups:
