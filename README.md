@@ -15,6 +15,7 @@ The project is currently alpha. While no breaking API changes are currently plan
     * [Deploy a sample Zookeeper Cluster to a cluster using Istio](#deploy-a-sample-zookeeper-cluster-with-istio)
     * [Upgrade a Zookeeper Cluster](#upgrade-a-zookeeper-cluster)
     * [Uninstall the Zookeeper Cluster](#uninstall-the-zookeeper-cluster)
+    * [Upgrade the Zookeeper Operator](#upgrade-the-operator)
     * [Uninstall the Operator](#uninstall-the-operator)
  * [Development](#development)
     * [Build the Operator Image](#build-the-operator-image)
@@ -150,7 +151,17 @@ svc/zookeeper-client     ClusterIP   10.31.243.173   <none>        2181/TCP     
 svc/zookeeper-headless   ClusterIP   None            <none>        2888/TCP,3888/TCP   2m
 ```
 
->Note: If you want to configure non deafult service accounts to zookeeper pods, refer to [this](doc/rbac.md).
+>Note: If you want to configure non default service accounts to zookeeper pods, set the service account inside pod.This support is added from zookeeper operator version `0.2.9` onwards.
+
+```
+apiVersion: "zookeeper.pravega.io/v1beta1"
+kind: "ZookeeperCluster"
+metadata:
+  name: "example"
+spec:
+  pod:
+    serviceAccountName: "zookeeper"
+```
 
 ### Deploy a sample Zookeeper cluster with Ephemeral storage
 
@@ -269,6 +280,10 @@ Status:
     Type:                    Upgrading
 ```
 >Note: The value of the tag field should not be modified while an upgrade is already in progress.
+
+### Upgrade the Operator
+
+For upgrading the zookeeper operator check the document [operator-upgrade](doc/operator-upgrade.md)
 
 ### Uninstall the Zookeeper cluster
 

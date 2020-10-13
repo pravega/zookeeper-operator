@@ -318,3 +318,13 @@ func MakePodDisruptionBudget(z *v1beta1.ZookeeperCluster) *policyv1beta1.PodDisr
 		},
 	}
 }
+
+//MakeServiceAccount returns the service account for zookeeper Cluster
+func MakeServiceAccount(z *v1beta1.ZookeeperCluster) *v1.ServiceAccount {
+	return &v1.ServiceAccount{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      z.Spec.Pod.ServiceAccountName,
+			Namespace: z.Namespace,
+		},
+	}
+}

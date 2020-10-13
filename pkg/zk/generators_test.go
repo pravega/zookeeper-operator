@@ -176,6 +176,29 @@ var _ = Describe("Generators Spec", func() {
 			})
 		})
 	})
+	Context("#MakeStatefulSet with non default service account", func() {
+		var sts *appsv1.StatefulSet
+
+		Context("with defaults", func() {
+
+			BeforeEach(func() {
+				z := &v1beta1.ZookeeperCluster{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "example",
+						Namespace: "default",
+					},
+					Spec: v1beta1.ZookeeperClusterSpec{},
+				}
+				z.Spec.Pod.ServiceAccountName = "zookeeper"
+				z.WithDefaults()
+				zk.MakeServiceAccount(z)
+				sts = zk.MakeStatefulSet(z)
+			})
+			It("Checking the sts service account", func() {
+				Ω(sts.Spec.Template.Spec.ServiceAccountName).To(Equal("zookeeper"))
+			})
+		})
+	})
 
 	Context("#MakeClientService", func() {
 		var s *v1.Service

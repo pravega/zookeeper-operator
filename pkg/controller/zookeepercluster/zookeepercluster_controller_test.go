@@ -200,6 +200,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 
 			BeforeEach(func() {
 				z.WithDefaults()
+				z.Spec.Pod.ServiceAccountName = "zookeeper"
 				z.Status.Init()
 				next := z.DeepCopy()
 				st := zk.MakeStatefulSet(z)
