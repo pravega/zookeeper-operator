@@ -54,8 +54,11 @@ func MakeStatefulSet(z *v1beta1.ZookeeperCluster) *appsv1.StatefulSet {
 	} else {
 		pvcs = append(pvcs, v1.PersistentVolumeClaim{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:   zkDataVolume,
-				Labels: map[string]string{"app": z.GetName()},
+				Name: zkDataVolume,
+				Labels: mergeLabels(
+					z.Spec.Labels,
+					map[string]string{"app": z.GetName()},
+				),
 			},
 			Spec: persistence.PersistentVolumeClaimSpec,
 		})
@@ -85,10 +88,13 @@ func MakeStatefulSet(z *v1beta1.ZookeeperCluster) *appsv1.StatefulSet {
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					GenerateName: z.GetName(),
-					Labels: map[string]string{
-						"app":  z.GetName(),
-						"kind": "ZookeeperMember",
-					},
+					Labels: mergeLabels(
+						z.Spec.Labels,
+						map[string]string{
+							"app":  z.GetName(),
+							"kind": "ZookeeperMember",
+						},
+					),
 				},
 				Spec: makeZkPodSpec(z, extraVolumes),
 			},
@@ -190,6 +196,7 @@ func MakeConfigMap(z *v1beta1.ZookeeperCluster) *v1.ConfigMap {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      z.ConfigMapName(),
 			Namespace: z.Namespace,
+			Labels:    z.Spec.Labels,
 		},
 		Data: map[string]string{
 			"zoo.cfg":                makeZkConfigString(z.Spec),
@@ -281,8 +288,10 @@ func makeService(name string, ports []v1.ServicePort, clusterIP bool, z *v1beta1
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: z.Namespace,
-
-			Labels:      map[string]string{"app": z.GetName(), "headless": strconv.FormatBool(!clusterIP)},
+			Labels: mergeLabels(
+				z.Spec.Labels,
+				map[string]string{"app": z.GetName(), "headless": strconv.FormatBool(!clusterIP)},
+			),
 			Annotations: annotationMap,
 		},
 		Spec: v1.ServiceSpec{
@@ -307,6 +316,7 @@ func MakePodDisruptionBudget(z *v1beta1.ZookeeperCluster) *policyv1beta1.PodDisr
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      z.GetName(),
 			Namespace: z.Namespace,
+			Labels:    z.Spec.Labels,
 		},
 		Spec: policyv1beta1.PodDisruptionBudgetSpec{
 			MaxUnavailable: &pdbCount,
@@ -327,4 +337,16 @@ func MakeServiceAccount(z *v1beta1.ZookeeperCluster) *v1.ServiceAccount {
 			Namespace: z.Namespace,
 		},
 	}
+}
+
+// MergeLabels merges label maps
+func mergeLabels(l ...map[string]string) map[string]string {
+	res := make(map[string]string)
+
+	for _, v := range l {
+		for lKey, lValue := range v {
+			res[lKey] = lValue
+		}
+	}
+	return res
 }
