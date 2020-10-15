@@ -95,6 +95,7 @@ func MakeStatefulSet(z *v1beta1.ZookeeperCluster) *appsv1.StatefulSet {
 							"kind": "ZookeeperMember",
 						},
 					),
+					Annotations: z.Spec.Pod.Annotations,
 				},
 				Spec: makeZkPodSpec(z, extraVolumes),
 			},
