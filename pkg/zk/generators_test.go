@@ -196,7 +196,7 @@ var _ = Describe("Generators Spec", func() {
 					"exampleValue"))
 			})
 		})
-		
+
 		Context("with pod policy annotations", func() {
 
 			BeforeEach(func() {
