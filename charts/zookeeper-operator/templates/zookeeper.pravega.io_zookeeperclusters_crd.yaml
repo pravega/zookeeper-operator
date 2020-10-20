@@ -64,81 +64,86 @@ spec:
           description: ZookeeperClusterSpec defines the desired state of ZookeeperCluster
           properties:
             config:
-              autoPurgePurgeInterval:
-                description: "The time interval in hours for which the purge task
-                  has to be triggered \n Disabled by default"
-                type: integer
-              autoPurgeSnapRetainCount:
-                description: "Retain the snapshots according to retain count \n
-                  The default value is 3"
-                type: integer
-              commitLogCount:
-                description: "Zookeeper maintains an in-memory list of last committed
-                  requests for fast synchronization with followers \n The default
-                  value is 500"
-                type: integer
-              globalOutstandingLimit:
-                description: "Clients can submit requests faster than ZooKeeper
-                  can process them, especially if there are a lot of clients. Zookeeper
-                  will throttle Clients so that requests won't exceed global outstanding
-                  limit. \n The default value is 1000"
-                type: integer
-              initLimit:
-                description: "InitLimit is the amount of time, in ticks, to allow
-                  followers to connect and sync to a leader. \n Default value is
-                  10."
-                type: integer
-              maxClientCnxns:
-                description: "Limits the number of concurrent connections that a
-                  single client, identified by IP address, may make to a single
-                  member of the ZooKeeper ensemble. \n The default value is 60"
-                type: integer
-              maxCnxns:
-                description: "Limits the total number of concurrent connections
-                  that can be made to a zookeeper server \n The defult value is
-                  0, indicating no limit"
-                type: integer
-              maxSessionTimeout:
-                description: "The maximum session timeout in milliseconds that the
-                  server will allow the client to negotiate. \n The default value
-                  is 40000"
-                type: integer
-              minSessionTimeout:
-                description: "The minimum session timeout in milliseconds that the
-                  server will allow the client to negotiate \n The default value
-                  is 4000"
-                type: integer
-              preAllocSize:
-                description: "To avoid seeks ZooKeeper allocates space in the transaction
-                  log file in blocks of preAllocSize kilobytes \n The default value
-                  is 64M"
-                type: integer
-              quorumListenOnAllIPs:
-                description: "QuorumListenOnAllIPs when set to true the ZooKeeper
-                  server will listen for connections from its peers on all available
-                  IP addresses, and not only the address configured in the server
-                  list of the configuration file. It affects the connections handling
-                  the ZAB protocol and the Fast Leader Election protocol. \n The
-                  default value is false."
-                type: boolean
-              snapCount:
-                description: "ZooKeeper records its transactions using snapshots
-                  and a transaction log The number of transactions recorded in the
-                  transaction log before a snapshot can be taken is determined by
-                  snapCount \n The default value is 100,000"
-                type: integer
-              snapSizeLimitInKb:
-                description: "Snapshot size limit in Kb \n The defult value is 4GB"
-                type: integer
-              syncLimit:
-                description: "SyncLimit is the amount of time, in ticks, to allow
-                  followers to sync with Zookeeper. \n The default value is 2."
-                type: integer
-              tickTime:
-                description: "TickTime is the length of a single tick, which is
-                  the basic time unit used by Zookeeper, as measured in milliseconds
-                  \n The default value is 2000."
-                type: integer
+              description: Conf is the zookeeper configuration, which will be used
+                to generate the static zookeeper configuration. If no configuration
+                is provided required default values will be provided, and optional
+                values will be excluded.
+              properties:
+                autoPurgePurgeInterval:
+                  description: "The time interval in hours for which the purge task
+                    has to be triggered \n Disabled by default"
+                  type: integer
+                autoPurgeSnapRetainCount:
+                  description: "Retain the snapshots according to retain count \n
+                    The default value is 3"
+                  type: integer
+                commitLogCount:
+                  description: "Zookeeper maintains an in-memory list of last committed
+                    requests for fast synchronization with followers \n The default
+                    value is 500"
+                  type: integer
+                globalOutstandingLimit:
+                  description: "Clients can submit requests faster than ZooKeeper
+                    can process them, especially if there are a lot of clients. Zookeeper
+                    will throttle Clients so that requests won't exceed global outstanding
+                    limit. \n The default value is 1000"
+                  type: integer
+                initLimit:
+                  description: "InitLimit is the amount of time, in ticks, to allow
+                    followers to connect and sync to a leader. \n Default value is
+                    10."
+                  type: integer
+                maxClientCnxns:
+                  description: "Limits the number of concurrent connections that a
+                    single client, identified by IP address, may make to a single
+                    member of the ZooKeeper ensemble. \n The default value is 60"
+                  type: integer
+                maxCnxns:
+                  description: "Limits the total number of concurrent connections
+                    that can be made to a zookeeper server \n The defult value is
+                    0, indicating no limit"
+                  type: integer
+                maxSessionTimeout:
+                  description: "The maximum session timeout in milliseconds that the
+                    server will allow the client to negotiate. \n The default value
+                    is 40000"
+                  type: integer
+                minSessionTimeout:
+                  description: "The minimum session timeout in milliseconds that the
+                    server will allow the client to negotiate \n The default value
+                    is 4000"
+                  type: integer
+                preAllocSize:
+                  description: "To avoid seeks ZooKeeper allocates space in the transaction
+                    log file in blocks of preAllocSize kilobytes \n The default value
+                    is 64M"
+                  type: integer
+                quorumListenOnAllIPs:
+                  description: "QuorumListenOnAllIPs when set to true the ZooKeeper
+                    server will listen for connections from its peers on all available
+                    IP addresses, and not only the address configured in the server
+                    list of the configuration file. It affects the connections handling
+                    the ZAB protocol and the Fast Leader Election protocol. \n The
+                    default value is false."
+                  type: boolean
+                snapCount:
+                  description: "ZooKeeper records its transactions using snapshots
+                    and a transaction log The number of transactions recorded in the
+                    transaction log before a snapshot can be taken is determined by
+                    snapCount \n The default value is 100,000"
+                  type: integer
+                snapSizeLimitInKb:
+                  description: "Snapshot size limit in Kb \n The defult value is 4GB"
+                  type: integer
+                syncLimit:
+                  description: "SyncLimit is the amount of time, in ticks, to allow
+                    followers to sync with Zookeeper. \n The default value is 2."
+                  type: integer
+                tickTime:
+                  description: "TickTime is the length of a single tick, which is
+                    the basic time unit used by Zookeeper, as measured in milliseconds
+                    \n The default value is 2000."
+                  type: integer
               type: object
             containers:
               description: Containers defines to support multi containers
