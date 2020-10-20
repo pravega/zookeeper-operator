@@ -63,7 +63,7 @@ The following table lists the configurable parameters of the zookeeper chart and
 | `ports` | Groups the ports for a zookeeper cluster node for easy access | `[]` |
 | `pod` | Defines the policy to create new pods for the zookeeper cluster | `{}` |
 | `pod.labels` | Labels to attach to the pods | `{}` |
-| `pod.nodeSelector` | Map of key-value pairs to be present as labels in the node in which the pod should run | `{}` |
+| `pod.nodeSelector` | Map of key-value pairs to be present as labels in the node in which the pod shoul`6553d run | `{}` |
 | `pod.affinity` | Specifies scheduling constraints on pods | `{}` |
 | `pod.resources` | Specifies resource requirements for the container | `{}` |
 | `pod.tolerations` | Specifies the pod's tolerations | `[]` |
@@ -75,6 +75,17 @@ The following table lists the configurable parameters of the zookeeper chart and
 | `config.initLimit` | Amount of time (in ticks) to allow followers to connect and sync to a leader | `10` |
 | `config.tickTime` | Length of a single tick which is the basic time unit used by Zookeeper (measured in milliseconds) | `2000` |
 | `config.syncLimit` | Amount of time (in ticks) to allow followers to sync with Zookeeper | `2` |
+| `config.globalOutstandingLimit` | Max limit for outstanding requests | `1000` |
+| `config.preAllocSize` | PreAllocSize in kilobytes | `65536` |
+| `config.snapCount` | The number of transactions recorded in the transaction log before a snapshot can be taken | `100000` |
+| `config.commitLogCount` | The number of committed requests in memory | `500`
+| `config.snapSizeLimitInKb` | SnapSizeLimitInKb | `4194304` |
+| `config.maxCnxns` | The total number of concurrent connections that can be made to a zookeeper server | `0` |
+| `config.maxClientCnxns` | The number of concurrent connections that a single client | `60` |
+| `config.minSessionTimeout` | The minimum session timeout in milliseconds that the server will allow the client to negotiate | `4000` |
+| `config.maxSessionTimeout` | The maximum session timeout in milliseconds that the server will allow the client to negotiate | `40000` |
+| `config.autoPurgeSnapRetainCount` | The number of snapshots to be retained | `3`
+| `config.autoPurgePurgeInterval` | The time interval in hours for which the purge task has to be triggered | `0`
 | `config.quorumListenOnAllIPs` | Whether Zookeeper server will listen for connections from its peers on all available IP addresses | `false` |
 | `storageType` | Type of storage that can be used it can take either ephemeral or persistence as value | `persistence` |
 | `persistence.reclaimPolicy` | Reclaim policy for persistent volumes | `Delete` |

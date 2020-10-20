@@ -232,6 +232,17 @@ func makeZkConfigString(s v1beta1.ZookeeperClusterSpec) string {
 		"initLimit=" + strconv.Itoa(s.Conf.InitLimit) + "\n" +
 		"syncLimit=" + strconv.Itoa(s.Conf.SyncLimit) + "\n" +
 		"tickTime=" + strconv.Itoa(s.Conf.TickTime) + "\n" +
+		"globalOutstandingLimit=" + strconv.Itoa(s.Conf.GlobalOutstandingLimit) + "\n" +
+		"preAllocSize=" + strconv.Itoa(s.Conf.PreAllocSize) + "\n" +
+		"snapCount=" + strconv.Itoa(s.Conf.SnapCount) + "\n" +
+		"commitLogCount=" + strconv.Itoa(s.Conf.CommitLogCount) + "\n" +
+		"snapSizeLimitInKb=" + strconv.Itoa(s.Conf.SnapSizeLimitInKb) + "\n" +
+		"maxCnxns=" + strconv.Itoa(s.Conf.MaxCnxns) + "\n" +
+		"maxClientCnxns=" + strconv.Itoa(s.Conf.MaxClientCnxns) + "\n" +
+		"minSessionTimeout=" + strconv.Itoa(s.Conf.MinSessionTimeout) + "\n" +
+		"maxSessionTimeout=" + strconv.Itoa(s.Conf.MaxSessionTimeout) + "\n" +
+		"autopurge.snapRetainCount=" + strconv.Itoa(s.Conf.AutoPurgeSnapRetainCount) + "\n" +
+		"autopurge.purgeInterval=" + strconv.Itoa(s.Conf.AutoPurgePurgeInterval) + "\n" +
 		"quorumListenOnAllIPs=" + strconv.FormatBool(s.Conf.QuorumListenOnAllIPs) + "\n" +
 		"dynamicConfigFile=/data/zoo.cfg.dynamic\n"
 }

@@ -1137,10 +1137,12 @@ k8s.io/autoscaler v0.0.0-20190607113959-1b4f1855cb8e/go.mod h1:QEXezc9uKPT91dwqh
 k8s.io/cli-runtime v0.17.5/go.mod h1:MgU0RZdbJoDThMLacP4ik4W7qpI0wOf2uiMyzVvB/BE=
 k8s.io/client-go v0.17.5 h1:Sm/9AQ415xPAX42JLKbJZnreXFgD2rVfDUDwOTm0gzA=
 k8s.io/client-go v0.17.5/go.mod h1:S8uZpBpjJJdEH/fEyxcqg7Rn0P5jH+ilkgBHjriSmNo=
+k8s.io/code-generator v0.17.6-beta.0 h1:1TWQ5C1MpYdLLs/xQwqRYuPAe26IitM6n3bqsj0QjFc=
 k8s.io/code-generator v0.17.6-beta.0/go.mod h1:qdiSCSTKtS+3WtPelj2h57fylSQcPUlhMVm+TD9Dvqc=
 k8s.io/component-base v0.17.5/go.mod h1:cZQAW1AUbBjD1lh+e/krbiIpqGz6fipI+vHslOBbuHE=
 k8s.io/gengo v0.0.0-20190128074634-0689ccc1d7d6/go.mod h1:ezvh/TsK7cY6rbqRK0oQQ8IAqLxYwwyPxAX1Pzy0ii0=
 k8s.io/gengo v0.0.0-20190822140433-26a664648505/go.mod h1:ezvh/TsK7cY6rbqRK0oQQ8IAqLxYwwyPxAX1Pzy0ii0=
+k8s.io/gengo v0.0.0-20191010091904-7fa3014cb28f h1:eW/6wVuHNZgQJmFesyAxu0cvj0WAHHUuGaLbPcmNY3Q=
 k8s.io/gengo v0.0.0-20191010091904-7fa3014cb28f/go.mod h1:ezvh/TsK7cY6rbqRK0oQQ8IAqLxYwwyPxAX1Pzy0ii0=
 k8s.io/helm v2.16.3+incompatible/go.mod h1:LZzlS4LQBHfciFOurYBFkCMTaZ0D1l+p0teMg7TSULI=
 k8s.io/klog v0.0.0-20181102134211-b9b56d5dfc92/go.mod h1:Gq+BEi5rUBO/HRz0bTSXDUcqjScdoY3a9IHpCEIOOfk=
