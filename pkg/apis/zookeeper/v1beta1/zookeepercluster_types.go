@@ -68,9 +68,11 @@ type ZookeeperClusterSpec struct {
 	//It can take either Ephemeral or persistence
 	//Default StorageType is Persistence storage
 	StorageType string `json:"storageType,omitempty"`
+
 	// Persistence is the configuration for zookeeper persistent layer.
 	// PersistentVolumeClaimSpec and VolumeReclaimPolicy can be specified in here.
 	Persistence *Persistence `json:"persistence,omitempty"`
+
 	// Ephemeral is the configuration which helps create ephemeral storage
 	// At anypoint only one of Persistence or Ephemeral should be present in the manifest
 	Ephemeral *Ephemeral `json:"ephemeral,omitempty"`
@@ -527,7 +529,7 @@ func (c *ZookeeperConfig) withDefaults() (changed bool) {
 		changed = true
 		c.MinSessionTimeout = 2 * c.TickTime
 	}
-	if c.MinSessionTimeout == 0 {
+	if c.MaxSessionTimeout == 0 {
 		changed = true
 		c.MaxSessionTimeout = 20 * c.TickTime
 	}
