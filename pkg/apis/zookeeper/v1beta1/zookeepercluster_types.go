@@ -438,7 +438,7 @@ type ZookeeperConfig struct {
 	// The default value is 500
 	CommitLogCount int `json:"commitLogCount,omitempty"`
 
-	// SnapSizeLimitInKb
+	// Snapshot size limit in Kb
 	//
 	// The defult value is 4GB
 	SnapSizeLimitInKb int `json:"snapSizeLimitInKb,omitempty"`
@@ -459,7 +459,6 @@ type ZookeeperConfig struct {
 	// client to negotiate
 	//
 	// The default value is 4000
-
 	MinSessionTimeout int `json:"minSessionTimeout,omitempty"`
 
 	// The maximum session timeout in milliseconds that the server will allow the
@@ -470,7 +469,7 @@ type ZookeeperConfig struct {
 
 	// Retain the snapshots according to retain count
 	//
-	// The default valueis 3
+	// The default value is 3
 	AutoPurgeSnapRetainCount int `json:"autoPurgeSnapRetainCount,omitempty"`
 
 	// The time interval in hours for which the purge task has to be triggered

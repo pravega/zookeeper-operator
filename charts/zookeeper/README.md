@@ -63,7 +63,7 @@ The following table lists the configurable parameters of the zookeeper chart and
 | `ports` | Groups the ports for a zookeeper cluster node for easy access | `[]` |
 | `pod` | Defines the policy to create new pods for the zookeeper cluster | `{}` |
 | `pod.labels` | Labels to attach to the pods | `{}` |
-| `pod.nodeSelector` | Map of key-value pairs to be present as labels in the node in which the pod shoul`6553d run | `{}` |
+| `pod.nodeSelector` | Map of key-value pairs to be present as labels in the node in which the pod should run | `{}` |
 | `pod.affinity` | Specifies scheduling constraints on pods | `{}` |
 | `pod.resources` | Specifies resource requirements for the container | `{}` |
 | `pod.tolerations` | Specifies the pod's tolerations | `[]` |
