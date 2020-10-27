@@ -75,6 +75,39 @@ spec:
     {{- if .Values.config.syncLimit }}
     syncLimit: {{ .Values.config.syncLimit }}
     {{- end }}
+    {{- if .Values.config.globalOutstandingLimit }}
+    globalOutstandingLimit: {{ .Values.config.globalOutstandingLimit }}
+    {{- end }}
+    {{- if .Values.config.preAllocSize }}
+    preAllocSize: {{ .Values.config.preAllocSize }}
+    {{- end }}
+    {{- if .Values.config.snapCount }}
+    snapCount: {{ .Values.config.snapCount }}
+    {{- end }}
+    {{- if .Values.config.commitLogCount }}
+    commitLogCount: {{ .Values.config.commitLogCount }}
+    {{- end }}
+    {{- if .Values.config.snapSizeLimitInKb }}
+    snapSizeLimitInKb: {{ .Values.snapSizeLimitInKb }}
+    {{- end }}
+    {{- if .Values.config.maxCnxns }}
+    maxCnxns: {{ .Values.maxCnxns }}
+    {{- end }}
+    {{- if .Values.config.maxClientCnxns }}
+    maxClientCnxns: {{ .Values.maxClientCnxns }}
+    {{- end }}
+    {{- if .Values.config.minSessionTimeout }}
+    minSessionTimeout: {{ .Values.minSessionTimeout }}
+    {{- end }}
+    {{- if .Values.config.maxSessionTimeout }}
+    maxSessionTimeout: {{ .Values.maxSessionTimeout }}
+    {{- end }}
+    {{- if .Values.config.autoPurgeSnapRetainCount }}
+    autoPurgeSnapRetainCount: {{ .Values.autoPurgeSnapRetainCount }}
+    {{- end }}
+    {{- if .Values.config.autoPurgePurgeInterval }}
+    autoPurgePurgeInterval: {{ .Values.config.autoPurgePurgeInterval }}
+    {{- end }}
     {{- if .Values.config.quorumListenOnAllIPs }}
     quorumListenOnAllIPs: {{ .Values.config.quorumListenOnAllIPs }}
     {{- end }}
