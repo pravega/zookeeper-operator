@@ -2,7 +2,7 @@ replicas: 3
 
 image:
   repository: pravega/zookeeper
-  tag: 0.2.8
+  tag: 0.2.9
   pullPolicy: IfNotPresent
 
 domainName:
@@ -26,6 +26,17 @@ config: {}
   # initLimit: 10
   # tickTime: 2000
   # syncLimit: 2
+  # globalOutstandingLimit: 1000
+  # preAllocSize: 65536
+  # snapCount: 100000
+  # commitLogCount: 500
+  # snapSizeLimitInKb: 4194304
+  # maxCnxns: 0
+  # maxClientCnxns: 60
+  # minSessionTimeout: 4000
+  # maxSessionTimeout: 40000
+  # autoPurgeSnapRetainCount: 3
+  # autoPurgePurgeInterval: 1
   # quorumListenOnAllIPs: false
 
 ## configure the storage type

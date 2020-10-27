@@ -537,6 +537,10 @@ func (c *ZookeeperConfig) withDefaults() (changed bool) {
 		changed = true
 		c.AutoPurgeSnapRetainCount = 3
 	}
+	if c.AutoPurgePurgeInterval == 0 {
+		changed = true
+		c.AutoPurgePurgeInterval = 1
+	}
 
 	return changed
 }
