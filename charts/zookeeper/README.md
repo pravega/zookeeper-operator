@@ -55,7 +55,7 @@ The following table lists the configurable parameters of the zookeeper chart and
 | ----- | ----------- | ------ |
 | `replicas` | Expected size of the zookeeper cluster (valid range is from 1 to 7) | `3` |
 | `image.repository` | Image repository | `pravega/zookeeper` |
-| `image.tag` | Image tag | `0.2.8` |
+| `image.tag` | Image tag | `0.2.9` |
 | `image.pullPolicy` | Image pull policy | `IfNotPresent` |
 | `domainName` | External host name appended for dns annotation | |
 | `kubernetesClusterDomain` | Domain of the kubernetes cluster | `cluster.local` |
