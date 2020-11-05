@@ -1,3 +1,4 @@
+{{- $storageType := .Values.storageType | default "persistence" -}}
 apiVersion: "zookeeper.pravega.io/v1beta1"
 kind: "ZookeeperCluster"
 metadata:
@@ -112,16 +113,18 @@ spec:
     quorumListenOnAllIPs: {{ .Values.config.quorumListenOnAllIPs }}
     {{- end }}
   {{- end }}
-  storageType: {{ default "persistence" .Values.storageType }}
-  {{- if eq (default .Values.storageType "persistence") "ephemeral" }}
+  storageType: {{ $storageType }}
+  {{- if eq $storageType "ephemeral" }}
   ephemeral:
     {{- if .Values.ephemeral.emptydirvolumesource }}
     emptydirvolumesource:
+      {{- if .Values.ephemeral.emptydirvolumesource.medium }}
       medium: {{ .Values.ephemeral.emptydirvolumesource.medium }}
+      {{- end }}
       {{- if .Values.ephemeral.emptydirvolumesource.sizeLimit }}
       sizeLimit: {{ .Values.ephemeral.emptydirvolumesource.sizeLimit }}
       {{- end }}
-      {{- end }}
+    {{- end }}
   {{- else }}
   persistence:
     reclaimPolicy: {{ .Values.persistence.reclaimPolicy }}
