@@ -55,7 +55,7 @@ The following table lists the configurable parameters of the zookeeper chart and
 | ----- | ----------- | ------ |
 | `replicas` | Expected size of the zookeeper cluster (valid range is from 1 to 7) | `3` |
 | `image.repository` | Image repository | `pravega/zookeeper` |
-| `image.tag` | Image tag | `0.2.8` |
+| `image.tag` | Image tag | `0.2.9` |
 | `image.pullPolicy` | Image pull policy | `IfNotPresent` |
 | `domainName` | External host name appended for dns annotation | |
 | `kubernetesClusterDomain` | Domain of the kubernetes cluster | `cluster.local` |
@@ -85,7 +85,7 @@ The following table lists the configurable parameters of the zookeeper chart and
 | `config.minSessionTimeout` | The minimum session timeout in milliseconds that the server will allow the client to negotiate | `4000` |
 | `config.maxSessionTimeout` | The maximum session timeout in milliseconds that the server will allow the client to negotiate | `40000` |
 | `config.autoPurgeSnapRetainCount` | The number of snapshots to be retained | `3`
-| `config.autoPurgePurgeInterval` | The time interval in hours for which the purge task has to be triggered | `0`
+| `config.autoPurgePurgeInterval` | The time interval in hours for which the purge task has to be triggered | `1`
 | `config.quorumListenOnAllIPs` | Whether Zookeeper server will listen for connections from its peers on all available IP addresses | `false` |
 | `storageType` | Type of storage that can be used it can take either ephemeral or persistence as value | `persistence` |
 | `persistence.reclaimPolicy` | Reclaim policy for persistent volumes | `Delete` |

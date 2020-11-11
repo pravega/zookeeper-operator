@@ -58,7 +58,7 @@ func testMultiZKCluster(t *testing.T) {
 	defaultCluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
 	defaultCluster.ObjectMeta.Name = "zk2"
 	initialVersion := "0.2.7"
-	upgradeVersion := "0.2.8-rc0"
+	upgradeVersion := "0.2.9"
 	defaultCluster.Spec.Image = api.ContainerImage{
 		Repository: "pravega/zookeeper",
 		Tag:        initialVersion,
