@@ -89,6 +89,7 @@ The following table lists the configurable parameters of the zookeeper chart and
 | `config.quorumListenOnAllIPs` | Whether Zookeeper server will listen for connections from its peers on all available IP addresses | `false` |
 | `storageType` | Type of storage that can be used it can take either ephemeral or persistence as value | `persistence` |
 | `persistence.reclaimPolicy` | Reclaim policy for persistent volumes | `Delete` |
+| `persistence.annotations` | Specifies the annotations to attach to pvcs | `{}` |`
 | `persistence.storageClassName` | Storage class for persistent volumes | `` |
 | `persistence.volumeSize` | Size of the volume requested for persistent volumes | `20Gi` |
 | `ephemeral.emptydirvolumesource.medium` |  What type of storage medium should back the directory. | `""` |

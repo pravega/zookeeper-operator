@@ -555,6 +555,9 @@ type Persistence struct {
 	// This field is optional. If no PVC is specified default persistentvolume
 	// will get created.
 	PersistentVolumeClaimSpec v1.PersistentVolumeClaimSpec `json:"spec,omitempty"`
+	// Annotations specifies the annotations to attach to pvc the operator
+	// creates.
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 type Ephemeral struct {
