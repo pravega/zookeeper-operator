@@ -130,7 +130,7 @@ spec:
     reclaimPolicy: {{ .Values.persistence.reclaimPolicy }}
     {{- if .Values.persistence.annotations }}
     annotations:
-    {{ toYaml .Values.persistence.annotations | indent 6 }}
+{{ toYaml .Values.persistence.annotations | indent 6 }}
     {{- end }}
     {{- if or .Values.persistence.storageClassName .Values.persistence.volumeSize }}
     spec:
