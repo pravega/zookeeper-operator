@@ -88,6 +88,13 @@ func (in *MembersStatus) DeepCopy() *MembersStatus {
 func (in *Persistence) DeepCopyInto(out *Persistence) {
 	*out = *in
 	in.PersistentVolumeClaimSpec.DeepCopyInto(&out.PersistentVolumeClaimSpec)
+	if in.Annotations != nil {
+		in, out := &in.Annotations, &out.Annotations
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
+	}
 	return
 }
 

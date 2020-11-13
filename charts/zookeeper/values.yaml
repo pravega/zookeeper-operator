@@ -49,6 +49,7 @@ persistence:
   ## specifying reclaim policy for PersistentVolumes
   ## accepted values - Delete / Retain
   reclaimPolicy: Delete
+  annotations: {}
   volumeSize: 20Gi
 
 ephemeral:
