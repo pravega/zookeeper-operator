@@ -1267,6 +1267,12 @@ spec:
                   - Delete
                   - Retain
                   type: string
+                annotations:
+                  additionalProperties:
+                    type: string
+                  description: Annotations specifies the annotations to attach to
+                    pvc the operator creates.
+                  type: object
                 spec:
                   description: PersistentVolumeClaimSpec is the spec to describe PVC
                     for the container This field is optional. If no PVC is specified
