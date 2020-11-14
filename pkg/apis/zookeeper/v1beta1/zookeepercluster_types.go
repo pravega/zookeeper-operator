@@ -339,6 +339,8 @@ type PodPolicy struct {
 	TerminationGracePeriodSeconds int64 `json:"terminationGracePeriodSeconds,omitempty"`
 	// Service Account to be used in pods
 	ServiceAccountName string `json:"serviceAccountName,omitempty"`
+	// ImagePullSecrets is a list of references to secrets in the same namespace to use for pulling any images
+	ImagePullSecret []v1.LocalObjectReference `json:"imagePullSecret,omitempty"`
 }
 
 func (p *PodPolicy) withDefaults(z *ZookeeperCluster) (changed bool) {
