@@ -13,6 +13,7 @@ package zookeepercluster
 import (
 	"context"
 	"fmt"
+	"os"
 	"strconv"
 	"time"
 
@@ -152,6 +153,8 @@ func (r *ReconcileZookeeperCluster) Reconcile(request reconcile.Request) (reconc
 		r.reconcileStatefulSet,
 		r.reconcileClientService,
 		r.reconcileHeadlessService,
+		r.reconcilePodPendingTimeout,
+		r.reconcilePodTerminatingTimeout,
 		r.reconcilePodDisruptionBudget,
 		r.reconcileClusterStatus,
 	} {
@@ -721,4 +724,180 @@ func (r *ReconcileZookeeperCluster) deletePVC(pvcItem corev1.PersistentVolumeCla
 	if err != nil {
 		r.log.Error(err, "Error deleteing PVC.", "Name", pvcDelete.Name)
 	}
+}
+
+func (r *ReconcileZookeeperCluster) deletePod(podItem corev1.Pod) {
+	podDelete := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:  podItem.Name,
+			Namespace: podItem.Namespace,
+		},
+	}
+	r.log.Info("Deleting Pod", "With Name", podItem.Name)
+	err := r.client.Delete(context.TODO(), podDelete)
+	if err != nil {
+		r.log.Error(err, "Error deleteing Pod.", "Name", podDelete.Name)
+	}
+}
+
+
+func (r *ReconcileZookeeperCluster) deletePodForcefully(podItem corev1.Pod) {
+	podDelete := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:  podItem.Name,
+			Namespace: podItem.Namespace,
+		},
+	}
+	gracePeriod := int64(0)
+	deleteOption := &client.DeleteOptions{GracePeriodSeconds: &gracePeriod}
+	r.log.Info("Deleting Pod forcefully", "With Name", podItem.Name)
+	err := r.client.Delete(context.TODO(), podDelete, deleteOption)
+	if err != nil {
+		r.log.Error(err, "Error deleteing Pod.", "Name", podDelete.Name)
+	}
+}
+
+func (r *ReconcileZookeeperCluster) getPodList(instance *zookeeperv1beta1.ZookeeperCluster) (corev1.PodList, error) {
+	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
+		MatchLabels: map[string]string{"app": instance.GetName()},
+	})
+	podListOps := &client.ListOptions{
+		Namespace:     instance.Namespace,
+		LabelSelector: selector,
+	}
+	podList := &corev1.PodList{}
+	err = r.client.List(context.TODO(), podList, podListOps)
+	return *podList, err
+}
+
+// Reconcile Pod whose pending status latest more than 2 minutes. We will match pvc node name with pod's node name. Only if different,
+// then delete this pvc forcing, finally delete this timeout pending status Pod. The StatefulSet will recreate new Pod and PVC automatically.
+func (r *ReconcileZookeeperCluster) reconcilePodPendingTimeout(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
+	podList, err := r.getPodList(instance)
+	if err != nil || podList.Items == nil || len(podList.Items) == 0{
+		return err
+	}
+
+	podPendingLongest := &corev1.Pod{}
+	// get time from OS ENV
+	pdEnv := os.Getenv("PENDING_TIMEOUT_TIME")
+	// default: 2 minutes
+	if pdEnv == "" {
+		pdEnv = "120"
+	}
+	pendingTimeoutThreshold, err := strconv.Atoi(pdEnv)
+	if err != nil {
+		return err
+	}
+	longestTime := (int64)(pendingTimeoutThreshold)
+
+	for _, pod := range podList.Items {
+		if pod.Status.Phase == corev1.PodPending {
+			pendingTime := time.Now().Unix() - pod.CreationTimestamp.Unix()
+			if pendingTime > longestTime {
+				podPendingLongest = &pod
+				longestTime = pendingTime
+			}
+		}
+	}
+
+	if podPendingLongest == nil {
+		return nil
+	}
+
+	// get reference PVC
+	podName := podPendingLongest.Name
+	var pvcBounded *corev1.PersistentVolumeClaim
+
+	pvcList, err := r.getPVCList(instance)
+	if err != nil {
+		return err
+	}
+	pvcName := zk.GetPVCName() + "-" + podName
+	for _, pvc := range pvcList.Items {
+		if pvc.Name == pvcName {
+			pvcBounded = &pvc
+			break
+		}
+	}
+	if pvcBounded == nil {
+		return nil
+	}
+	defer r.deletePod(*podPendingLongest)
+	annotations := pvcBounded.Annotations
+	if nodeName, ok := annotations["volume.kubernetes.io/selected-node"]; ok {
+		// Compare pod's nodeName and pvc's nodeName, if not equal, delete all.
+		if nodeName != podPendingLongest.Spec.NodeName {
+			r.deletePVC(*pvcBounded)
+		}
+	}
+	return nil
+}
+
+
+func (r *ReconcileZookeeperCluster) reconcilePodTerminatingTimeout(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
+	podList, err := r.getPodList(instance)
+	if err != nil || podList.Items == nil || len(podList.Items) == 0{
+		return err
+	}
+
+	tmEnv := os.Getenv("TERMINATING_TIMEOUT_TIME")
+	// default 6 minutes
+	if tmEnv == "" {
+		tmEnv = "360"
+	}
+
+	timeout, err := strconv.Atoi(tmEnv)
+	if err != nil {
+		return err
+	}
+	terminatingTimeoutThreshold := int64(timeout)
+
+	for _, pod := range podList.Items {
+		if getPodStatus(&pod) == "Terminating" {
+			terminatingTime := time.Now().Unix() - pod.CreationTimestamp.Unix()
+			if terminatingTime > terminatingTimeoutThreshold {
+				// delete pod forcefully
+				r.deletePodForcefully(pod)
+			}
+		}
+	}
+
+	return nil
+}
+
+func getPodStatus(pod *corev1.Pod) string {
+	// Terminating
+	if pod.DeletionTimestamp != nil {
+		return "Terminating"
+	}
+
+	// not running
+	if pod.Status.Phase != corev1.PodRunning {
+		return string(pod.Status.Phase)
+	}
+
+	ready := false
+	notReadyReason := ""
+	for _, c := range pod.Status.Conditions {
+		if c.Type == corev1.PodReady {
+			ready = c.Status == corev1.ConditionTrue
+			notReadyReason = c.Reason
+		}
+	}
+
+	if pod.Status.Reason != "" {
+		return pod.Status.Reason
+	}
+
+	if notReadyReason != "" {
+		return notReadyReason
+	}
+
+	if ready {
+		return string(corev1.PodRunning)
+	}
+
+	// Unknown?
+	return "Unknown"
 }

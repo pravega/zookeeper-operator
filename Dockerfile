@@ -1,34 +1,27 @@
+# build builder
 ARG GO_VERSION=1.13.8
 ARG ALPINE_VERSION=3.11
 FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} as go-builder
 
-ARG PROJECT_NAME=zookeeper-operator
-ARG REPO_PATH=github.com/pravega/$PROJECT_NAME
+ARG CODEPATH
 
-# Build version and commit should be passed in when performing docker build
-ARG VERSION=0.0.0-localdev
-ARG GIT_SHA=0000000
 
-WORKDIR /src
-COPY pkg ./pkg
-COPY cmd ./cmd
-COPY go.mod ./
+WORKDIR $GOPATH/src/$CODEPATH
 
-# Download all dependencies.
-RUN go mod download
 
-RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o /src/${PROJECT_NAME} \
-    -ldflags "-X ${REPO_PATH}/pkg/version.Version=${VERSION} -X ${REPO_PATH}/pkg/version.GitSHA=${GIT_SHA}" \
-    /src/cmd/manager
+COPY . .
 
-# =============================================================================
-FROM alpine:${ALPINE_VERSION} AS final
+RUN GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOPROXY=https://mirrors.aliyun.com/goproxy/  go build -o /zookeeper-operator ./cmd/manager/main.go
 
-ARG PROJECT_NAME=zookeeper-operator
+# build server
+FROM alpine:3.8
 
-COPY --from=go-builder /src/${PROJECT_NAME} /usr/local/bin/${PROJECT_NAME}
+RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
-RUN adduser -D ${PROJECT_NAME}
-USER ${PROJECT_NAME}
+WORKDIR /
 
-ENTRYPOINT ["/usr/local/bin/zookeeper-operator"]
+COPY --from=builder /zookeeper-operator .
+RUN chmod +x /zookeeper-operator
+
+ENTRYPOINT ["zookeeper-operator"]
+

@@ -82,7 +82,7 @@ func MakeStatefulSet(z *v1beta1.ZookeeperCluster) *appsv1.StatefulSet {
 				},
 			},
 			UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
-				Type: appsv1.RollingUpdateStatefulSetStrategyType,
+				Type: appsv1.OnDeleteStatefulSetStrategyType,
 			},
 			PodManagementPolicy: appsv1.OrderedReadyPodManagement,
 			Template: v1.PodTemplateSpec{
@@ -361,4 +361,9 @@ func mergeLabels(l ...map[string]string) map[string]string {
 		}
 	}
 	return res
+}
+
+
+func GetPVCName() string{
+	return zkDataVolume
 }

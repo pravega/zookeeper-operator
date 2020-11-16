@@ -25,7 +25,8 @@ rules:
   - persistentvolumeclaims
   - events
   - configmaps
-  - secrets
+  - secret
+  - nodes
   verbs:
   - "*"
 - apiGroups:

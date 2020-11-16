@@ -1,116 +1,44 @@
-# Copyright (c) 2018 Dell Inc., or its subsidiaries. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
+# If you update this file, please follow
+# https://suva.sh/posts/well-documented-makefiles
 
-SHELL=/bin/bash -o pipefail
+# Ensure Make is run with bash shell as some syntax below is bash-specific
+SHELL:=/usr/bin/env bash
 
-PROJECT_NAME=zookeeper-operator
-EXPORTER_NAME=zookeeper-exporter
-APP_NAME=zookeeper
-KUBE_VERSION=1.17.5
-REPO=pravega/$(PROJECT_NAME)
-TEST_REPO=testzkop/$(PROJECT_NAME)
-APP_REPO=pravega/$(APP_NAME)
-ALTREPO=emccorp/$(PROJECT_NAME)
-APP_ALTREPO=emccorp/$(APP_NAME)
-VERSION=$(shell git describe --always --tags --dirty | sed "s/\(.*\)-g`git rev-parse --short HEAD`/\1/")
-GIT_SHA=$(shell git rev-parse --short HEAD)
-TEST_IMAGE=$(TEST_REPO)-testimages:$(VERSION)
-DOCKER_TEST_PASS=testzkop@123
-DOCKER_TEST_USER=testzkop
+.DEFAULT_GOAL := help
 
-.PHONY: all build check clean test
+# Code
+VERSION := 0.2.9
+CODEPATH := $(shell go mod why | sed -n '2,2p')
 
-all: check build
+# Tools
+TOOLS_DIR := tools
+TOOLS_BIN_DIR := $(TOOLS_DIR)/bin
 
-build: test build-go build-image
+# Define Docker related variables. Releases should modify and double check these vars.
+REGISTRY := r.qihoo.cloud/bigdata_infra
+IMAGE := zookeeper-operator
+CONTROLLER_IMG := $(REGISTRY)/$(IMAGE)
+TAG := dev
+ARCH := amd64
 
-build-go:
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
-		-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
-		-o bin/$(PROJECT_NAME)-linux-amd64 cmd/manager/main.go
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
-		-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
-		-o bin/$(EXPORTER_NAME)-linux-amd64 cmd/exporter/main.go
-	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build \
-		-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
-		-o bin/$(PROJECT_NAME)-darwin-amd64 cmd/manager/main.go
-	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build \
-		-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
-		-o bin/$(EXPORTER_NAME)-darwin-amd64 cmd/exporter/main.go
-	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build \
-		-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
-		-o bin/$(PROJECT_NAME)-windows-amd64.exe cmd/manager/main.go
-	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build \
-		-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
-		-o bin/$(EXPORTER_NAME)-windows-amd64.exe cmd/exporter/main.go
+# Use GOPROXY environment variable if set
+GOPROXY := $(shell go env GOPROXY)
+ifeq ($(GOPROXY),)
+GOPROXY := https://goproxy.cn
+endif
+export GOPROXY
+# Active module mode, as we use go modules to manage dependencies
+export GO111MODULE=on
+# Lint
+GOLANGCI_LINT := $(TOOLS_BIN_DIR)/golangci-lint
 
-build-image:
-	docker build --build-arg VERSION=$(VERSION) --build-arg GIT_SHA=$(GIT_SHA) -t $(REPO):$(VERSION) .
-	docker tag $(REPO):$(VERSION) $(REPO):latest
+.PHONY: server
 
-build-zk-image:
-	docker build --build-arg VERSION=$(VERSION) --build-arg GIT_SHA=$(GIT_SHA) -t $(APP_REPO):$(VERSION) ./docker
-	docker tag $(APP_REPO):$(VERSION) $(APP_REPO):latest
+run:
+	GOPROXY=https://goproxy.cn GO111MODULE=on go run detector.go -conf "./configs/pro.toml"
 
-build-zk-image-swarm:
-	docker build --build-arg VERSION=$(VERSION)-swarm --build-arg GIT_SHA=$(GIT_SHA) \
-		-f ./docker/Dockerfile-swarm -t $(APP_REPO):$(VERSION)-swarm ./docker
 
-test:
-	go test $$(go list ./... | grep -v /vendor/ | grep -v /test/e2e) -race -coverprofile=coverage.txt -covermode=atomic
-
-test-e2e: test-e2e-remote
-
-test-e2e-remote: test-login
-	operator-sdk build $(TEST_IMAGE)
-	docker push $(TEST_IMAGE)
-	operator-sdk test local ./test/e2e --operator-namespace default \
-		--namespaced-manifest ./test/e2e/resources/rbac-operator.yaml \
-		--global-manifest deploy/crds/zookeeper.pravega.io_zookeeperclusters_crd.yaml \
-		--image $(TEST_IMAGE) --go-test-flags "-v -timeout 0"
-
-test-e2e-local:
-	operator-sdk test local ./test/e2e --operator-namespace default --up-local --go-test-flags "-v -timeout 0"
-
-run-local:
-	operator-sdk up local
-
-login:
-	@docker login -u "$(DOCKER_USER)" -p "$(DOCKER_PASS)"
-
-test-login:
-	echo "$(DOCKER_TEST_PASS)" | docker login -u "$(DOCKER_TEST_USER)" --password-stdin
-
-push: build-image build-zk-image build-zk-image-swarm login
-	docker push $(REPO):$(VERSION)
-	docker push $(REPO):latest
-	docker push $(APP_REPO):$(VERSION)
-	docker push $(APP_REPO):latest
-	docker push $(APP_REPO):$(VERSION)-swarm
-	docker tag $(REPO):$(VERSION) $(ALTREPO):$(VERSION)
-	docker tag $(REPO):$(VERSION) $(ALTREPO):latest
-	docker tag $(APP_REPO):$(VERSION) $(APP_ALTREPO):$(VERSION)
-	docker tag $(APP_REPO):$(VERSION) $(APP_ALTREPO):latest
-	docker push $(ALTREPO):$(VERSION)
-	docker push $(ALTREPO):latest
-	docker push $(APP_ALTREPO):$(VERSION)
-	docker push $(APP_ALTREPO):latest
-
-clean:
-	rm -f bin/$(PROJECT_NAME)
-
-check: check-format check-license
-
-check-format:
-	./scripts/check_format.sh
-
-check-license:
-	./scripts/check_license.sh
-
-update-kube-version:
-	./scripts/update_kube_version.sh ${KUBE_VERSION}
+server:
+	@echo "version: $(VERSION)"
+	docker build --no-cache --build-arg CODEPATH=$(CODEPATH) -t $(REGISTRY)/$(IMAGE):$(VERSION) -f Dockerfile .
+	docker push $(REGISTRY)/$(IMAGE):$(VERSION)
