@@ -72,6 +72,7 @@ The following table lists the configurable parameters of the zookeeper chart and
 | `pod.securityContext` | Specifies the security context for the entire pod | `{}` |
 | `pod.terminationGracePeriodSeconds` | Amount of time given to the pod to shutdown normally | `30` |
 | `pod.serviceAccountName` | Name for the service account | `zookeeper` |
+| `pod.imagePullSecrets` | ImagePullSecrets is a list of references to secrets in the same namespace to use for pulling any images. | `[]` |
 | `config.initLimit` | Amount of time (in ticks) to allow followers to connect and sync to a leader | `10` |
 | `config.tickTime` | Length of a single tick which is the basic time unit used by Zookeeper (measured in milliseconds) | `2000` |
 | `config.syncLimit` | Amount of time (in ticks) to allow followers to sync with Zookeeper | `2` |

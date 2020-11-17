@@ -2335,6 +2335,19 @@ spec:
                 serviceAccountName:
                   description: Service Account to be used in pods
                   type: string
+                imagePullSecrets:
+                  description: ImagePullSecrets is a list of references to secrets in
+                      the same namespace to use for pulling any images.
+                  items:
+                    description: LocalObjectReference contains enough information
+                      to let you locate the referenced object inside the same namespace.
+                    properties:
+                      name:
+                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                          TODO: Add other useful fields. apiVersion, kind, uid?'
+                        type: string
+                    type: object
+                  type: array
                 terminationGracePeriodSeconds:
                   description: TerminationGracePeriodSeconds is the amount of time
                     that kubernetes will give for a pod instance to shutdown normally.

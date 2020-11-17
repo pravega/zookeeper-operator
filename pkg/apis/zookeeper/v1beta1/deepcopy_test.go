@@ -29,9 +29,9 @@ func TestDeepcopy(t *testing.T) {
 var _ = Describe("ZookeeperCluster DeepCopy", func() {
 	Context("with defaults", func() {
 		var (
-			str1, str2, str3, str4, str5, str6, str7, str8, str9, str10 string
-			checkport                                                   int32
-			z1, z2                                                      *v1beta1.ZookeeperCluster
+			str1, str2, str3, str4, str5, str6, str7, str8, str9, str10, str11 string
+			checkport                                                          int32
+			z1, z2                                                             *v1beta1.ZookeeperCluster
 		)
 		BeforeEach(func() {
 			z1 = &v1beta1.ZookeeperCluster{
@@ -104,7 +104,12 @@ var _ = Describe("ZookeeperCluster DeepCopy", func() {
 			z1.Spec.Pod.Annotations = m
 			podSec := &v1.PodSecurityContext{}
 			z1.Spec.Pod.SecurityContext = podSec
+			pullsecret1 := v1.LocalObjectReference{
+				Name: "testimagepullsecret",
+			}
+			z1.Spec.Pod.ImagePullSecrets = []v1.LocalObjectReference{pullsecret1}
 			z1.Spec.Pod.DeepCopyInto(&z2.Spec.Pod)
+			str11 = z2.Spec.Pod.ImagePullSecrets[0].Name
 			port := z1.ZookeeperPorts()
 			tempPort := port.DeepCopy()
 			checkport = tempPort.Client
@@ -138,7 +143,9 @@ var _ = Describe("ZookeeperCluster DeepCopy", func() {
 		It("value of str10 should be zk-2", func() {
 			Ω(str10).To(Equal("zk-2"))
 		})
-
+		It("value of str11 should be testimagepullsecret", func() {
+			Ω(str11).To(Equal("testimagepullsecret"))
+		})
 		It("value of checkport should be 2181", func() {
 			Ω(checkport).To(Equal(int32(2181)))
 		})
