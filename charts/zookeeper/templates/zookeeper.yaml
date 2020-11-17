@@ -66,8 +66,8 @@ spec:
     {{- end }}
     serviceAccountName: {{ default "zookeeper" .Values.pod.serviceAccountName }}
     {{- if .Values.pod.imagePullSecret }}
-    imagePullSecret:
-{{ toYaml .Values.pod.imagePullSecret | indent 6 }}
+    imagePullSecrets:
+{{ toYaml .Values.pod.imagePullSecrets | indent 6 }}
     {{- end }}
   {{- if .Values.config }}
   config:
