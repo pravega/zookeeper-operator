@@ -348,7 +348,7 @@ func MakeServiceAccount(z *v1beta1.ZookeeperCluster) *v1.ServiceAccount {
 			Name:      z.Spec.Pod.ServiceAccountName,
 			Namespace: z.Namespace,
 		},
-		ImagePullSecrets: z.Spec.Pod.ImagePullSecret,
+		ImagePullSecrets: z.Spec.Pod.ImagePullSecrets,
 	}
 }
 

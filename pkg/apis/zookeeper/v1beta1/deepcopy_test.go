@@ -107,9 +107,9 @@ var _ = Describe("ZookeeperCluster DeepCopy", func() {
 			pullsecret1 := v1.LocalObjectReference{
 				Name: "testimagepullsecret",
 			}
-			z1.Spec.Pod.ImagePullSecret = []v1.LocalObjectReference{pullsecret1}
+			z1.Spec.Pod.ImagePullSecrets = []v1.LocalObjectReference{pullsecret1}
 			z1.Spec.Pod.DeepCopyInto(&z2.Spec.Pod)
-			str11 = z2.Spec.Pod.ImagePullSecret[0].Name
+			str11 = z2.Spec.Pod.ImagePullSecrets[0].Name
 			port := z1.ZookeeperPorts()
 			tempPort := port.DeepCopy()
 			checkport = tempPort.Client

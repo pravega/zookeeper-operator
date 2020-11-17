@@ -21,7 +21,7 @@ pod:
   # securityContext: {}
   # terminationGracePeriodSeconds: 30
   serviceAccountName: zookeeper
-  # imagePullSecret: []
+  # imagePullSecrets: []
 
 config: {}
   # initLimit: 10
