@@ -157,6 +157,11 @@ func (in *PodPolicy) DeepCopyInto(out *PodPolicy) {
 		*out = new(v1.PodSecurityContext)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.ImagePullSecret != nil {
+		in, out := &in.ImagePullSecret, &out.ImagePullSecret
+		*out = make([]v1.LocalObjectReference, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 
