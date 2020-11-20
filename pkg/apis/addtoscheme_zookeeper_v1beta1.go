@@ -11,8 +11,9 @@
 package apis
 
 import (
-	"github.com/pravega/zookeeper-operator/pkg/apis/statefulset/v1"
-	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
+	"github.com/q8s-io/statefulset-pingcap/client/apis/apps/v1"
+
+	"github.com/q8s-io/zookeeper-operator-pravega/pkg/apis/zookeeper/v1beta1"
 )
 
 func init() {

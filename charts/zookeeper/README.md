@@ -10,7 +10,7 @@ This chart creates a Zookeeper cluster in [Kubernetes](http://kubernetes.io) usi
 
   - Kubernetes 1.15+ with Beta APIs
   - Helm 3.2.1+
-  - Zookeeper Operator. You can install it using its own [Helm chart](https://github.com/pravega/zookeeper-operator/tree/master/charts/zookeeper-operator)
+  - Zookeeper Operator. You can install it using its own [Helm chart](https://github.com/q8s-io/zookeeper-operator-pravega/tree/master/charts/zookeeper-operator)
 
 ## Installing the Chart
 

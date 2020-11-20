@@ -11,7 +11,7 @@
 package zk
 
 import (
-	pingcapv1 "github.com/pravega/zookeeper-operator/pkg/apis/statefulset/v1"
+	pingcapv1 "github.com/q8s-io/statefulset-pingcap/client/apis/apps/v1"
 	"k8s.io/api/core/v1"
 )
 

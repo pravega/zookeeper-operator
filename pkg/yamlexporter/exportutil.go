@@ -18,7 +18,8 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
-	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
+
+	"github.com/q8s-io/zookeeper-operator-pravega/pkg/apis/zookeeper/v1beta1"
 )
 
 // YAMLOutputDir where the zookeeper YAML resources will get generated

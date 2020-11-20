@@ -96,7 +96,7 @@ spec:
               fieldPath: metadata.name
         - name: OPERATOR_NAME
           value: zookeeper-operator
-        image: pravega/zookeeper-operator:latest
+        image: q8s-io/zookeeper-operator-pravega:latest
         imagePullPolicy: Always
         name: zookeeper-operator
         ports:

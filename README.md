@@ -1,5 +1,5 @@
 # Zookeeper Operator
-[![Build Status](https://travis-ci.org/pravega/zookeeper-operator.svg?branch=master)](https://travis-ci.org/pravega/zookeeper-operator)
+[![Build Status](https://travis-ci.org/q8s-io/zookeeper-operator-pravega.svg?branch=master)](https://travis-ci.org/q8s-io/zookeeper-operator-pravega)
 ### Project status: alpha
 
 The project is currently alpha. While no breaking API changes are currently planned, we reserve the right to address bugs and change the API before the project is declared stable.
@@ -335,20 +335,20 @@ Example image after running `make build`.
 The Zookeeper operator image will be available in your Docker environment.
 
 ```
-$ docker images pravega/zookeeper-operator
+$ docker images q8s-io/zookeeper-operator-pravega
 
 REPOSITORY                    TAG              IMAGE ID        CREATED         SIZE   
 
-pravega/zookeeper-operator    0.1.1-3-dirty    2b2d5bcbedf5    10 minutes ago  41.7MB
+q8s-io/zookeeper-operator-pravega    0.1.1-3-dirty    2b2d5bcbedf5    10 minutes ago  41.7MB
 
-pravega/zookeeper-operator    latest           2b2d5bcbedf5    10 minutes ago  41.7MB
+q8s-io/zookeeper-operator-pravega    latest           2b2d5bcbedf5    10 minutes ago  41.7MB
 
 ```
 Optionally push it to a Docker registry.
 
 ```
-docker tag pravega/zookeeper-operator [REGISTRY_HOST]:[REGISTRY_PORT]/pravega/zookeeper-operator
-docker push [REGISTRY_HOST]:[REGISTRY_PORT]/pravega/zookeeper-operator
+docker tag q8s-io/zookeeper-operator-pravega [REGISTRY_HOST]:[REGISTRY_PORT]/q8s-io/zookeeper-operator-pravega
+docker push [REGISTRY_HOST]:[REGISTRY_PORT]/q8s-io/zookeeper-operator-pravega
 ```
 
 where:

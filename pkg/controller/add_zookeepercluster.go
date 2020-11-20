@@ -11,7 +11,7 @@
 package controller
 
 import (
-	"github.com/pravega/zookeeper-operator/pkg/controller/zookeepercluster"
+	"github.com/q8s-io/zookeeper-operator-pravega/pkg/controller/zookeepercluster"
 )
 
 func init() {

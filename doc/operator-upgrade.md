@@ -2,7 +2,7 @@
 zookeeperoperator can be upgraded to a version **[VERSION]** via helm using the following command
 
 ```
-$ helm upgrade [ZOOKEEPER_OPERATOR_RELEASE_NAME] pravega/zookeeper-operator --version=[VERSION]
+$ helm upgrade [ZOOKEEPER_OPERATOR_RELEASE_NAME] q8s-io/zookeeper-operator-pravega --version=[VERSION]
 ```
 The zookeeper operator with deployment name **[DEPLOYMENT_NAME]** can also be upgraded manually by modifying the image tag using kubectl edit, patch or apply
 ```

@@ -15,8 +15,8 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
-	"github.com/pravega/zookeeper-operator/pkg/zk"
+	"github.com/q8s-io/zookeeper-operator-pravega/pkg/apis/zookeeper/v1beta1"
+	"github.com/q8s-io/zookeeper-operator-pravega/pkg/zk"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

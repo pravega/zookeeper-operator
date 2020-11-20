@@ -16,8 +16,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
-	"github.com/pravega/zookeeper-operator/pkg/zk"
+	"github.com/q8s-io/zookeeper-operator-pravega/pkg/apis/zookeeper/v1beta1"
+	"github.com/q8s-io/zookeeper-operator-pravega/pkg/zk"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"

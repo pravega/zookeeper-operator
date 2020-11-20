@@ -20,13 +20,10 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/pravega/zookeeper-operator/pkg/utils"
-	"github.com/pravega/zookeeper-operator/pkg/yamlexporter"
+	"github.com/q8s-io/zookeeper-operator-pravega/pkg/utils"
+	"github.com/q8s-io/zookeeper-operator-pravega/pkg/yamlexporter"
 
 	"github.com/go-logr/logr"
-	pingcapv1 "github.com/pravega/zookeeper-operator/pkg/apis/statefulset/v1"
-	zookeeperv1beta1 "github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
-	"github.com/pravega/zookeeper-operator/pkg/zk"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
@@ -43,6 +40,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+
+	pingcapv1 "github.com/q8s-io/statefulset-pingcap/client/apis/apps/v1"
+
+	zookeeperv1beta1 "github.com/q8s-io/zookeeper-operator-pravega/pkg/apis/zookeeper/v1beta1"
+	"github.com/q8s-io/zookeeper-operator-pravega/pkg/zk"
 )
 
 // ReconcileTime is the delay between reconciliations
