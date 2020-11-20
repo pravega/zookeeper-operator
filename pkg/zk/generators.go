@@ -17,7 +17,7 @@ import (
 	"strings"
 
 	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
-	appsv1 "k8s.io/api/apps/v1"
+	pingcapv1 "github.com/pravega/zookeeper-operator/pkg/apis/statefulset/v1"
 	v1 "k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -27,6 +27,7 @@ import (
 const (
 	externalDNSAnnotationKey = "external-dns.alpha.kubernetes.io/hostname"
 	dot                      = "."
+	apiVersion = "apps.pingcap.com/v1"
 )
 
 func headlessDomain(z *v1beta1.ZookeeperCluster) string {
@@ -40,7 +41,7 @@ func headlessSvcName(z *v1beta1.ZookeeperCluster) string {
 var zkDataVolume = "data"
 
 // MakeStatefulSet return a zookeeper stateful set from the zk spec
-func MakeStatefulSet(z *v1beta1.ZookeeperCluster) *appsv1.StatefulSet {
+func MakeStatefulSet(z *v1beta1.ZookeeperCluster) *pingcapv1.StatefulSet {
 	extraVolumes := []v1.Volume{}
 	persistence := z.Spec.Persistence
 	pvcs := []v1.PersistentVolumeClaim{}
@@ -63,17 +64,17 @@ func MakeStatefulSet(z *v1beta1.ZookeeperCluster) *appsv1.StatefulSet {
 			Spec: persistence.PersistentVolumeClaimSpec,
 		})
 	}
-	return &appsv1.StatefulSet{
+	return &pingcapv1.StatefulSet{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "StatefulSet",
-			APIVersion: "apps/v1",
+			APIVersion: "apps.pingcap.com/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      z.GetName(),
 			Namespace: z.Namespace,
 			Labels:    z.Spec.Labels,
 		},
-		Spec: appsv1.StatefulSetSpec{
+		Spec: pingcapv1.StatefulSetSpec{
 			ServiceName: headlessSvcName(z),
 			Replicas:    &z.Spec.Replicas,
 			Selector: &metav1.LabelSelector{
@@ -81,10 +82,10 @@ func MakeStatefulSet(z *v1beta1.ZookeeperCluster) *appsv1.StatefulSet {
 					"app": z.GetName(),
 				},
 			},
-			UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
-				Type: appsv1.OnDeleteStatefulSetStrategyType,
+			UpdateStrategy: pingcapv1.StatefulSetUpdateStrategy{
+				Type: pingcapv1.RollingUpdateStatefulSetStrategyType,
 			},
-			PodManagementPolicy: appsv1.OrderedReadyPodManagement,
+			PodManagementPolicy: pingcapv1.OrderedReadyPodManagement,
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					GenerateName: z.GetName(),

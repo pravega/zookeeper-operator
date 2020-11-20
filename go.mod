@@ -1,8 +1,9 @@
 module github.com/pravega/zookeeper-operator
 
-go 1.13
+go 1.14
 
 require (
+	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
 	github.com/go-logr/logr v0.1.0
 	github.com/mdempsky/maligned v0.0.0-20180708014732-6e39bd26a8c8 // indirect
 	github.com/mibk/dupl v1.0.0 // indirect
@@ -10,9 +11,9 @@ require (
 	github.com/onsi/gomega v1.9.0
 	github.com/operator-framework/operator-sdk v0.17.0
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/common v0.9.1
+	github.com/prometheus/common v0.9.1 // indirect
 	github.com/samuel/go-zookeeper v0.0.0-20190923202752-2cc03de413da
-	github.com/sirupsen/logrus v1.5.0
+	github.com/sirupsen/logrus v1.5.0 // indirect
 	github.com/stripe/safesql v0.2.0 // indirect
 	golang.org/x/lint v0.0.0-20191125180803-fdd1cda4f05f // indirect
 	golang.org/x/tools v0.0.0-20200331202046-9d5940d49312 // indirect
@@ -20,6 +21,7 @@ require (
 	k8s.io/apimachinery v0.17.5
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/code-generator v0.19.3 // indirect
+	k8s.io/kubernetes v1.13.0
 	sigs.k8s.io/controller-runtime v0.5.2
 )
 

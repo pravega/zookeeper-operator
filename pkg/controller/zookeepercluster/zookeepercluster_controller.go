@@ -24,6 +24,7 @@ import (
 	"github.com/pravega/zookeeper-operator/pkg/yamlexporter"
 
 	"github.com/go-logr/logr"
+	pingcapv1 "github.com/pravega/zookeeper-operator/pkg/apis/statefulset/v1"
 	zookeeperv1beta1 "github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	"github.com/pravega/zookeeper-operator/pkg/zk"
 	appsv1 "k8s.io/api/apps/v1"
@@ -153,8 +154,8 @@ func (r *ReconcileZookeeperCluster) Reconcile(request reconcile.Request) (reconc
 		r.reconcileStatefulSet,
 		r.reconcileClientService,
 		r.reconcileHeadlessService,
-		r.reconcilePodPendingTimeout,
-		r.reconcilePodTerminatingTimeout,
+		//r.reconcilePodPendingTimeout,
+		//r.reconcilePodTerminatingTimeout,
 		r.reconcilePodDisruptionBudget,
 		r.reconcileClusterStatus,
 	} {
@@ -194,7 +195,7 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 	if err = controllerutil.SetControllerReference(instance, sts, r.scheme); err != nil {
 		return err
 	}
-	foundSts := &appsv1.StatefulSet{}
+	foundSts := &pingcapv1.StatefulSet{}
 	err = r.client.Get(context.TODO(), types.NamespacedName{
 		Name:      sts.Name,
 		Namespace: sts.Namespace,
@@ -240,7 +241,7 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 	}
 }
 
-func (r *ReconcileZookeeperCluster) updateStatefulSet(instance *zookeeperv1beta1.ZookeeperCluster, foundSts *appsv1.StatefulSet, sts *appsv1.StatefulSet) (err error) {
+func (r *ReconcileZookeeperCluster) updateStatefulSet(instance *zookeeperv1beta1.ZookeeperCluster, foundSts *pingcapv1.StatefulSet, sts *pingcapv1.StatefulSet) (err error) {
 	r.log.Info("Updating StatefulSet",
 		"StatefulSet.Namespace", foundSts.Namespace,
 		"StatefulSet.Name", foundSts.Name)
@@ -255,7 +256,7 @@ func (r *ReconcileZookeeperCluster) updateStatefulSet(instance *zookeeperv1beta1
 	return nil
 }
 
-func (r *ReconcileZookeeperCluster) upgradeStatefulSet(instance *zookeeperv1beta1.ZookeeperCluster, foundSts *appsv1.StatefulSet) (err error) {
+func (r *ReconcileZookeeperCluster) upgradeStatefulSet(instance *zookeeperv1beta1.ZookeeperCluster, foundSts *pingcapv1.StatefulSet) (err error) {
 
 	//Getting the upgradeCondition from the zk clustercondition
 	_, upgradeCondition := instance.Status.GetClusterCondition(zookeeperv1beta1.ClusterConditionUpgrading)
@@ -778,7 +779,7 @@ func (r *ReconcileZookeeperCluster) reconcilePodPendingTimeout(instance *zookeep
 		return err
 	}
 
-	podPendingLongest := &corev1.Pod{}
+	var podPendingLongest *corev1.Pod
 	// get time from OS ENV
 	pdEnv := os.Getenv("PENDING_TIMEOUT_TIME")
 	// default: 2 minutes
@@ -801,10 +802,12 @@ func (r *ReconcileZookeeperCluster) reconcilePodPendingTimeout(instance *zookeep
 		}
 	}
 
+
 	if podPendingLongest == nil {
 		return nil
 	}
-
+	fmt.Println(podPendingLongest.Name)
+	defer r.deletePod(*podPendingLongest)
 	// get reference PVC
 	podName := podPendingLongest.Name
 	var pvcBounded *corev1.PersistentVolumeClaim
@@ -823,7 +826,6 @@ func (r *ReconcileZookeeperCluster) reconcilePodPendingTimeout(instance *zookeep
 	if pvcBounded == nil {
 		return nil
 	}
-	defer r.deletePod(*podPendingLongest)
 	annotations := pvcBounded.Annotations
 	if nodeName, ok := annotations["volume.kubernetes.io/selected-node"]; ok {
 		// Compare pod's nodeName and pvc's nodeName, if not equal, delete all.
