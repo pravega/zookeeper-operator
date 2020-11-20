@@ -730,7 +730,7 @@ func (r *ReconcileZookeeperCluster) deletePVC(pvcItem corev1.PersistentVolumeCla
 func (r *ReconcileZookeeperCluster) deletePod(podItem corev1.Pod) {
 	podDelete := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:  podItem.Name,
+			Name:      podItem.Name,
 			Namespace: podItem.Namespace,
 		},
 	}
@@ -741,11 +741,10 @@ func (r *ReconcileZookeeperCluster) deletePod(podItem corev1.Pod) {
 	}
 }
 
-
 func (r *ReconcileZookeeperCluster) deletePodForcefully(podItem corev1.Pod) {
 	podDelete := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:  podItem.Name,
+			Name:      podItem.Name,
 			Namespace: podItem.Namespace,
 		},
 	}
@@ -775,7 +774,7 @@ func (r *ReconcileZookeeperCluster) getPodList(instance *zookeeperv1beta1.Zookee
 // then delete this pvc forcing, finally delete this timeout pending status Pod. The StatefulSet will recreate new Pod and PVC automatically.
 func (r *ReconcileZookeeperCluster) reconcilePodPendingTimeout(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
 	podList, err := r.getPodList(instance)
-	if err != nil || podList.Items == nil || len(podList.Items) == 0{
+	if err != nil || podList.Items == nil || len(podList.Items) == 0 {
 		return err
 	}
 
@@ -801,7 +800,6 @@ func (r *ReconcileZookeeperCluster) reconcilePodPendingTimeout(instance *zookeep
 			}
 		}
 	}
-
 
 	if podPendingLongest == nil {
 		return nil
@@ -836,10 +834,9 @@ func (r *ReconcileZookeeperCluster) reconcilePodPendingTimeout(instance *zookeep
 	return nil
 }
 
-
 func (r *ReconcileZookeeperCluster) reconcilePodTerminatingTimeout(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
 	podList, err := r.getPodList(instance)
-	if err != nil || podList.Items == nil || len(podList.Items) == 0{
+	if err != nil || podList.Items == nil || len(podList.Items) == 0 {
 		return err
 	}
 

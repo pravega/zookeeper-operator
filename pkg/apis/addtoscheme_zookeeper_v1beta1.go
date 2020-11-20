@@ -11,7 +11,7 @@
 package apis
 
 import (
-	 "github.com/pravega/zookeeper-operator/pkg/apis/statefulset/v1"
+	"github.com/pravega/zookeeper-operator/pkg/apis/statefulset/v1"
 	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 )
 

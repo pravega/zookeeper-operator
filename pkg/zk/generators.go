@@ -16,8 +16,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	pingcapv1 "github.com/pravega/zookeeper-operator/pkg/apis/statefulset/v1"
+	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	v1 "k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -27,7 +27,7 @@ import (
 const (
 	externalDNSAnnotationKey = "external-dns.alpha.kubernetes.io/hostname"
 	dot                      = "."
-	apiVersion = "apps.pingcap.com/v1"
+	apiVersion               = "apps.pingcap.com/v1"
 )
 
 func headlessDomain(z *v1beta1.ZookeeperCluster) string {
@@ -364,7 +364,6 @@ func mergeLabels(l ...map[string]string) map[string]string {
 	return res
 }
 
-
-func GetPVCName() string{
+func GetPVCName() string {
 	return zkDataVolume
 }
