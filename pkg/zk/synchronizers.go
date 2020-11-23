@@ -20,6 +20,7 @@ func SyncStatefulSet(curr *pingcapv1.StatefulSet, next *pingcapv1.StatefulSet) {
 	curr.Spec.Replicas = next.Spec.Replicas
 	curr.Spec.Template = next.Spec.Template
 	curr.Spec.UpdateStrategy = next.Spec.UpdateStrategy
+	curr.Annotations = nil
 }
 
 // SyncService synchronizes a service with an updated spec and validates it

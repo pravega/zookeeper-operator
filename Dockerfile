@@ -4,8 +4,12 @@ RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
 WORKDIR /
 
-COPY ./zookeeper-operator .
-RUN chmod +x /zookeeper-operator
+ARG PROJECT_NAME=zookeeper-operator
 
-ENTRYPOINT ["zookeeper-operator"]
+COPY ${PROJECT_NAME} /usr/local/bin/${PROJECT_NAME}
+
+RUN adduser -D ${PROJECT_NAME}
+USER ${PROJECT_NAME}
+
+ENTRYPOINT ["/usr/local/bin/zookeeper-operator"]
 

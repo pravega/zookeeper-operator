@@ -48,7 +48,7 @@ import (
 )
 
 // ReconcileTime is the delay between reconciliations
-const ReconcileTime = 30 * time.Second
+const ReconcileTime = 10 * time.Second
 
 var log = logf.Log.WithName("controller_zookeepercluster")
 
@@ -156,9 +156,9 @@ func (r *ReconcileZookeeperCluster) Reconcile(request reconcile.Request) (reconc
 		r.reconcileStatefulSet,
 		r.reconcileClientService,
 		r.reconcileHeadlessService,
-		//r.reconcilePodPendingTimeout,
-		//r.reconcilePodTerminatingTimeout,
 		r.reconcilePodDisruptionBudget,
+		r.reconcilePodPendingTimeout,
+		r.reconcilePodTerminatingTimeout,
 		r.reconcileClusterStatus,
 	} {
 		if err = fun(instance); err != nil {
@@ -729,7 +729,7 @@ func (r *ReconcileZookeeperCluster) deletePVC(pvcItem corev1.PersistentVolumeCla
 	}
 }
 
-func (r *ReconcileZookeeperCluster) deletePod(podItem corev1.Pod) {
+func (r *ReconcileZookeeperCluster) deletePod(podItem *corev1.Pod) {
 	podDelete := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      podItem.Name,
@@ -740,6 +740,24 @@ func (r *ReconcileZookeeperCluster) deletePod(podItem corev1.Pod) {
 	err := r.client.Delete(context.TODO(), podDelete)
 	if err != nil {
 		r.log.Error(err, "Error deleteing Pod.", "Name", podDelete.Name)
+	}
+}
+
+func (r *ReconcileZookeeperCluster) scaleIn(sts *pingcapv1.StatefulSet , index int) {
+	podName := fmt.Sprintf("%s-%d", sts.Name, index + 1)
+	r.log.Info("Scale in StatefulSet", "With Name", sts.Name)
+
+	sts.Annotations = make(map[string]string)
+	value := fmt.Sprintf("[%d]", index + 1)
+
+	sts.Annotations["delete-slot"] = value
+	replicas := sts.Spec.Replicas
+	*replicas = *replicas - 1
+	sts.Spec.Replicas = replicas
+
+	err := r.client.Update(context.TODO(), sts)
+	if err != nil {
+		r.log.Error(err, "Error deleteing Pod.", "Name", podName)
 	}
 }
 
@@ -806,8 +824,7 @@ func (r *ReconcileZookeeperCluster) reconcilePodPendingTimeout(instance *zookeep
 	if podPendingLongest == nil {
 		return nil
 	}
-	fmt.Println(podPendingLongest.Name)
-	defer r.deletePod(*podPendingLongest)
+
 	// get reference PVC
 	podName := podPendingLongest.Name
 	var pvcBounded *corev1.PersistentVolumeClaim
@@ -831,6 +848,7 @@ func (r *ReconcileZookeeperCluster) reconcilePodPendingTimeout(instance *zookeep
 		// Compare pod's nodeName and pvc's nodeName, if not equal, delete all.
 		if nodeName != podPendingLongest.Spec.NodeName {
 			r.deletePVC(*pvcBounded)
+			r.deletePod(podPendingLongest)
 		}
 	}
 	return nil
@@ -858,8 +876,8 @@ func (r *ReconcileZookeeperCluster) reconcilePodTerminatingTimeout(instance *zoo
 		if getPodStatus(&pod) == "Terminating" {
 			terminatingTime := time.Now().Unix() - pod.CreationTimestamp.Unix()
 			if terminatingTime > terminatingTimeoutThreshold {
-				// delete pod forcefully
 				r.deletePodForcefully(pod)
+				return nil
 			}
 		}
 	}
