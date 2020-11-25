@@ -7,19 +7,19 @@ SHELL:=/usr/bin/env bash
 .DEFAULT_GOAL := help
 
 # Code
-VERSION := 0.2.9
-CODEPATH := $(shell go mod why | sed -n '2,2p')
+VERSION := 0.0.1-q8s
+GIT_SHA := $(shell git rev-parse --short HEAD)
+PROJECT_NAME := zookeeper-operator
+CODE_PATH := github.com/q8s-io/zookeeper-operator-pravega
+
+# Define Docker related variables. Releases should modify and double check these vars.
+REGISTRY := uhub.service.ucloud.cn/infra
+IMAGE := zookeeper-operator
+CONTROLLER_IMG := $(REGISTRY)/$(IMAGE)
 
 # Tools
 TOOLS_DIR := tools
 TOOLS_BIN_DIR := $(TOOLS_DIR)/bin
-
-# Define Docker related variables. Releases should modify and double check these vars.
-REGISTRY := r.qihoo.cloud/bigdata_infra
-IMAGE := zookeeper-operator
-CONTROLLER_IMG := $(REGISTRY)/$(IMAGE)
-TAG := dev
-ARCH := amd64
 
 # Use GOPROXY environment variable if set
 GOPROXY := $(shell go env GOPROXY)
@@ -37,8 +37,7 @@ GOLANGCI_LINT := $(TOOLS_BIN_DIR)/golangci-lint
 run:
 	GOPROXY=https://goproxy.cn GO111MODULE=on go run detector.go -conf "./configs/pro.toml"
 
-
 server:
 	@echo "version: $(VERSION)"
-	docker build --no-cache --build-arg CODEPATH=$(CODEPATH) -t $(REGISTRY)/$(IMAGE):$(VERSION) -f Dockerfile .
-	docker push $(REGISTRY)/$(IMAGE):$(VERSION)
+	docker build --no-cache --build-arg VERSION=$(VERSION) --build-arg GIT_SHA=$(GIT_SHA) --build-arg PROJECT_NAME=$(PROJECT_NAME) --build-arg CODE_PATH=$(CODE_PATH) -t $(CONTROLLER_IMG):$(VERSION) -f Dockerfile .
+	docker push $(CONTROLLER_IMG):$(VERSION)

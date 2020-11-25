@@ -1,0 +1,21 @@
+apiVersion: "zookeeper.pravega.io/v1beta1"
+kind: "ZookeeperCluster"
+metadata:
+  name: "example"
+  namespace: zookeeper
+spec:
+  replicas: 3  
+  image:
+    repository: uhub.service.ucloud.cn/infra/zookeeper
+    tag: 0.2.9
+    pullPolicy: Always
+  storageType: "persistence"
+  persistence:
+    reclaimPolicy: "Delete"
+    storageClass: "kubevirt-hostpath-provisioner"
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 100Gi
+    
