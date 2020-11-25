@@ -19,5 +19,6 @@ import (
 func init() {
 	// Register the types with the Scheme so the components can map objects to
 	// GroupVersionKinds and back
+	// also add pingcap.statefulset to scheme
 	AddToSchemes = append(AddToSchemes, v1beta1.SchemeBuilder.AddToScheme, v1.SchemeBuilder.AddToScheme)
 }
