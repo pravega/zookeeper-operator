@@ -15,10 +15,11 @@ import (
 
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	"github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
-	apis "github.com/pravega/zookeeper-operator/pkg/apis"
-	operator "github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
-	zk_e2eutil "github.com/pravega/zookeeper-operator/pkg/test/e2e/e2eutil"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	apis "github.com/q8s-io/zookeeper-operator-pravega/pkg/apis"
+	operator "github.com/q8s-io/zookeeper-operator-pravega/pkg/apis/zookeeper/v1beta1"
+	zk_e2eutil "github.com/q8s-io/zookeeper-operator-pravega/pkg/test/e2e/e2eutil"
 )
 
 func TestZookeeperCluster(t *testing.T) {

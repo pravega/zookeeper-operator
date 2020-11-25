@@ -11,11 +11,14 @@
 package apis
 
 import (
-	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
+	"github.com/q8s-io/statefulset-pingcap/client/apis/apps/v1"
+
+	"github.com/q8s-io/zookeeper-operator-pravega/pkg/apis/zookeeper/v1beta1"
 )
 
 func init() {
 	// Register the types with the Scheme so the components can map objects to
 	// GroupVersionKinds and back
-	AddToSchemes = append(AddToSchemes, v1beta1.SchemeBuilder.AddToScheme)
+	// also add pingcap.statefulset to scheme
+	AddToSchemes = append(AddToSchemes, v1beta1.SchemeBuilder.AddToScheme, v1.SchemeBuilder.AddToScheme)
 }

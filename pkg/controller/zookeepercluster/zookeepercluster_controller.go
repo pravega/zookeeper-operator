@@ -20,12 +20,10 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/pravega/zookeeper-operator/pkg/utils"
-	"github.com/pravega/zookeeper-operator/pkg/yamlexporter"
+	"github.com/q8s-io/zookeeper-operator-pravega/pkg/utils"
+	"github.com/q8s-io/zookeeper-operator-pravega/pkg/yamlexporter"
 
 	"github.com/go-logr/logr"
-	zookeeperv1beta1 "github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
-	"github.com/pravega/zookeeper-operator/pkg/zk"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
@@ -42,10 +40,15 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+
+	pingcapv1 "github.com/q8s-io/statefulset-pingcap/client/apis/apps/v1"
+
+	zookeeperv1beta1 "github.com/q8s-io/zookeeper-operator-pravega/pkg/apis/zookeeper/v1beta1"
+	"github.com/q8s-io/zookeeper-operator-pravega/pkg/zk"
 )
 
 // ReconcileTime is the delay between reconciliations
-const ReconcileTime = 30 * time.Second
+const ReconcileTime = 10 * time.Second
 
 var log = logf.Log.WithName("controller_zookeepercluster")
 
@@ -153,9 +156,9 @@ func (r *ReconcileZookeeperCluster) Reconcile(request reconcile.Request) (reconc
 		r.reconcileStatefulSet,
 		r.reconcileClientService,
 		r.reconcileHeadlessService,
+		r.reconcilePodDisruptionBudget,
 		r.reconcilePodPendingTimeout,
 		r.reconcilePodTerminatingTimeout,
-		r.reconcilePodDisruptionBudget,
 		r.reconcileClusterStatus,
 	} {
 		if err = fun(instance); err != nil {
@@ -194,7 +197,7 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 	if err = controllerutil.SetControllerReference(instance, sts, r.scheme); err != nil {
 		return err
 	}
-	foundSts := &appsv1.StatefulSet{}
+	foundSts := &pingcapv1.StatefulSet{}
 	err = r.client.Get(context.TODO(), types.NamespacedName{
 		Name:      sts.Name,
 		Namespace: sts.Namespace,
@@ -240,7 +243,7 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 	}
 }
 
-func (r *ReconcileZookeeperCluster) updateStatefulSet(instance *zookeeperv1beta1.ZookeeperCluster, foundSts *appsv1.StatefulSet, sts *appsv1.StatefulSet) (err error) {
+func (r *ReconcileZookeeperCluster) updateStatefulSet(instance *zookeeperv1beta1.ZookeeperCluster, foundSts *pingcapv1.StatefulSet, sts *pingcapv1.StatefulSet) (err error) {
 	r.log.Info("Updating StatefulSet",
 		"StatefulSet.Namespace", foundSts.Namespace,
 		"StatefulSet.Name", foundSts.Name)
@@ -255,7 +258,7 @@ func (r *ReconcileZookeeperCluster) updateStatefulSet(instance *zookeeperv1beta1
 	return nil
 }
 
-func (r *ReconcileZookeeperCluster) upgradeStatefulSet(instance *zookeeperv1beta1.ZookeeperCluster, foundSts *appsv1.StatefulSet) (err error) {
+func (r *ReconcileZookeeperCluster) upgradeStatefulSet(instance *zookeeperv1beta1.ZookeeperCluster, foundSts *pingcapv1.StatefulSet) (err error) {
 
 	//Getting the upgradeCondition from the zk clustercondition
 	_, upgradeCondition := instance.Status.GetClusterCondition(zookeeperv1beta1.ClusterConditionUpgrading)
@@ -726,10 +729,10 @@ func (r *ReconcileZookeeperCluster) deletePVC(pvcItem corev1.PersistentVolumeCla
 	}
 }
 
-func (r *ReconcileZookeeperCluster) deletePod(podItem corev1.Pod) {
+func (r *ReconcileZookeeperCluster) deletePod(podItem *corev1.Pod) {
 	podDelete := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:  podItem.Name,
+			Name:      podItem.Name,
 			Namespace: podItem.Namespace,
 		},
 	}
@@ -740,11 +743,28 @@ func (r *ReconcileZookeeperCluster) deletePod(podItem corev1.Pod) {
 	}
 }
 
+func (r *ReconcileZookeeperCluster) scaleIn(sts *pingcapv1.StatefulSet , index int) {
+	podName := fmt.Sprintf("%s-%d", sts.Name, index + 1)
+	r.log.Info("Scale in StatefulSet", "With Name", sts.Name)
+
+	sts.Annotations = make(map[string]string)
+	value := fmt.Sprintf("[%d]", index + 1)
+
+	sts.Annotations["delete-slot"] = value
+	replicas := sts.Spec.Replicas
+	*replicas = *replicas - 1
+	sts.Spec.Replicas = replicas
+
+	err := r.client.Update(context.TODO(), sts)
+	if err != nil {
+		r.log.Error(err, "Error deleteing Pod.", "Name", podName)
+	}
+}
 
 func (r *ReconcileZookeeperCluster) deletePodForcefully(podItem corev1.Pod) {
 	podDelete := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:  podItem.Name,
+			Name:      podItem.Name,
 			Namespace: podItem.Namespace,
 		},
 	}
@@ -773,12 +793,16 @@ func (r *ReconcileZookeeperCluster) getPodList(instance *zookeeperv1beta1.Zookee
 // Reconcile Pod whose pending status latest more than 2 minutes. We will match pvc node name with pod's node name. Only if different,
 // then delete this pvc forcing, finally delete this timeout pending status Pod. The StatefulSet will recreate new Pod and PVC automatically.
 func (r *ReconcileZookeeperCluster) reconcilePodPendingTimeout(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
+	// if no instance ready, do nothing.
+	if instance.Status.ReadyReplicas < 1 {
+		return nil
+	}
 	podList, err := r.getPodList(instance)
-	if err != nil || podList.Items == nil || len(podList.Items) == 0{
+	if err != nil || podList.Items == nil || len(podList.Items) == 0 {
 		return err
 	}
 
-	podPendingLongest := &corev1.Pod{}
+	var podPendingLongest *corev1.Pod
 	// get time from OS ENV
 	pdEnv := os.Getenv("PENDING_TIMEOUT_TIME")
 	// default: 2 minutes
@@ -791,6 +815,7 @@ func (r *ReconcileZookeeperCluster) reconcilePodPendingTimeout(instance *zookeep
 	}
 	longestTime := (int64)(pendingTimeoutThreshold)
 
+	// process pod that has longest pending time in the cluster
 	for _, pod := range podList.Items {
 		if pod.Status.Phase == corev1.PodPending {
 			pendingTime := time.Now().Unix() - pod.CreationTimestamp.Unix()
@@ -823,21 +848,26 @@ func (r *ReconcileZookeeperCluster) reconcilePodPendingTimeout(instance *zookeep
 	if pvcBounded == nil {
 		return nil
 	}
-	defer r.deletePod(*podPendingLongest)
 	annotations := pvcBounded.Annotations
 	if nodeName, ok := annotations["volume.kubernetes.io/selected-node"]; ok {
 		// Compare pod's nodeName and pvc's nodeName, if not equal, delete all.
 		if nodeName != podPendingLongest.Spec.NodeName {
 			r.deletePVC(*pvcBounded)
+			r.deletePod(podPendingLongest)
+			return nil
 		}
 	}
 	return nil
 }
 
-
+// process some case when pod last terminating status more than a value that given from env, delete the pod force.
 func (r *ReconcileZookeeperCluster) reconcilePodTerminatingTimeout(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
+	// if no instance ready, do nothing.
+	if instance.Status.ReadyReplicas < 1 {
+		return nil
+	}
 	podList, err := r.getPodList(instance)
-	if err != nil || podList.Items == nil || len(podList.Items) == 0{
+	if err != nil || podList.Items == nil || len(podList.Items) == 0 {
 		return err
 	}
 
@@ -857,8 +887,8 @@ func (r *ReconcileZookeeperCluster) reconcilePodTerminatingTimeout(instance *zoo
 		if getPodStatus(&pod) == "Terminating" {
 			terminatingTime := time.Now().Unix() - pod.CreationTimestamp.Unix()
 			if terminatingTime > terminatingTimeoutThreshold {
-				// delete pod forcefully
 				r.deletePodForcefully(pod)
+				return nil
 			}
 		}
 	}

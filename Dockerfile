@@ -27,4 +27,3 @@ RUN adduser -D zookeeper-operator
 USER ${PROJECT_NAME}
 
 ENTRYPOINT ["/usr/local/bin/zookeeper-operator"]
-

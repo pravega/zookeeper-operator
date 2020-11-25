@@ -15,8 +15,9 @@ import (
 
 	. "github.com/onsi/gomega"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
-	api "github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
-	zk_e2eutil "github.com/pravega/zookeeper-operator/pkg/test/e2e/e2eutil"
+
+	api "github.com/q8s-io/zookeeper-operator-pravega/pkg/apis/zookeeper/v1beta1"
+	zk_e2eutil "github.com/q8s-io/zookeeper-operator-pravega/pkg/test/e2e/e2eutil"
 )
 
 func testUpgradeCluster(t *testing.T) {

@@ -22,12 +22,13 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
-	"github.com/pravega/zookeeper-operator/pkg/controller/zookeepercluster"
-	"github.com/pravega/zookeeper-operator/pkg/version"
-	"github.com/pravega/zookeeper-operator/pkg/yamlexporter"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+
+	"github.com/q8s-io/zookeeper-operator-pravega/pkg/controller/zookeepercluster"
+	"github.com/q8s-io/zookeeper-operator-pravega/pkg/version"
+	"github.com/q8s-io/zookeeper-operator-pravega/pkg/yamlexporter"
 )
 
 var (

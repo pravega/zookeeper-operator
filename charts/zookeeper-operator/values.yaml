@@ -8,7 +8,7 @@ global:
   # - private-registry-key
 
 image:
-  repository: pravega/zookeeper-operator
+  repository: q8s-io/zookeeper-operator-pravega
   tag: 0.2.9
   pullPolicy: IfNotPresent
 

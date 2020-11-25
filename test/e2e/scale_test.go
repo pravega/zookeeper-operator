@@ -15,7 +15,8 @@ import (
 
 	. "github.com/onsi/gomega"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
-	zk_e2eutil "github.com/pravega/zookeeper-operator/pkg/test/e2e/e2eutil"
+
+	zk_e2eutil "github.com/q8s-io/zookeeper-operator-pravega/pkg/test/e2e/e2eutil"
 )
 
 func testScaleCluster(t *testing.T) {

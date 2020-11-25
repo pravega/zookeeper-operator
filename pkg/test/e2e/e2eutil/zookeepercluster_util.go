@@ -24,7 +24,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
-	api "github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
+
+	api "github.com/q8s-io/zookeeper-operator-pravega/pkg/apis/zookeeper/v1beta1"
 )
 
 var (

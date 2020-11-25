@@ -21,9 +21,6 @@ import (
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"github.com/operator-framework/operator-sdk/pkg/leader"
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
-	"github.com/pravega/zookeeper-operator/pkg/apis"
-	"github.com/pravega/zookeeper-operator/pkg/controller"
-	"github.com/pravega/zookeeper-operator/pkg/version"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
@@ -31,6 +28,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
+
+	"github.com/q8s-io/zookeeper-operator-pravega/pkg/apis"
+	"github.com/q8s-io/zookeeper-operator-pravega/pkg/controller"
+	"github.com/q8s-io/zookeeper-operator-pravega/pkg/version"
 )
 
 var (
