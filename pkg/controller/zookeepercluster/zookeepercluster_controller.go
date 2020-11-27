@@ -790,8 +790,8 @@ func (r *ReconcileZookeeperCluster) getPodList(instance *zookeeperv1beta1.Zookee
 	return *podList, err
 }
 
-// Reconcile Pod whose pending status latest more than 2 minutes. We will match pvc node name with pod's node name. Only if different,
-// then delete this pvc forcing, finally delete this timeout pending status Pod. The StatefulSet will recreate new Pod and PVC automatically.
+// Reconcile Pod whose pending status last more than 2 minutes. We will match pvc's node name with pod's node name. Only if different,
+// then delete unmatched pvc forcing, finally delete the pod of timeout pending status. The StatefulSet will automatically recreate a new Pod and PVC .
 func (r *ReconcileZookeeperCluster) reconcilePodPendingTimeout(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
 	// if no instance ready, do nothing.
 	if instance.Status.ReadyReplicas < 1 {
@@ -815,7 +815,7 @@ func (r *ReconcileZookeeperCluster) reconcilePodPendingTimeout(instance *zookeep
 	}
 	longestTime := (int64)(pendingTimeoutThreshold)
 
-	// process pod that has longest pending time in the cluster
+	// process pod that has longest pending time in this namespace
 	for _, pod := range podList.Items {
 		if pod.Status.Phase == corev1.PodPending {
 			pendingTime := time.Now().Unix() - pod.CreationTimestamp.Unix()
@@ -825,15 +825,13 @@ func (r *ReconcileZookeeperCluster) reconcilePodPendingTimeout(instance *zookeep
 			}
 		}
 	}
-
 	if podPendingLongest == nil {
 		return nil
 	}
 
-	// get reference PVC
+	// get matched PVC and process it.
 	podName := podPendingLongest.Name
 	var pvcBounded *corev1.PersistentVolumeClaim
-
 	pvcList, err := r.getPVCList(instance)
 	if err != nil {
 		return err
@@ -850,19 +848,20 @@ func (r *ReconcileZookeeperCluster) reconcilePodPendingTimeout(instance *zookeep
 	}
 	annotations := pvcBounded.Annotations
 	if nodeName, ok := annotations["volume.kubernetes.io/selected-node"]; ok {
-		// Compare pod's nodeName and pvc's nodeName, if not equal, delete all.
+		// Compare pod's nodeName and pvc's nodeName, if not equal, delete it.
 		if nodeName != podPendingLongest.Spec.NodeName {
 			r.deletePVC(*pvcBounded)
 			r.deletePod(podPendingLongest)
+			// delete only one at a time.
 			return nil
 		}
 	}
 	return nil
 }
 
-// process some case when pod last terminating status more than a value that given from env, delete the pod force.
+// When the continuous time of a pod in terminating status more than a value that given from env, delete the pod forcefully.
 func (r *ReconcileZookeeperCluster) reconcilePodTerminatingTimeout(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
-	// if no instance ready, do nothing.
+	// if no one instance ready, do nothing.
 	if instance.Status.ReadyReplicas < 1 {
 		return nil
 	}
@@ -872,7 +871,7 @@ func (r *ReconcileZookeeperCluster) reconcilePodTerminatingTimeout(instance *zoo
 	}
 
 	tmEnv := os.Getenv("TERMINATING_TIMEOUT_TIME")
-	// default 6 minutes
+	// default value: 6 minutes
 	if tmEnv == "" {
 		tmEnv = "360"
 	}
@@ -888,6 +887,7 @@ func (r *ReconcileZookeeperCluster) reconcilePodTerminatingTimeout(instance *zoo
 			terminatingTime := time.Now().Unix() - pod.CreationTimestamp.Unix()
 			if terminatingTime > terminatingTimeoutThreshold {
 				r.deletePodForcefully(pod)
+				// delete one pod forcefully at a reconcile loop
 				return nil
 			}
 		}
