@@ -22,7 +22,6 @@ GIT_SHA=$(shell git rev-parse --short HEAD)
 TEST_IMAGE=$(TEST_REPO)-testimages:$(VERSION)
 DOCKER_TEST_PASS=testzkop@123
 DOCKER_TEST_USER=testzkop
-#DOCKER_REGISTRY=devops-repo.isus.emc.com:8116
 .PHONY: all build check clean test
 
 all: check build
