@@ -175,7 +175,6 @@ func makeZkPodSpec(z *v1beta1.ZookeeperCluster, volumes []v1.Volume) v1.PodSpec 
 	podSpec.Tolerations = z.Spec.Pod.Tolerations
 	podSpec.TerminationGracePeriodSeconds = &z.Spec.Pod.TerminationGracePeriodSeconds
 	podSpec.ServiceAccountName = z.Spec.Pod.ServiceAccountName
-
 	return podSpec
 }
 
@@ -349,6 +348,7 @@ func MakeServiceAccount(z *v1beta1.ZookeeperCluster) *v1.ServiceAccount {
 			Name:      z.Spec.Pod.ServiceAccountName,
 			Namespace: z.Namespace,
 		},
+		ImagePullSecrets: z.Spec.Pod.ImagePullSecrets,
 	}
 }
 
