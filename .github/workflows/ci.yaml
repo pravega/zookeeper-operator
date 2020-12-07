@@ -55,7 +55,7 @@ jobs:
         echo "cluster info"
         sudo kubectl -n kube-system get pod -o wide
     - name: E2E
-      run: make test-e2e
+      run: sudo make test-e2e
 
 
   # Show cluster information
