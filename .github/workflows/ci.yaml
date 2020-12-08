@@ -65,7 +65,7 @@ jobs:
     - name: Pushing docker images
       run: sudo make push
     - name: Uploading binary files
-    - uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v2
        with:
          name: zookeeper-exporter
          path: bin/zookeeper-exporter*
