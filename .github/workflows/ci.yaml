@@ -69,4 +69,3 @@ jobs:
       with:
         name: zookeeper-exporter
         path: bin/zookeeper-exporter*
-  # Show pathcluster information
