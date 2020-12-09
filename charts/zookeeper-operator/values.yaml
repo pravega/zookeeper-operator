@@ -46,6 +46,9 @@ nodeSelector: {}
 affinity: {}
 tolerations: []
 
+# Pod annotations
+annotations: {}
+
 hooks:
   backoffLimit: 10
   image:
