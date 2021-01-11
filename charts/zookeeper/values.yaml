@@ -1,15 +1,26 @@
 replicas: 3
 
 image:
-  repository: pravega/zookeeper
-  tag: 0.2.9
+  repository: devops-repo.isus.emc.com:8116/nautilus/zookeeper
+  tag: 0.2.9-162-9bdc9a2
   pullPolicy: IfNotPresent
 
 domainName:
 labels: {}
 ports: []
 kubernetesClusterDomain: "cluster.local"
-
+probes:
+  readiness:
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    failureThreshold: 3
+    successThreshold: 1
+    timeoutSeconds: 10
+  liveness:
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    failureThreshold: 3
+    timeoutSeconds: 10
 pod:
   # labels: {}
   # nodeSelector: {}
