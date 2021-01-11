@@ -67,7 +67,6 @@ The following table lists the configurable parameters of the zookeeper chart and
 | `probes.liveness.initialDelaySeconds` | Number of seconds after the container has started before liveness probe is initiated | `10` |
 | `probes.liveness.periodSeconds` | Number of seconds in which liveness probe will be performed  | `10` |
 | `probes.liveness.failureThreshold` | Number of seconds after which the liveness probe times out | `3` |
-| `probes.liveness.successThreshold` | Minimum number of consecutive successes for the liveness probe to be considered successful after having failed | `1` |
 | `probes.liveness.timeoutSeconds` | Number of times Kubernetes will retry after a liveness probe failure before restarting the container | `10` |
 | `labels` | Specifies the labels to be attached | `{}` |
 | `ports` | Groups the ports for a zookeeper cluster node for easy access | `[]` |
