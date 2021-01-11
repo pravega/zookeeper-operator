@@ -15,6 +15,10 @@ spec:
       labels:
         name: {{ template "zookeeper-operator.fullname" . }}
         component: zookeeper-operator
+      {{- if .Values.annotations }}
+      annotations:
+{{ toYaml .Values.annotations | indent 8 }}
+      {{- end }}
     spec:
       serviceAccountName: {{ .Values.serviceAccount.name }}
       containers:
