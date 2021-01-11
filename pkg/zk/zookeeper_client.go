@@ -54,7 +54,11 @@ func (client *DefaultZookeeperClient) CreateNode(zoo *v1beta1.ZookeeperCluster, 
 	data := "CLUSTER_SIZE=" + strconv.Itoa(int(zoo.Spec.Replicas))
 	childNode := parentPath + "/" + paths[pathLength-1]
 	if _, err := client.conn.Create(childNode, []byte(data), 0, zk.WorldACL(zk.PermAll)); err != nil {
-		return fmt.Errorf("Error creating sub zkNode: %s: %v", childNode, err)
+		if err != zk.ErrNodeExists {
+			return fmt.Errorf("Error creating sub zkNode: %s: %v", childNode, err)
+		}
+		_, err = client.conn.Set(childNode, []byte(data), 0)
+		return err
 	}
 	return nil
 }
