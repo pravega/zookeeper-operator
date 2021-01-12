@@ -1,8 +1,8 @@
 replicas: 3
 
 image:
-  repository: devops-repo.isus.emc.com:8116/nautilus/zookeeper
-  tag: 0.2.9-162-9bdc9a2
+  repository: pravega/zookeeper
+  tag: 0.2.9
   pullPolicy: IfNotPresent
 
 domainName:
