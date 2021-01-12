@@ -131,13 +131,16 @@ type ZookeeperClusterSpec struct {
 	Volumes []v1.Volume `json:"volumes,omitempty"`
 
 	// Probes specifies the timeout values for the Readiness and Liveness Probes
-	// for the bookkeeper pods.
+	// for the zookeeper pods.
+	// +optional
 	Probes *Probes `json:"probes"`
 }
 
 type Probes struct {
+	// +optional
 	ReadinessProbe *Probe `json:"readinessProbe"`
-	LivenessProbe  *Probe `json:"livenessProbe"`
+	// +optional
+	LivenessProbe *Probe `json:"livenessProbe"`
 }
 
 func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) {
@@ -250,11 +253,21 @@ func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) 
 }
 
 type Probe struct {
+	// +kubebuilder:validation:Minimum=0
+	// +optional
 	InitialDelaySeconds int32 `json:"initialDelaySeconds"`
-	PeriodSeconds       int32 `json:"periodSeconds"`
-	FailureThreshold    int32 `json:"failureThreshold"`
-	SuccessThreshold    int32 `json:"successThreshold"`
-	TimeoutSeconds      int32 `json:"timeoutSeconds"`
+	// +kubebuilder:validation:Minimum=0
+	// +optional
+	PeriodSeconds int32 `json:"periodSeconds"`
+	// +kubebuilder:validation:Minimum=0
+	// +optional
+	FailureThreshold int32 `json:"failureThreshold"`
+	// +kubebuilder:validation:Minimum=0
+	// +optional
+	SuccessThreshold int32 `json:"successThreshold"`
+	// +kubebuilder:validation:Minimum=0
+	// +optional
+	TimeoutSeconds int32 `json:"timeoutSeconds"`
 }
 
 // Generate CRD using kubebuilder

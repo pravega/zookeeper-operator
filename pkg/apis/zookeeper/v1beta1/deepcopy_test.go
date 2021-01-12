@@ -115,6 +115,9 @@ var _ = Describe("ZookeeperCluster DeepCopy", func() {
 			checkport = tempPort.Client
 			z1.Status.SetPodsReadyConditionTrue()
 			z2.Status.Conditions[0] = *z1.Status.Conditions[0].DeepCopy()
+			z1.Spec.Probes.ReadinessProbe.InitialDelaySeconds = 5
+			z1.Spec.Probes.LivenessProbe.FailureThreshold = 2
+			z2.Spec.Probes = z1.Spec.Probes.DeepCopy()
 		})
 		It("value of str1 and str2 should be equal", func() {
 			Ω(str2).To(Equal(str1))
@@ -253,6 +256,16 @@ var _ = Describe("ZookeeperCluster DeepCopy", func() {
 			clustercond2 := clustercond.DeepCopy()
 			Ω(clustercond2).To(BeNil())
 		})
+		It("checking for nil Probes", func() {
+			var probes *v1beta1.Probes
+			probes2 := probes.DeepCopy()
+			Ω(probes2).To(BeNil())
+		})
+		It("checking for nil Probe", func() {
+			var probe *v1beta1.Probe
+			probe2 := probe.DeepCopy()
+			Ω(probe2).To(BeNil())
+		})
 		It("checking Ephemeral deep copy", func() {
 			z1.Spec.StorageType = "ephemeral"
 			z1.WithDefaults()
@@ -265,6 +278,16 @@ var _ = Describe("ZookeeperCluster DeepCopy", func() {
 			z1.Spec.Ephemeral.EmptyDirVolumeSource.Medium = "Memory"
 			z1.Spec.DeepCopyInto(&z2.Spec)
 			Ω(fmt.Sprintf("%s", z2.Spec.Ephemeral.EmptyDirVolumeSource.Medium)).To(Equal("Memory"))
+		})
+		It("checking value of z2 probes", func() {
+			Ω(z2.Spec.Probes.ReadinessProbe.InitialDelaySeconds).To(Equal(int32(5)))
+			Ω(z2.Spec.Probes.LivenessProbe.FailureThreshold).To(Equal(int32(2)))
+			z1.Spec.Probes.ReadinessProbe.InitialDelaySeconds = 0
+			z1.Spec.Probes.LivenessProbe.FailureThreshold = 1
+			z1.Spec.Probes.ReadinessProbe.DeepCopyInto(z2.Spec.Probes.ReadinessProbe)
+			z2.Spec.Probes.LivenessProbe = z1.Spec.Probes.LivenessProbe.DeepCopy()
+			Ω(z2.Spec.Probes.ReadinessProbe.InitialDelaySeconds).To(Equal(int32(0)))
+			Ω(z2.Spec.Probes.LivenessProbe.FailureThreshold).To(Equal(int32(1)))
 		})
 	})
 })
