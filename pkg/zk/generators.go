@@ -122,15 +122,22 @@ func makeZkPodSpec(z *v1beta1.ZookeeperCluster, volumes []v1.Volume) v1.PodSpec 
 		},
 		ImagePullPolicy: z.Spec.Image.PullPolicy,
 		ReadinessProbe: &v1.Probe{
-			InitialDelaySeconds: 10,
-			TimeoutSeconds:      10,
+			InitialDelaySeconds: z.Spec.Probes.ReadinessProbe.InitialDelaySeconds,
+			PeriodSeconds:       z.Spec.Probes.ReadinessProbe.PeriodSeconds,
+			TimeoutSeconds:      z.Spec.Probes.ReadinessProbe.TimeoutSeconds,
+			FailureThreshold:    z.Spec.Probes.ReadinessProbe.FailureThreshold,
+			SuccessThreshold:    z.Spec.Probes.ReadinessProbe.SuccessThreshold,
+
 			Handler: v1.Handler{
 				Exec: &v1.ExecAction{Command: []string{"zookeeperReady.sh"}},
 			},
 		},
 		LivenessProbe: &v1.Probe{
-			InitialDelaySeconds: 10,
-			TimeoutSeconds:      10,
+			InitialDelaySeconds: z.Spec.Probes.LivenessProbe.InitialDelaySeconds,
+			PeriodSeconds:       z.Spec.Probes.LivenessProbe.PeriodSeconds,
+			TimeoutSeconds:      z.Spec.Probes.LivenessProbe.TimeoutSeconds,
+			FailureThreshold:    z.Spec.Probes.LivenessProbe.FailureThreshold,
+
 			Handler: v1.Handler{
 				Exec: &v1.ExecAction{Command: []string{"zookeeperLive.sh"}},
 			},

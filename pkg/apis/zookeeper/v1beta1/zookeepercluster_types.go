@@ -39,6 +39,42 @@ const (
 	// DefaultZookeeperCacheVolumeSize is the default volume size for the
 	// Zookeeper cache volume
 	DefaultZookeeperCacheVolumeSize = "20Gi"
+
+	// DefaultReadinessProbeInitialDelaySeconds is the default initial delay (in seconds)
+	// for the readiness probe
+	DefaultReadinessProbeInitialDelaySeconds = 10
+
+	// DefaultReadinessProbePeriodSeconds is the default probe period (in seconds)
+	// for the readiness probe
+	DefaultReadinessProbePeriodSeconds = 10
+
+	// DefaultReadinessProbeFailureThreshold is the default probe failure threshold
+	// for the readiness probe
+	DefaultReadinessProbeFailureThreshold = 3
+
+	// DefaultReadinessProbeSuccessThreshold is the default probe success threshold
+	// for the readiness probe
+	DefaultReadinessProbeSuccessThreshold = 1
+
+	// DefaultReadinessProbeTimeoutSeconds is the default probe timeout (in seconds)
+	// for the readiness probe
+	DefaultReadinessProbeTimeoutSeconds = 10
+
+	// DefaultLivenessProbeInitialDelaySeconds is the default initial delay (in seconds)
+	// for the liveness probe
+	DefaultLivenessProbeInitialDelaySeconds = 10
+
+	// DefaultLivenessProbePeriodSeconds is the default probe period (in seconds)
+	// for the liveness probe
+	DefaultLivenessProbePeriodSeconds = 10
+
+	// DefaultLivenessProbeFailureThreshold is the default probe failure threshold
+	// for the liveness probe
+	DefaultLivenessProbeFailureThreshold = 3
+
+	// DefaultLivenessProbeTimeoutSeconds is the default probe timeout (in seconds)
+	// for the liveness probe
+	DefaultLivenessProbeTimeoutSeconds = 10
 )
 
 // ZookeeperClusterSpec defines the desired state of ZookeeperCluster
@@ -93,6 +129,18 @@ type ZookeeperClusterSpec struct {
 
 	// Volumes defines to support customized volumes
 	Volumes []v1.Volume `json:"volumes,omitempty"`
+
+	// Probes specifies the timeout values for the Readiness and Liveness Probes
+	// for the zookeeper pods.
+	// +optional
+	Probes *Probes `json:"probes"`
+}
+
+type Probes struct {
+	// +optional
+	ReadinessProbe *Probe `json:"readinessProbe"`
+	// +optional
+	LivenessProbe *Probe `json:"livenessProbe"`
 }
 
 func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) {
@@ -104,6 +152,14 @@ func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) 
 		s.Replicas = 3
 		changed = true
 	}
+	if s.Probes == nil {
+		changed = true
+		s.Probes = &Probes{}
+	}
+	if s.Probes.withDefaults() {
+		changed = true
+	}
+
 	if s.Ports == nil {
 		s.Ports = []v1.ContainerPort{
 			{
@@ -194,6 +250,24 @@ func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) 
 		}
 	}
 	return changed
+}
+
+type Probe struct {
+	// +kubebuilder:validation:Minimum=0
+	// +optional
+	InitialDelaySeconds int32 `json:"initialDelaySeconds"`
+	// +kubebuilder:validation:Minimum=0
+	// +optional
+	PeriodSeconds int32 `json:"periodSeconds"`
+	// +kubebuilder:validation:Minimum=0
+	// +optional
+	FailureThreshold int32 `json:"failureThreshold"`
+	// +kubebuilder:validation:Minimum=0
+	// +optional
+	SuccessThreshold int32 `json:"successThreshold"`
+	// +kubebuilder:validation:Minimum=0
+	// +optional
+	TimeoutSeconds int32 `json:"timeoutSeconds"`
 }
 
 // Generate CRD using kubebuilder
@@ -392,6 +466,29 @@ func (p *PodPolicy) withDefaults(z *ZookeeperCluster) (changed bool) {
 		}
 		changed = true
 	}
+	return changed
+}
+
+func (s *Probes) withDefaults() (changed bool) {
+	if s.ReadinessProbe == nil {
+		changed = true
+		s.ReadinessProbe = &Probe{}
+		s.ReadinessProbe.InitialDelaySeconds = DefaultReadinessProbeInitialDelaySeconds
+		s.ReadinessProbe.PeriodSeconds = DefaultReadinessProbePeriodSeconds
+		s.ReadinessProbe.FailureThreshold = DefaultReadinessProbeFailureThreshold
+		s.ReadinessProbe.SuccessThreshold = DefaultReadinessProbeSuccessThreshold
+		s.ReadinessProbe.TimeoutSeconds = DefaultReadinessProbeTimeoutSeconds
+	}
+
+	if s.LivenessProbe == nil {
+		changed = true
+		s.LivenessProbe = &Probe{}
+		s.LivenessProbe.InitialDelaySeconds = DefaultLivenessProbeInitialDelaySeconds
+		s.LivenessProbe.PeriodSeconds = DefaultLivenessProbePeriodSeconds
+		s.LivenessProbe.FailureThreshold = DefaultLivenessProbeFailureThreshold
+		s.LivenessProbe.TimeoutSeconds = DefaultLivenessProbeTimeoutSeconds
+	}
+
 	return changed
 }
 
