@@ -63,7 +63,7 @@ data:
     set -e
     sleep 30
 
-    replicas=`kubectl get zk -n {{ .Release.Namespace }} {{ template "zookeeper.fullname" . }} -o jsonpath='{.status.replicas}'`
+    replicas=`kubectl get zk -n {{ .Release.Namespace }} {{ template "zookeeper.fullname" . }} -o jsonpath='{.spec.replicas}'`
     readyReplicas=`kubectl get zk -n {{ .Release.Namespace }} {{ template "zookeeper.fullname" . }} -o jsonpath='{.status.readyReplicas}'`
     currentVersion=`kubectl get zk -n {{ .Release.Namespace }} {{ template "zookeeper.fullname" . }} -o jsonpath='{.status.currentVersion}'`
     targetVersion=`kubectl get zk -n {{ .Release.Namespace }} {{ template "zookeeper.fullname" . }} -o jsonpath='{.spec.image.tag}'`
