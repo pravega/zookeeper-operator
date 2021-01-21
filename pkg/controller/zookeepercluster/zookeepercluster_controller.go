@@ -152,6 +152,7 @@ func (r *ReconcileZookeeperCluster) Reconcile(request reconcile.Request) (reconc
 		r.reconcileStatefulSet,
 		r.reconcileClientService,
 		r.reconcileHeadlessService,
+		r.reconcileAdminServerService,
 		r.reconcilePodDisruptionBudget,
 		r.reconcileClusterStatus,
 	} {
@@ -408,6 +409,40 @@ func (r *ReconcileZookeeperCluster) reconcileHeadlessService(instance *zookeeper
 		return err
 	} else {
 		r.log.Info("Updating existing headless service",
+			"Service.Namespace", foundSvc.Namespace,
+			"Service.Name", foundSvc.Name)
+		zk.SyncService(foundSvc, svc)
+		err = r.client.Update(context.TODO(), foundSvc)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *ReconcileZookeeperCluster) reconcileAdminServerService(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
+	svc := zk.MakeAdminServerService(instance)
+	if err = controllerutil.SetControllerReference(instance, svc, r.scheme); err != nil {
+		return err
+	}
+	foundSvc := &corev1.Service{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{
+		Name:      svc.Name,
+		Namespace: svc.Namespace,
+	}, foundSvc)
+	if err != nil && errors.IsNotFound(err) {
+		r.log.Info("Creating admin server service",
+			"Service.Namespace", svc.Namespace,
+			"Service.Name", svc.Name)
+		err = r.client.Create(context.TODO(), svc)
+		if err != nil {
+			return err
+		}
+		return nil
+	} else if err != nil {
+		return err
+	} else {
+		r.log.Info("Updating existing admin server service",
 			"Service.Namespace", foundSvc.Namespace,
 			"Service.Name", foundSvc.Name)
 		zk.SyncService(foundSvc, svc)

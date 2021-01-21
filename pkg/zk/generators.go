@@ -194,6 +194,16 @@ func MakeClientService(z *v1beta1.ZookeeperCluster) *v1.Service {
 	return makeService(z.GetClientServiceName(), svcPorts, true, z)
 }
 
+// MakeAdminServerService returns a service which provides an interface
+// to access the zookeeper admin server port
+func MakeAdminServerService(z *v1beta1.ZookeeperCluster) *v1.Service {
+	ports := z.ZookeeperPorts()
+	svcPorts := []v1.ServicePort{
+		{Name: "tcp-admin-server", Port: ports.AdminServer},
+	}
+	return makeService(z.GetAdminServerServiceName(), svcPorts, true, z)
+}
+
 // MakeConfigMap returns a zookeeper config map
 func MakeConfigMap(z *v1beta1.ZookeeperCluster) *v1.ConfigMap {
 	return &v1.ConfigMap{
@@ -224,6 +234,7 @@ func MakeHeadlessService(z *v1beta1.ZookeeperCluster) *v1.Service {
 		{Name: "tcp-quorum", Port: ports.Quorum},
 		{Name: "tcp-leader-election", Port: ports.Leader},
 		{Name: "tcp-metrics", Port: ports.Metrics},
+		{Name: "tcp-admin-server", Port: ports.AdminServer},
 	}
 	return makeService(headlessSvcName(z), svcPorts, false, z)
 }
@@ -281,6 +292,8 @@ func makeZkEnvConfigString(z *v1beta1.ZookeeperCluster) string {
 		"LEADER_PORT=" + strconv.Itoa(int(ports.Leader)) + "\n" +
 		"CLIENT_HOST=" + z.GetClientServiceName() + "\n" +
 		"CLIENT_PORT=" + strconv.Itoa(int(ports.Client)) + "\n" +
+		"ADMIN_SERVER_HOST=" + z.GetAdminServerServiceName() + "\n" +
+		"ADMIN_SERVER_PORT=" + strconv.Itoa(int(ports.AdminServer)) + "\n" +
 		"CLUSTER_NAME=" + z.GetName() + "\n" +
 		"CLUSTER_SIZE=" + fmt.Sprint(z.Spec.Replicas) + "\n"
 }

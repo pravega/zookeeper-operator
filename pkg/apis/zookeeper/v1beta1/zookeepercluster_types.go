@@ -178,11 +178,15 @@ func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) 
 				Name:          "metrics",
 				ContainerPort: 7000,
 			},
+			{
+				Name:          "admin-server",
+				ContainerPort: 8080,
+			},
 		}
 		changed = true
 	} else {
 		var (
-			foundClient, foundQuorum, foundLeader, foundMetrics bool
+			foundClient, foundQuorum, foundLeader, foundMetrics, foundAdmin bool
 		)
 		for i := 0; i < len(s.Ports); i++ {
 			if s.Ports[i].Name == "client" {
@@ -193,6 +197,8 @@ func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) 
 				foundLeader = true
 			} else if s.Ports[i].Name == "metrics" {
 				foundMetrics = true
+			} else if s.Ports[i].Name == "admin-server" {
+				foundAdmin = true
 			}
 		}
 		if !foundClient {
@@ -212,6 +218,11 @@ func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) 
 		}
 		if !foundMetrics {
 			ports := v1.ContainerPort{Name: "metrics", ContainerPort: 7000}
+			s.Ports = append(s.Ports, ports)
+			changed = true
+		}
+		if !foundAdmin {
+			ports := v1.ContainerPort{Name: "admin-server", ContainerPort: 8080}
 			s.Ports = append(s.Ports, ports)
 			changed = true
 		}
@@ -323,6 +334,8 @@ func (z *ZookeeperCluster) ZookeeperPorts() Ports {
 			ports.Leader = p.ContainerPort
 		} else if p.Name == "metrics" {
 			ports.Metrics = p.ContainerPort
+		} else if p.Name == "admin-server" {
+			ports.AdminServer = p.ContainerPort
 		}
 	}
 	return ports
@@ -333,12 +346,18 @@ func (z *ZookeeperCluster) GetClientServiceName() string {
 	return fmt.Sprintf("%s-client", z.GetName())
 }
 
+// GetAdminServerServiceName returns the name of the admin server service for the cluster
+func (z *ZookeeperCluster) GetAdminServerServiceName() string {
+	return fmt.Sprintf("%s-admin-server", z.GetName())
+}
+
 // Ports groups the ports for a zookeeper cluster node for easy access
 type Ports struct {
-	Client  int32
-	Quorum  int32
-	Leader  int32
-	Metrics int32
+	Client      int32
+	Quorum      int32
+	Leader      int32
+	Metrics     int32
+	AdminServer int32
 }
 
 // ContainerImage defines the fields needed for a Docker repository image. The
