@@ -12,7 +12,6 @@ package zk
 
 import (
 	"fmt"
-	"reflect"
 	"strconv"
 	"strings"
 
@@ -175,13 +174,16 @@ func makeZkPodSpec(z *v1beta1.ZookeeperCluster, volumes []v1.Volume) v1.PodSpec 
 		Affinity:   z.Spec.Pod.Affinity,
 		Volumes:    append(z.Spec.Volumes, volumes...),
 	}
-	if reflect.DeepEqual(v1.PodSecurityContext{}, z.Spec.Pod.SecurityContext) {
+	if z.Spec.Pod.SecurityContext != nil {
 		podSpec.SecurityContext = z.Spec.Pod.SecurityContext
 	}
 	podSpec.NodeSelector = z.Spec.Pod.NodeSelector
 	podSpec.Tolerations = z.Spec.Pod.Tolerations
 	podSpec.TerminationGracePeriodSeconds = &z.Spec.Pod.TerminationGracePeriodSeconds
 	podSpec.ServiceAccountName = z.Spec.Pod.ServiceAccountName
+	if z.Spec.InitContainers != nil {
+		podSpec.InitContainers = z.Spec.InitContainers
+	}
 	return podSpec
 }
 

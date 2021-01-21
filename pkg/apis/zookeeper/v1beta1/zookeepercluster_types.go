@@ -124,6 +124,9 @@ type ZookeeperClusterSpec struct {
 	// Domain of the kubernetes cluster, defaults to cluster.local
 	KubernetesClusterDomain string `json:"kubernetesClusterDomain,omitempty"`
 
+	// Init containers to support initialization
+	InitContainers []v1.Container `json:"initContainers,omitempty"`
+
 	// Containers defines to support multi containers
 	Containers []v1.Container `json:"containers,omitempty"`
 
