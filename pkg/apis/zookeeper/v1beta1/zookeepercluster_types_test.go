@@ -127,8 +127,12 @@ var _ = Describe("ZookeeperCluster Types", func() {
 				Ω(z.GetKubernetesClusterDomain()).To(Equal("cluster.local"))
 			})
 
-			It("should give clientservicename as example-client", func() {
+			It("should give client service name as example-client", func() {
 				Ω(z.GetClientServiceName()).To(Equal("example-client"))
+			})
+
+			It("should give admin-server service name as example-admin-server", func() {
+				Ω(z.GetAdminServerServiceName()).To(Equal("example-admin-server"))
 			})
 
 			It("should set InitLimit to 10", func() {
@@ -184,6 +188,20 @@ var _ = Describe("ZookeeperCluster Types", func() {
 				Ω(ports).To(ContainElement(corev1.ContainerPort{
 					Name:          "leader-election",
 					ContainerPort: 3888,
+				}))
+			})
+
+			It("should have the default metrics port", func() {
+				Ω(ports).To(ContainElement(corev1.ContainerPort{
+					Name:          "metrics",
+					ContainerPort: 7000,
+				}))
+			})
+
+			It("should have the default admin-server port", func() {
+				Ω(ports).To(ContainElement(corev1.ContainerPort{
+					Name:          "admin-server",
+					ContainerPort: 8080,
 				}))
 			})
 
@@ -277,6 +295,10 @@ var _ = Describe("ZookeeperCluster Types", func() {
 		It("should have a metrics port", func() {
 			Ω(p.Metrics).To(BeEquivalentTo(7000))
 		})
+
+		It("should have an admin-server port", func() {
+			Ω(p.AdminServer).To(BeEquivalentTo(8080))
+		})
 	})
 	Context("#ZookeeperPorts with values set", func() {
 		var p v1beta1.Ports
@@ -312,6 +334,10 @@ var _ = Describe("ZookeeperCluster Types", func() {
 
 		It("should have a metrics port", func() {
 			Ω(p.Metrics).To(BeEquivalentTo(7000))
+		})
+
+		It("should have an admin-server port", func() {
+			Ω(p.AdminServer).To(BeEquivalentTo(8080))
 		})
 	})
 })

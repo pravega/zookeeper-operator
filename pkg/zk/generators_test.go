@@ -309,11 +309,11 @@ var _ = Describe("Generators Spec", func() {
 			Ω(p.Port).To(BeEquivalentTo(2181))
 		})
 
-		It("should have a the client svc name", func() {
+		It("should have a client svc name", func() {
 			Ω(s.GetName()).To(Equal("example-client"))
 		})
 
-		It("should have a the client svc name", func() {
+		It("should have a client svc name", func() {
 			Ω(s.Spec.Selector["app"]).To(Equal("example"))
 		})
 
@@ -375,11 +375,11 @@ var _ = Describe("Generators Spec", func() {
 			Ω(p.Port).To(BeEquivalentTo(7000))
 		})
 
-		It("should have a the client svc name", func() {
+		It("should have a client svc name", func() {
 			Ω(s.GetName()).To(Equal("example-headless"))
 		})
 
-		It("should have a the client svc name", func() {
+		It("should have a client svc name", func() {
 			Ω(s.Spec.Selector["app"]).To(Equal("example"))
 		})
 
@@ -447,11 +447,11 @@ var _ = Describe("Generators Spec", func() {
 			Ω(p.Port).To(BeEquivalentTo(8080))
 		})
 
-		It("should havethe admin server svc name", func() {
+		It("should have an admin server svc name", func() {
 			Ω(s.GetName()).To(Equal("example-admin-server"))
 		})
 
-		It("should have a the client svc name", func() {
+		It("should have a client svc name", func() {
 			Ω(s.Spec.Selector["app"]).To(Equal("example"))
 		})
 
