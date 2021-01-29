@@ -2293,7 +2293,7 @@ spec:
                 required:
                 - name
                 type: object
-              type: array  
+              type: array
             kubernetesClusterDomain:
               description: Domain of the kubernetes cluster, defaults to cluster.local
               type: string
@@ -3553,6 +3553,11 @@ spec:
               - ephemeral
               - persistence
               type: string
+            volumePermissions:
+              description: VolumePermission  indicates whether to Change the owner
+                of the persist volume mountpoint in the init containers Defaults to
+                false.
+              type: boolean
             volumes:
               description: Volumes defines to support customized volumes
               items:

@@ -21,6 +21,7 @@ probes:
     periodSeconds: 10
     failureThreshold: 3
     timeoutSeconds: 10
+volumePermissions: false
 pod:
   # labels: {}
   # nodeSelector: {}
@@ -30,6 +31,8 @@ pod:
   # env: []
   # annotations: {}
   # securityContext: {}
+    #runAsUser: 1001
+    #runAsGroup: 1001
   # terminationGracePeriodSeconds: 30
   serviceAccountName: zookeeper
   # imagePullSecrets: []

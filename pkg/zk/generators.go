@@ -181,8 +181,35 @@ func makeZkPodSpec(z *v1beta1.ZookeeperCluster, volumes []v1.Volume) v1.PodSpec 
 	podSpec.Tolerations = z.Spec.Pod.Tolerations
 	podSpec.TerminationGracePeriodSeconds = &z.Spec.Pod.TerminationGracePeriodSeconds
 	podSpec.ServiceAccountName = z.Spec.Pod.ServiceAccountName
-	if z.Spec.InitContainers != nil {
-		podSpec.InitContainers = z.Spec.InitContainers
+	if z.Spec.VolumePermissions == true && z.Spec.Pod.SecurityContext != nil {
+		runAsUser := int64(0)
+		var arg string
+		if strconv.Itoa(int(*podSpec.SecurityContext.RunAsUser)) == "auto" {
+
+			arg = "chown -R " + "`" + "id -u" + "`" + ":" + "`" + "id -G | cut -d \" \" -f2" + "`" + " /data" + " /opt"
+
+		} else {
+			arg = "chown -R " + strconv.Itoa(int(*podSpec.SecurityContext.RunAsUser)) + ":" + strconv.Itoa(int(*podSpec.SecurityContext.RunAsGroup)) + " /data" + " /opt"
+		}
+		z.Spec.InitContainers = []v1.Container{}
+		podSpec.InitContainers = append(z.Spec.InitContainers, v1.Container{
+			Name:  "initcontainer",
+			Image: z.Spec.Image.ToString(),
+			SecurityContext: &v1.SecurityContext{
+				RunAsUser: &runAsUser,
+			},
+			Command: []string{"/bin/sh"},
+			Args: []string{
+				"-cx",
+				arg,
+			},
+			VolumeMounts: []v1.VolumeMount{
+				{
+					Name:      "data",
+					MountPath: "/data",
+				},
+			},
+		})
 	}
 	return podSpec
 }

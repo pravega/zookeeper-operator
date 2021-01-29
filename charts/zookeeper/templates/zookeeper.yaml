@@ -7,27 +7,11 @@ metadata:
   labels:
 {{ include "zookeeper.commonLabels" . | indent 4 }}
 spec:
-  initContainers:
-  - name: initcontainer # Or replace the name
-    image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
-    securityContext:
-      runAsUser: 0
-    command:
-      - /bin/sh
-      - -cx
-      - |
-        mkdir -p /data
-        cp /root/zu.jar /data/
-        {{- if  .Values.pod.securityContext }}
-        chown -R {{ .Values.pod.securityContext.runAsUser }}:{{ .Values.pod.securityContext.runAsGroup }} /data
-        {{- end }}
-    volumeMounts:
-    - name: data
-      mountPath: /data 
-  volumes:
-    - name: data
-      persistentVolumeClaim:
-        claimName: data-zookeeper
+  volumePermissions: {{ .Values.volumePermissions }}
+  #volumes:
+    #- name: data
+      #persistentVolumeClaim:
+        #claimName: data-zookeeper
   replicas: {{ .Values.replicas }}
   image:
     repository: {{ .Values.image.repository }}

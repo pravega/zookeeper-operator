@@ -214,6 +214,16 @@ var _ = Describe("Generators Spec", func() {
 					},
 				}
 				z.WithDefaults()
+				no := int64(0)
+				securitycontext := v1.PodSecurityContext{
+					RunAsUser: &no,
+				}
+				z.Spec.Pod.SecurityContext = &securitycontext
+				z.Spec.InitContainers = []v1.Container{
+					{Name: "testcontainer2",
+						Image: "testimg1",
+					},
+				}
 				sts = zk.MakeStatefulSet(z)
 			})
 

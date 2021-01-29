@@ -51,6 +51,11 @@ var _ = Describe("ZookeeperCluster DeepCopy", func() {
 						Name: "testvolume",
 					},
 				},
+				InitContainers: []v1.Container{
+					{Name: "testcontainer2",
+						Image: "testimg1",
+					},
+				},
 			}
 
 			z1.WithDefaults()

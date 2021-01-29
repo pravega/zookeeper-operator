@@ -124,6 +124,12 @@ type ZookeeperClusterSpec struct {
 	// Domain of the kubernetes cluster, defaults to cluster.local
 	KubernetesClusterDomain string `json:"kubernetesClusterDomain,omitempty"`
 
+	// VolumePermission  indicates whether to Change the owner of the persist volume mountpoint
+	// in the init containers
+	// Defaults to false.
+	// +optional
+	VolumePermissions bool `json:"volumePermissions"`
+
 	// Init containers to support initialization
 	InitContainers []v1.Container `json:"initContainers,omitempty"`
 
@@ -252,6 +258,7 @@ func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) 
 			changed = true
 		}
 	}
+
 	return changed
 }
 
