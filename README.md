@@ -330,7 +330,7 @@ $ kubectl get svc
 NAME                                TYPE           CLUSTER-IP       EXTERNAL-IP    PORT(S)
 zookeeper-admin-server              LoadBalancer   10.100.200.104   10.243.39.62   8118:30477/TCP
 ```
-The commands are issued by going to the URL `/commands/<command name>`, e.g. http://10.243.39.62:8118/commands/stat
+The commands are issued by going to the URL `/commands/<command name>`, e.g. `http://10.243.39.62:8118/commands/stat`
 The list of available commands are
 ```
 /commands/configuration
