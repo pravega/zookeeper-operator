@@ -8,6 +8,12 @@ image:
 domainName:
 labels: {}
 ports: []
+  # - containerPort: 2181
+  #   name: client
+  # - containerPort: 2888
+  #   name: quorum
+  # - containerPort: 8080
+  #   name: admin-server
 kubernetesClusterDomain: "cluster.local"
 probes:
   readiness:
