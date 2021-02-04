@@ -17,6 +17,7 @@ The project is currently alpha. While no breaking API changes are currently plan
     * [Uninstall the Zookeeper Cluster](#uninstall-the-zookeeper-cluster)
     * [Upgrade the Zookeeper Operator](#upgrade-the-operator)
     * [Uninstall the Operator](#uninstall-the-operator)
+    * [The AdminServer](#the-adminserver)
  * [Development](#development)
     * [Build the Operator Image](#build-the-operator-image)
     * [Direct Access to Cluster](#direct-access-to-the-cluster)
@@ -313,6 +314,51 @@ To delete all clusters, delete all cluster CR objects before uninstalling the op
 $ kubectl delete -f deploy/default_ns
 // or, depending on how you deployed it
 $ kubectl delete -f deploy/all_ns
+```
+
+### The AdminServer
+The AdminServer is an embedded Jetty server that provides an HTTP interface to the four letter word commands. This port is made accessible to the outside world via the AdminServer service.
+By default, the server is started on port 8080, but this configuration can be modified by providing the desired port number within the values.yaml file of the zookeeper cluster charts
+```
+ports:
+   - containerPort: 8118
+     name: admin-server
+```
+This would bring up the AdminServer service on port 8118 as shown below
+```
+$ kubectl get svc
+NAME                                TYPE           CLUSTER-IP       EXTERNAL-IP    PORT(S)
+zookeeper-admin-server              LoadBalancer   10.100.200.104   10.243.39.62   8118:30477/TCP
+```
+The commands are issued by going to the URL `/commands/<command name>`, e.g. `http://10.243.39.62:8118/commands/stat`
+The list of available commands are
+```
+/commands/configuration
+/commands/connection_stat_reset
+/commands/connections
+/commands/dirs
+/commands/dump
+/commands/environment
+/commands/get_trace_mask
+/commands/hash
+/commands/initial_configuration
+/commands/is_read_only
+/commands/last_snapshot
+/commands/leader
+/commands/monitor
+/commands/observer_connection_stat_reset
+/commands/observers
+/commands/ruok
+/commands/server_stats
+/commands/set_trace_mask
+/commands/stat_reset
+/commands/stats
+/commands/system_properties
+/commands/voting_view
+/commands/watch_summary
+/commands/watches
+/commands/watches_by_path
+/commands/zabstate
 ```
 
 ## Development

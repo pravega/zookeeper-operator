@@ -191,7 +191,17 @@ func MakeClientService(z *v1beta1.ZookeeperCluster) *v1.Service {
 	svcPorts := []v1.ServicePort{
 		{Name: "tcp-client", Port: ports.Client},
 	}
-	return makeService(z.GetClientServiceName(), svcPorts, true, z)
+	return makeService(z.GetClientServiceName(), svcPorts, true, false, z)
+}
+
+// MakeAdminServerService returns a service which provides an interface
+// to access the zookeeper admin server port
+func MakeAdminServerService(z *v1beta1.ZookeeperCluster) *v1.Service {
+	ports := z.ZookeeperPorts()
+	svcPorts := []v1.ServicePort{
+		{Name: "tcp-admin-server", Port: ports.AdminServer},
+	}
+	return makeService(z.GetAdminServerServiceName(), svcPorts, true, true, z)
 }
 
 // MakeConfigMap returns a zookeeper config map
@@ -207,7 +217,7 @@ func MakeConfigMap(z *v1beta1.ZookeeperCluster) *v1.ConfigMap {
 			Labels:    z.Spec.Labels,
 		},
 		Data: map[string]string{
-			"zoo.cfg":                makeZkConfigString(z.Spec),
+			"zoo.cfg":                makeZkConfigString(z),
 			"log4j.properties":       makeZkLog4JConfigString(),
 			"log4j-quiet.properties": makeZkLog4JQuietConfigString(),
 			"env.sh":                 makeZkEnvConfigString(z),
@@ -224,11 +234,13 @@ func MakeHeadlessService(z *v1beta1.ZookeeperCluster) *v1.Service {
 		{Name: "tcp-quorum", Port: ports.Quorum},
 		{Name: "tcp-leader-election", Port: ports.Leader},
 		{Name: "tcp-metrics", Port: ports.Metrics},
+		{Name: "tcp-admin-server", Port: ports.AdminServer},
 	}
-	return makeService(headlessSvcName(z), svcPorts, false, z)
+	return makeService(headlessSvcName(z), svcPorts, false, false, z)
 }
 
-func makeZkConfigString(s v1beta1.ZookeeperClusterSpec) string {
+func makeZkConfigString(z *v1beta1.ZookeeperCluster) string {
+	ports := z.ZookeeperPorts()
 	return "4lw.commands.whitelist=cons, envi, conf, crst, srvr, stat, mntr, ruok\n" +
 		"dataDir=/data\n" +
 		"standaloneEnabled=false\n" +
@@ -237,21 +249,22 @@ func makeZkConfigString(s v1beta1.ZookeeperClusterSpec) string {
 		"metricsProvider.className=org.apache.zookeeper.metrics.prometheus.PrometheusMetricsProvider\n" +
 		"metricsProvider.httpPort=7000\n" +
 		"metricsProvider.exportJvmInfo=true\n" +
-		"initLimit=" + strconv.Itoa(s.Conf.InitLimit) + "\n" +
-		"syncLimit=" + strconv.Itoa(s.Conf.SyncLimit) + "\n" +
-		"tickTime=" + strconv.Itoa(s.Conf.TickTime) + "\n" +
-		"globalOutstandingLimit=" + strconv.Itoa(s.Conf.GlobalOutstandingLimit) + "\n" +
-		"preAllocSize=" + strconv.Itoa(s.Conf.PreAllocSize) + "\n" +
-		"snapCount=" + strconv.Itoa(s.Conf.SnapCount) + "\n" +
-		"commitLogCount=" + strconv.Itoa(s.Conf.CommitLogCount) + "\n" +
-		"snapSizeLimitInKb=" + strconv.Itoa(s.Conf.SnapSizeLimitInKb) + "\n" +
-		"maxCnxns=" + strconv.Itoa(s.Conf.MaxCnxns) + "\n" +
-		"maxClientCnxns=" + strconv.Itoa(s.Conf.MaxClientCnxns) + "\n" +
-		"minSessionTimeout=" + strconv.Itoa(s.Conf.MinSessionTimeout) + "\n" +
-		"maxSessionTimeout=" + strconv.Itoa(s.Conf.MaxSessionTimeout) + "\n" +
-		"autopurge.snapRetainCount=" + strconv.Itoa(s.Conf.AutoPurgeSnapRetainCount) + "\n" +
-		"autopurge.purgeInterval=" + strconv.Itoa(s.Conf.AutoPurgePurgeInterval) + "\n" +
-		"quorumListenOnAllIPs=" + strconv.FormatBool(s.Conf.QuorumListenOnAllIPs) + "\n" +
+		"initLimit=" + strconv.Itoa(z.Spec.Conf.InitLimit) + "\n" +
+		"syncLimit=" + strconv.Itoa(z.Spec.Conf.SyncLimit) + "\n" +
+		"tickTime=" + strconv.Itoa(z.Spec.Conf.TickTime) + "\n" +
+		"globalOutstandingLimit=" + strconv.Itoa(z.Spec.Conf.GlobalOutstandingLimit) + "\n" +
+		"preAllocSize=" + strconv.Itoa(z.Spec.Conf.PreAllocSize) + "\n" +
+		"snapCount=" + strconv.Itoa(z.Spec.Conf.SnapCount) + "\n" +
+		"commitLogCount=" + strconv.Itoa(z.Spec.Conf.CommitLogCount) + "\n" +
+		"snapSizeLimitInKb=" + strconv.Itoa(z.Spec.Conf.SnapSizeLimitInKb) + "\n" +
+		"maxCnxns=" + strconv.Itoa(z.Spec.Conf.MaxCnxns) + "\n" +
+		"maxClientCnxns=" + strconv.Itoa(z.Spec.Conf.MaxClientCnxns) + "\n" +
+		"minSessionTimeout=" + strconv.Itoa(z.Spec.Conf.MinSessionTimeout) + "\n" +
+		"maxSessionTimeout=" + strconv.Itoa(z.Spec.Conf.MaxSessionTimeout) + "\n" +
+		"autopurge.snapRetainCount=" + strconv.Itoa(z.Spec.Conf.AutoPurgeSnapRetainCount) + "\n" +
+		"autopurge.purgeInterval=" + strconv.Itoa(z.Spec.Conf.AutoPurgePurgeInterval) + "\n" +
+		"quorumListenOnAllIPs=" + strconv.FormatBool(z.Spec.Conf.QuorumListenOnAllIPs) + "\n" +
+		"admin.serverPort=" + strconv.Itoa(int(ports.AdminServer)) + "\n" +
 		"dynamicConfigFile=/data/zoo.cfg.dynamic\n"
 }
 
@@ -281,11 +294,13 @@ func makeZkEnvConfigString(z *v1beta1.ZookeeperCluster) string {
 		"LEADER_PORT=" + strconv.Itoa(int(ports.Leader)) + "\n" +
 		"CLIENT_HOST=" + z.GetClientServiceName() + "\n" +
 		"CLIENT_PORT=" + strconv.Itoa(int(ports.Client)) + "\n" +
+		"ADMIN_SERVER_HOST=" + z.GetAdminServerServiceName() + "\n" +
+		"ADMIN_SERVER_PORT=" + strconv.Itoa(int(ports.AdminServer)) + "\n" +
 		"CLUSTER_NAME=" + z.GetName() + "\n" +
 		"CLUSTER_SIZE=" + fmt.Sprint(z.Spec.Replicas) + "\n"
 }
 
-func makeService(name string, ports []v1.ServicePort, clusterIP bool, z *v1beta1.ZookeeperCluster) *v1.Service {
+func makeService(name string, ports []v1.ServicePort, clusterIP bool, external bool, z *v1beta1.ZookeeperCluster) *v1.Service {
 	var dnsName string
 	var annotationMap map[string]string
 	if !clusterIP && z.Spec.DomainName != "" {
@@ -317,6 +332,9 @@ func makeService(name string, ports []v1.ServicePort, clusterIP bool, z *v1beta1
 			Ports:    ports,
 			Selector: map[string]string{"app": z.GetName()},
 		},
+	}
+	if external {
+		service.Spec.Type = "LoadBalancer"
 	}
 	if !clusterIP {
 		service.Spec.ClusterIP = v1.ClusterIPNone

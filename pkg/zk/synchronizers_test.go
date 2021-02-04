@@ -87,7 +87,7 @@ var _ = Describe("Synchronizers", func() {
 		})
 	})
 
-	Context("with a valid update of config map ", func() {
+	Context("with a valid update of config map", func() {
 		var value string
 		BeforeEach(func() {
 			z := &v1beta1.ZookeeperCluster{

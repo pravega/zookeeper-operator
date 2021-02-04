@@ -125,6 +125,14 @@ var _ = Describe("Generators Spec", func() {
 					Ω(cfg).To(ContainSubstring("CLIENT_PORT=2181\n"))
 				})
 
+				It("should set the ADMIN_SERVER_HOST", func() {
+					Ω(cfg).To(ContainSubstring("ADMIN_SERVER_HOST=example-admin-server\n"))
+				})
+
+				It("should set the ADMIN_SERVER_PORT", func() {
+					Ω(cfg).To(ContainSubstring("ADMIN_SERVER_PORT=8080\n"))
+				})
+
 				It("should set the LEADER_PORT", func() {
 					Ω(cfg).To(ContainSubstring("LEADER_PORT=3888\n"))
 				})
@@ -301,11 +309,11 @@ var _ = Describe("Generators Spec", func() {
 			Ω(p.Port).To(BeEquivalentTo(2181))
 		})
 
-		It("should have a the client svc name", func() {
+		It("should have a client svc name", func() {
 			Ω(s.GetName()).To(Equal("example-client"))
 		})
 
-		It("should have a the client svc name", func() {
+		It("should have a client svc name", func() {
 			Ω(s.Spec.Selector["app"]).To(Equal("example"))
 		})
 
@@ -367,11 +375,11 @@ var _ = Describe("Generators Spec", func() {
 			Ω(p.Port).To(BeEquivalentTo(7000))
 		})
 
-		It("should have a the client svc name", func() {
+		It("should have a client svc name", func() {
 			Ω(s.GetName()).To(Equal("example-headless"))
 		})
 
-		It("should have a the client svc name", func() {
+		It("should have a client svc name", func() {
 			Ω(s.Spec.Selector["app"]).To(Equal("example"))
 		})
 
@@ -387,6 +395,7 @@ var _ = Describe("Generators Spec", func() {
 				"exampleValue"))
 		})
 	})
+
 	Context("#MakeHeadlessService dnsname without dot", func() {
 		var s *v1.Service
 		var domainName string
@@ -410,6 +419,46 @@ var _ = Describe("Generators Spec", func() {
 			Expect(s.GetAnnotations()).To(HaveKeyWithValue(
 				"external-dns.alpha.kubernetes.io/hostname",
 				"example-headless.zkcom."))
+		})
+	})
+
+	Context("#MakeAdminServerService", func() {
+		var s *v1.Service
+
+		BeforeEach(func() {
+			z := &v1beta1.ZookeeperCluster{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "example",
+					Namespace: "default",
+				},
+				Spec: v1beta1.ZookeeperClusterSpec{
+					Labels: map[string]string{
+						"exampleLabel": "exampleValue",
+					},
+				},
+			}
+			z.WithDefaults()
+			s = zk.MakeAdminServerService(z)
+		})
+
+		It("should have an admin server port", func() {
+			p, err := utils.ServicePortByName(s.Spec.Ports, "tcp-admin-server")
+			Ω(err).To(BeNil())
+			Ω(p.Port).To(BeEquivalentTo(8080))
+		})
+
+		It("should have an admin server svc name", func() {
+			Ω(s.GetName()).To(Equal("example-admin-server"))
+		})
+
+		It("should have a client svc name", func() {
+			Ω(s.Spec.Selector["app"]).To(Equal("example"))
+		})
+
+		It("should have custom labels set", func() {
+			Ω(s.GetLabels()).To(HaveKeyWithValue(
+				"exampleLabel",
+				"exampleValue"))
 		})
 	})
 
