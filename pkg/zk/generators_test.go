@@ -214,6 +214,29 @@ var _ = Describe("Generators Spec", func() {
 					},
 				}
 				z.WithDefaults()
+
+				sts = zk.MakeStatefulSet(z)
+			})
+
+			It("should have custom labels set on pods", func() {
+				Ω(sts.Spec.Template.ObjectMeta.Annotations).To(HaveKeyWithValue(
+					"example-annotation",
+					"example-value"))
+			})
+
+		})
+
+		Context("with pod policy securitycontext", func() {
+
+			BeforeEach(func() {
+				z := &v1beta1.ZookeeperCluster{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "example",
+						Namespace: "default",
+					},
+				}
+				z.WithDefaults()
+				z.Spec.VolumePermissions = true
 				no := int64(0)
 				securitycontext := v1.PodSecurityContext{
 					RunAsUser: &no,
@@ -226,11 +249,8 @@ var _ = Describe("Generators Spec", func() {
 				}
 				sts = zk.MakeStatefulSet(z)
 			})
-
-			It("should have custom labels set on pods", func() {
-				Ω(sts.Spec.Template.ObjectMeta.Annotations).To(HaveKeyWithValue(
-					"example-annotation",
-					"example-value"))
+			It("should have runAsUser value as 0", func() {
+				Ω(fmt.Sprintf("%v", *sts.Spec.Template.Spec.SecurityContext.RunAsUser)).To(Equal("0"))
 			})
 		})
 	})
