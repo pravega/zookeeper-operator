@@ -30,9 +30,10 @@ pod:
   # tolerations: []
   # env: []
   # annotations: {}
-  # securityContext: {}
-    #runAsUser: 1001
-    #runAsGroup: 1001
+  # securityContext:
+    # Mention runAsUser as auto in case of openshift
+    # runAsUser: 1001
+    # runAsGroup: 1001
   # terminationGracePeriodSeconds: 30
   serviceAccountName: zookeeper
   # imagePullSecrets: []
@@ -82,3 +83,7 @@ hooks:
 
 containers: []
 volumes: []
+#initContainers:
+  #name: initcontainer
+  #securityContext:
+    #runAsUser: auto

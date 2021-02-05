@@ -181,24 +181,35 @@ func makeZkPodSpec(z *v1beta1.ZookeeperCluster, volumes []v1.Volume) v1.PodSpec 
 	podSpec.Tolerations = z.Spec.Pod.Tolerations
 	podSpec.TerminationGracePeriodSeconds = &z.Spec.Pod.TerminationGracePeriodSeconds
 	podSpec.ServiceAccountName = z.Spec.Pod.ServiceAccountName
-	if z.Spec.VolumePermissions == true && z.Spec.Pod.SecurityContext != nil {
-		runAsUser := int64(0)
-		var arg string
-		if strconv.Itoa(int(*podSpec.SecurityContext.RunAsUser)) == "auto" {
 
+	if z.Spec.VolumePermissions == true && z.Spec.Pod.SecurityContext != nil {
+		var securityContext *v1.SecurityContext
+		var initContainerName string
+		if z.Spec.InitContainers == nil || z.Spec.InitContainers[0].SecurityContext == nil {
+			securityContext = &v1.SecurityContext{}
+			initContainerName = "initcontainer"
+		} else {
+			initContainerName = z.Spec.InitContainers[0].Name
+			securityContext = z.Spec.InitContainers[0].SecurityContext.DeepCopy()
+
+		}
+		var arg string
+		if podSpec.SecurityContext == nil || podSpec.SecurityContext.RunAsUser == nil {
 			arg = "chown -R " + "`" + "id -u" + "`" + ":" + "`" + "id -G | cut -d \" \" -f2" + "`" + " /data" + " /opt"
 
 		} else {
+
+			if podSpec.SecurityContext.RunAsGroup == nil {
+				podSpec.SecurityContext.RunAsGroup = podSpec.SecurityContext.RunAsUser
+			}
 			arg = "chown -R " + strconv.Itoa(int(*podSpec.SecurityContext.RunAsUser)) + ":" + strconv.Itoa(int(*podSpec.SecurityContext.RunAsGroup)) + " /data" + " /opt"
 		}
 		z.Spec.InitContainers = []v1.Container{}
 		podSpec.InitContainers = append(z.Spec.InitContainers, v1.Container{
-			Name:  "initcontainer",
-			Image: z.Spec.Image.ToString(),
-			SecurityContext: &v1.SecurityContext{
-				RunAsUser: &runAsUser,
-			},
-			Command: []string{"/bin/sh"},
+			Name:            initContainerName,
+			Image:           z.Spec.Image.ToString(),
+			SecurityContext: securityContext,
+			Command:         []string{"/bin/sh"},
 			Args: []string{
 				"-cx",
 				arg,
