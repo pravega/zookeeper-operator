@@ -21,7 +21,6 @@ probes:
     periodSeconds: 10
     failureThreshold: 3
     timeoutSeconds: 10
-volumePermissions: false
 pod:
   # labels: {}
   # nodeSelector: {}
@@ -31,9 +30,9 @@ pod:
   # env: []
   # annotations: {}
   # securityContext:
-    # Mention runAsUser as auto in case of openshift
-    # runAsUser: 1001
-    # runAsGroup: 1001
+    #runAsUser: 1000
+    #runAsGroup: 1000
+    #runAsNonRoot: false
   # terminationGracePeriodSeconds: 30
   serviceAccountName: zookeeper
   # imagePullSecrets: []
@@ -83,7 +82,13 @@ hooks:
 
 containers: []
 volumes: []
-#initContainers:
-  #name: initcontainer
-  #securityContext:
-    #runAsUser: auto
+
+## Init containers parameters:
+## volumePermissions: Change the owner of the persistent volume mountpoint to RunAsUser:RunAsGroup
+
+volumePermissions:
+  enabled: false
+  #initContainer:
+    #name: initcontainer
+    #securityContext:
+      #runAsUser: 0

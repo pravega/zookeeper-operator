@@ -194,7 +194,7 @@ func makeZkPodSpec(z *v1beta1.ZookeeperCluster, volumes []v1.Volume) v1.PodSpec 
 
 		}
 		var arg string
-		if podSpec.SecurityContext == nil || podSpec.SecurityContext.RunAsUser == nil {
+		if podSpec.SecurityContext.RunAsUser == nil {
 			arg = "chown -R " + "`" + "id -u" + "`" + ":" + "`" + "id -G | cut -d \" \" -f2" + "`" + " /data" + " /opt"
 
 		} else {

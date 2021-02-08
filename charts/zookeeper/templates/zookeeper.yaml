@@ -7,7 +7,6 @@ metadata:
   labels:
 {{ include "zookeeper.commonLabels" . | indent 4 }}
 spec:
-  volumePermissions: {{ .Values.volumePermissions }}
   replicas: {{ .Values.replicas }}
   image:
     repository: {{ .Values.image.repository }}
@@ -39,20 +38,18 @@ spec:
   containers:
 {{ toYaml .Values.containers | indent 4 }}
   {{- end }}
-  {{- if .Values.initContainers }}
-  initContainers:
-  - name: {{ .Values.initContainers.name }}
-  {{- if eq ( toString ( .Values.initContainers.securityContext.runAsUser )) "auto" }}
-    securityContext: {}
-  {{- else }}
-  initContainers:
-    securityContext:
-      runAsUser: {{ .Values.initContainers.securityContext.runAsUser }}
-  {{- end }}
-  {{- end }}
   {{- if .Values.volumes }}
   volumes:
 {{ toYaml .Values.volumes | indent 4 }}
+  {{- end }}
+  volumePermissions: {{ .Values.volumePermissions.enabled }}
+  {{- if .Values.volumePermissions.enabled }}
+  initContainers:
+  - name: {{ .Values.volumePermissions.initContainer.name }}
+  {{- if .Values.volumePermissions.initContainer.securityContext }}
+    securityContext:
+      runAsUser: {{ .Values.volumePermissions.initContainer.securityContext.runAsUser }}
+  {{- end }}
   {{- end }}
   labels:
 {{ toYaml .Values.labels | indent 4 }}
@@ -88,11 +85,8 @@ spec:
 {{ toYaml .Values.pod.annotations | indent 6 }}
     {{- end }}
     {{- if .Values.pod.securityContext }}
-    {{- if eq ( toString ( .Values.pod.securityContext.runAsUser )) "auto" }}
-    securityContext: {{- omit .Values.pod.securityContext "runAsUser" | toYaml | indent 6 }}
-    {{- else }}
-    securityContext: {{- .Values.pod.securityContext | toYaml | indent 6 }}
-    {{- end }}
+    securityContext:
+{{ toYaml .Values.pod.securityContext | indent 6 }}
     {{- end }}
     {{- if .Values.pod.terminationGracePeriodSeconds }}
     terminationGracePeriodSeconds: {{ .Values.pod.terminationGracePeriodSeconds }}

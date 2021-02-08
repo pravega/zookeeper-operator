@@ -1990,6 +1990,7 @@ spec:
                           takes precedence.
                         format: int64
                         type: integer
+                        nullable: true
                       runAsNonRoot:
                         description: Indicates that the container must run as a non-root
                           user. If true, the Kubelet will validate the image at runtime
@@ -2007,6 +2008,7 @@ spec:
                           value specified in SecurityContext takes precedence.
                         format: int64
                         type: integer
+                        nullable: true
                       seLinuxOptions:
                         description: The SELinux context to be applied to the container.
                           If unspecified, the container runtime will allocate a random
@@ -3284,6 +3286,7 @@ spec:
                         that container.
                       format: int64
                       type: integer
+                      nullable: true
                     runAsNonRoot:
                       description: Indicates that the container must run as a non-root
                         user. If true, the Kubelet will validate the image at runtime
@@ -3301,6 +3304,7 @@ spec:
                         takes precedence for that container.
                       format: int64
                       type: integer
+                      nullable: true
                     seLinuxOptions:
                       description: The SELinux context to be applied to all containers.
                         If unspecified, the container runtime will allocate a random

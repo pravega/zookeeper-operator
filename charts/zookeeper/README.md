@@ -105,6 +105,7 @@ The following table lists the configurable parameters of the zookeeper chart and
 | `ephemeral.emptydirvolumesource.medium` |  What type of storage medium should back the directory. | `""` |
 | `ephemeral.emptydirvolumesource.sizeLimit` | Total amount of local storage required for the EmptyDir volume. | `20Gi` |
 | `containers` | Application containers run with the zookeeper pod | `[]` |
-| `initContainers` | Containers to support initialization | `[]` |
-| `volumePermissions` | Indicates whether to change the owner of persistent volume mount point | `false` |
+| `volumePermissions.enabled` | Indicates whether to change the owner of persistent volume mount point | `false` |
+| `volumePermissions.initContainer.name` | Name of the initcontainer | `initcontainer` |
+| `volumePermissions.initContainer.securityContext` | Holds the initcontainer security settings | `{}` |
 | `volumes` | Named volumes that may be accessed by any container in the pod | `[]` |
