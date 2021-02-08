@@ -1,3 +1,4 @@
+{{- if .Values.hooks.delete }}
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
@@ -108,3 +109,4 @@ spec:
           configMap:
             name: {{ template "zookeeper-operator.fullname" . }}-pre-delete
             defaultMode: 0555
+{{- end }}
