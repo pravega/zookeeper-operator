@@ -253,6 +253,60 @@ var _ = Describe("Generators Spec", func() {
 				Ω(fmt.Sprintf("%v", *sts.Spec.Template.Spec.SecurityContext.RunAsUser)).To(Equal("0"))
 			})
 		})
+
+		Context("with pod policy securitycontext runasuser empty", func() {
+
+			BeforeEach(func() {
+				z := &v1beta1.ZookeeperCluster{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "example",
+						Namespace: "default",
+					},
+				}
+				z.WithDefaults()
+				z.Spec.VolumePermissions = true
+				runAsNonRoot := false
+				no := int64(0)
+				securitycontext := v1.PodSecurityContext{
+					RunAsNonRoot: &runAsNonRoot,
+				}
+				z.Spec.Pod.SecurityContext = &securitycontext
+				z.Spec.InitContainers = []v1.Container{
+					{Name: "testcontainer2",
+						Image: "testimg1",
+						SecurityContext: &v1.SecurityContext{
+							RunAsUser: &no,
+						},
+					},
+				}
+				sts = zk.MakeStatefulSet(z)
+			})
+			It("should have runAsNonRoot value as false", func() {
+				Ω(*sts.Spec.Template.Spec.SecurityContext.RunAsNonRoot).Should(Equal(false))
+			})
+		})
+		Context("with pod policy securitycontext nil", func() {
+
+			BeforeEach(func() {
+				z := &v1beta1.ZookeeperCluster{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "example",
+						Namespace: "default",
+					},
+				}
+				z.WithDefaults()
+				z.Spec.VolumePermissions = true
+				z.Spec.InitContainers = []v1.Container{
+					{Name: "testcontainer2",
+						Image: "testimg1",
+					},
+				}
+				sts = zk.MakeStatefulSet(z)
+			})
+			It("should have runAsUser value as 0", func() {
+				Ω(sts.Spec.Template.Spec.SecurityContext).To(BeNil())
+			})
+		})
 	})
 
 	Context("#MakeStatefulSet with Ephemeral storage", func() {
