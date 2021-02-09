@@ -45,7 +45,7 @@ spec:
   volumePermissions: {{ .Values.volumePermissions.enabled }}
   {{- if .Values.volumePermissions.enabled }}
   initContainers:
-  - name: {{ .Values.volumePermissions.initContainer.name }}
+  - name: volume-perms-init
   {{- if .Values.volumePermissions.initContainer.securityContext }}
     securityContext:
       runAsUser: {{ .Values.volumePermissions.initContainer.securityContext.runAsUser }}

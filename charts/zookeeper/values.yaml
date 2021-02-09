@@ -32,7 +32,6 @@ pod:
   # securityContext:
     #runAsUser: 1000
     #runAsGroup: 1000
-    #runAsNonRoot: false
   # terminationGracePeriodSeconds: 30
   serviceAccountName: zookeeper
   # imagePullSecrets: []
@@ -89,6 +88,5 @@ volumes: []
 volumePermissions:
   enabled: false
   #initContainer:
-    #name: initcontainer
     #securityContext:
       #runAsUser: 0

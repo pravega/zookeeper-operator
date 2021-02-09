@@ -12,10 +12,12 @@ package zk
 
 import (
 	"fmt"
+
 	"strconv"
 	"strings"
 
 	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
+	log "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
@@ -184,12 +186,9 @@ func makeZkPodSpec(z *v1beta1.ZookeeperCluster, volumes []v1.Volume) v1.PodSpec 
 
 	if z.Spec.VolumePermissions == true && z.Spec.Pod.SecurityContext != nil {
 		var securityContext *v1.SecurityContext
-		var initContainerName string
 		if z.Spec.InitContainers == nil || z.Spec.InitContainers[0].SecurityContext == nil {
 			securityContext = &v1.SecurityContext{}
-			initContainerName = "initcontainer"
 		} else {
-			initContainerName = z.Spec.InitContainers[0].Name
 			securityContext = z.Spec.InitContainers[0].SecurityContext.DeepCopy()
 
 		}
@@ -206,7 +205,7 @@ func makeZkPodSpec(z *v1beta1.ZookeeperCluster, volumes []v1.Volume) v1.PodSpec 
 		}
 		z.Spec.InitContainers = []v1.Container{}
 		podSpec.InitContainers = append(z.Spec.InitContainers, v1.Container{
-			Name:            initContainerName,
+			Name:            "volume-perms-init",
 			Image:           z.Spec.Image.ToString(),
 			SecurityContext: securityContext,
 			Command:         []string{"/bin/sh"},
@@ -221,6 +220,9 @@ func makeZkPodSpec(z *v1beta1.ZookeeperCluster, volumes []v1.Volume) v1.PodSpec 
 				},
 			},
 		})
+	}
+	if z.Spec.VolumePermissions == true && z.Spec.Pod.SecurityContext == nil {
+		log.Warn("Volume permission is enabled but security context is not provided")
 	}
 	return podSpec
 }
