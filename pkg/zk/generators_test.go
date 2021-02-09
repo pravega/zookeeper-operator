@@ -303,7 +303,7 @@ var _ = Describe("Generators Spec", func() {
 				}
 				sts = zk.MakeStatefulSet(z)
 			})
-			It("should have runAsUser value as 0", func() {
+			It("Security context should be nil", func() {
 				Ω(sts.Spec.Template.Spec.SecurityContext).To(BeNil())
 			})
 		})
