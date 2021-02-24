@@ -241,7 +241,6 @@ func CheckAdminService(t *testing.T, f *framework.Framework, ctx *framework.Test
 	}
 
 	for _, sn := range serviceList.Items {
-
 		if sn.Name == "zookeeper-admin-server" {
 			t.Logf("Admin service is enabled")
 			t.Logf("servicenameis %v", sn.Name)

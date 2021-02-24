@@ -19,7 +19,7 @@ import (
 )
 
 // Test create and recreate a Zookeeper cluster with the same name
-func testCreateRecreateCluster(t *testing.T) {
+func testImagePullSecret(t *testing.T) {
 	g := NewGomegaWithT(t)
 
 	doCleanup := true
@@ -39,6 +39,8 @@ func testCreateRecreateCluster(t *testing.T) {
 	defaultCluster.WithDefaults()
 	defaultCluster.Status.Init()
 	defaultCluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
+	defaultCluster.Spec.Image.Repository = "testanisha/zookeeper"
+	defaultCluster.Spec.Image.Tag = "checksecret_1"
 
 	zk, err := zk_e2eutil.CreateCluster(t, f, ctx, defaultCluster)
 	g.Expect(err).NotTo(HaveOccurred())
@@ -53,26 +55,6 @@ func testCreateRecreateCluster(t *testing.T) {
 
 	err = zk_e2eutil.DeleteCluster(t, f, ctx, zk)
 	g.Expect(err).NotTo(HaveOccurred())
-
-	err = zk_e2eutil.WaitForClusterToTerminate(t, f, ctx, zk)
-	g.Expect(err).NotTo(HaveOccurred())
-
-	defaultCluster = zk_e2eutil.NewDefaultCluster(namespace)
-	defaultCluster.WithDefaults()
-	defaultCluster.Status.Init()
-	defaultCluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
-
-	zk, err = zk_e2eutil.CreateCluster(t, f, ctx, defaultCluster)
-	g.Expect(err).NotTo(HaveOccurred())
-
-	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
-	g.Expect(err).NotTo(HaveOccurred())
-
-	err = zk_e2eutil.DeleteCluster(t, f, ctx, zk)
-	g.Expect(err).NotTo(HaveOccurred())
-
-	// No need to do cleanup since the cluster CR has already been deleted
-	doCleanup = false
 
 	err = zk_e2eutil.WaitForClusterToTerminate(t, f, ctx, zk)
 	g.Expect(err).NotTo(HaveOccurred())
