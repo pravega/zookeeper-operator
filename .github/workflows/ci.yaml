@@ -51,10 +51,10 @@ jobs:
         sleep 60
         sudo kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=kube-system:default
         echo "created cluster role"
-        kubectl create secret docker-registry regcred --docker-server=https://index.docker.io/v1/ --docker-username="testanisha"  --docker-password="123456789" --docker-email=testimage456@gmail.com
         sudo kubectl cluster-info
         echo "cluster info"
         sudo kubectl -n kube-system get pod -o wide
+        sudo kubectl create secret docker-registry regcred --docker-server=https://index.docker.io/v1/ --docker-username="testanisha"  --docker-password="123456789" --docker-email=testimage456@gmail.com
     - name: E2E
       run: sudo make test-e2e
   publish:
