@@ -60,6 +60,10 @@ func testScaleCluster(t *testing.T) {
 	err = zk_e2eutil.UpdateCluster(t, f, ctx, zk)
 	g.Expect(err).NotTo(HaveOccurred())
 
+	podDeleteCount := 2
+	err = zk_e2eutil.DeletePods(t, f, ctx, zk, podDeleteCount)
+	g.Expect(err).NotTo(HaveOccurred())
+
 	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
 	g.Expect(err).NotTo(HaveOccurred())
 
