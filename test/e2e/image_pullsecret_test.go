@@ -16,6 +16,7 @@ import (
 	. "github.com/onsi/gomega"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	zk_e2eutil "github.com/pravega/zookeeper-operator/pkg/test/e2e/e2eutil"
+	v1 "k8s.io/api/core/v1"
 )
 
 // Test create and recreate a Zookeeper cluster with the same name
@@ -41,7 +42,11 @@ func testImagePullSecret(t *testing.T) {
 	defaultCluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
 	defaultCluster.Spec.Image.Repository = "testanisha/zookeeper"
 	defaultCluster.Spec.Image.Tag = "checksecret_1"
-
+	defaultCluster.Spec.Pod.ImagePullSecrets = []v1.LocalObjectReference{
+		{
+			Name: "regcred",
+		},
+	}
 	zk, err := zk_e2eutil.CreateCluster(t, f, ctx, defaultCluster)
 	g.Expect(err).NotTo(HaveOccurred())
 
