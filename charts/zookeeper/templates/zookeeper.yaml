@@ -111,22 +111,22 @@ spec:
     commitLogCount: {{ .Values.config.commitLogCount }}
     {{- end }}
     {{- if .Values.config.snapSizeLimitInKb }}
-    snapSizeLimitInKb: {{ .Values.snapSizeLimitInKb }}
+    snapSizeLimitInKb: {{ .Values.config.snapSizeLimitInKb }}
     {{- end }}
     {{- if .Values.config.maxCnxns }}
-    maxCnxns: {{ .Values.maxCnxns }}
+    maxCnxns: {{ .Values.config.maxCnxns }}
     {{- end }}
     {{- if .Values.config.maxClientCnxns }}
-    maxClientCnxns: {{ .Values.maxClientCnxns }}
+    maxClientCnxns: {{ .Values.config.maxClientCnxns }}
     {{- end }}
     {{- if .Values.config.minSessionTimeout }}
-    minSessionTimeout: {{ .Values.minSessionTimeout }}
+    minSessionTimeout: {{ .Values.config.minSessionTimeout }}
     {{- end }}
     {{- if .Values.config.maxSessionTimeout }}
-    maxSessionTimeout: {{ .Values.maxSessionTimeout }}
+    maxSessionTimeout: {{ .Values.config.maxSessionTimeout }}
     {{- end }}
     {{- if .Values.config.autoPurgeSnapRetainCount }}
-    autoPurgeSnapRetainCount: {{ .Values.autoPurgeSnapRetainCount }}
+    autoPurgeSnapRetainCount: {{ .Values.config.autoPurgeSnapRetainCount }}
     {{- end }}
     {{- if .Values.config.autoPurgePurgeInterval }}
     autoPurgePurgeInterval: {{ .Values.config.autoPurgePurgeInterval }}
