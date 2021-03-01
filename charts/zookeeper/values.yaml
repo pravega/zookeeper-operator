@@ -40,6 +40,16 @@ pod:
   serviceAccountName: zookeeper
   # imagePullSecrets: []
 
+adminServerService:
+  # annotations: {}
+  # internal: false
+
+clientService:
+  # annotations: {}
+
+headlessService:
+  # annotations: {}
+
 config: {}
   # initLimit: 10
   # tickTime: 2000

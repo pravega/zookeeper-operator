@@ -297,6 +297,11 @@ var _ = Describe("Generators Spec", func() {
 					Labels: map[string]string{
 						"exampleLabel": "exampleValue",
 					},
+					ClientService: v1beta1.ClientServicePolicy{
+						Annotations: map[string]string{
+							"exampleAnnotation": "exampleValue",
+						},
+					},
 				},
 			}
 			z.WithDefaults()
@@ -318,13 +323,18 @@ var _ = Describe("Generators Spec", func() {
 		})
 
 		It("should not set the dns annotation", func() {
-			mapLength := len(s.GetAnnotations())
-			Ω(mapLength).To(Equal(0))
+			Expect(s.GetAnnotations()).NotTo(HaveKey("external-dns.alpha.kubernetes.io/hostname"))
 		})
 
 		It("should have custom labels set", func() {
 			Ω(s.GetLabels()).To(HaveKeyWithValue(
 				"exampleLabel",
+				"exampleValue"))
+		})
+
+		It("should have custom annotations set", func() {
+			Ω(s.GetAnnotations()).To(HaveKeyWithValue(
+				"exampleAnnotation",
 				"exampleValue"))
 		})
 	})
@@ -344,6 +354,11 @@ var _ = Describe("Generators Spec", func() {
 					DomainName: domainName,
 					Labels: map[string]string{
 						"exampleLabel": "exampleValue",
+					},
+					HeadlessService: v1beta1.HeadlessServicePolicy{
+						Annotations: map[string]string{
+							"exampleAnnotation": "exampleValue",
+						},
 					},
 				},
 			}
@@ -394,6 +409,12 @@ var _ = Describe("Generators Spec", func() {
 				"exampleLabel",
 				"exampleValue"))
 		})
+
+		It("should have custom annotations set", func() {
+			Ω(s.GetAnnotations()).To(HaveKeyWithValue(
+				"exampleAnnotation",
+				"exampleValue"))
+		})
 	})
 
 	Context("#MakeHeadlessService dnsname without dot", func() {
@@ -435,6 +456,11 @@ var _ = Describe("Generators Spec", func() {
 					Labels: map[string]string{
 						"exampleLabel": "exampleValue",
 					},
+					AdminServerService: v1beta1.AdminServerServicePolicy{
+						Annotations: map[string]string{
+							"exampleAnnotation": "exampleValue",
+						},
+					},
 				},
 			}
 			z.WithDefaults()
@@ -459,6 +485,40 @@ var _ = Describe("Generators Spec", func() {
 			Ω(s.GetLabels()).To(HaveKeyWithValue(
 				"exampleLabel",
 				"exampleValue"))
+		})
+
+		It("should have custom annotations set", func() {
+			Ω(s.GetAnnotations()).To(HaveKeyWithValue(
+				"exampleAnnotation",
+				"exampleValue"))
+		})
+
+		It("should have LoadBalancer attached by default", func() {
+			Ω(s.Spec.Type).To(Equal(v1.ServiceTypeLoadBalancer))
+		})
+	})
+
+	Context("#MakeAdminServerService internal without LoadBalancer", func() {
+		var s *v1.Service
+
+		BeforeEach(func() {
+			z := &v1beta1.ZookeeperCluster{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "example",
+					Namespace: "default",
+				},
+				Spec: v1beta1.ZookeeperClusterSpec{
+					AdminServerService: v1beta1.AdminServerServicePolicy{
+						Internal: true,
+					},
+				},
+			}
+			z.WithDefaults()
+			s = zk.MakeAdminServerService(z)
+		})
+
+		It("should have no LoadBalancer attached", func() {
+			Ω(s.Spec.Type).NotTo(Equal(v1.ServiceTypeLoadBalancer))
 		})
 	})
 

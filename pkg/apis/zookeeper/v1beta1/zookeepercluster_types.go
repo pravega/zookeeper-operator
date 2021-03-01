@@ -100,6 +100,12 @@ type ZookeeperClusterSpec struct {
 	// Updating the Pod does not take effect on any existing pods.
 	Pod PodPolicy `json:"pod,omitempty"`
 
+	AdminServerService AdminServerServicePolicy `json:"adminServerService,omitempty"`
+
+	ClientService ClientServicePolicy `json:"clientService,omitempty"`
+
+	HeadlessService HeadlessServicePolicy `json:"headlessService,omitempty"`
+
 	//StorageType is used to tell which type of storage we will be using
 	//It can take either Ephemeral or persistence
 	//Default StorageType is Persistence storage
@@ -486,6 +492,26 @@ func (p *PodPolicy) withDefaults(z *ZookeeperCluster) (changed bool) {
 		changed = true
 	}
 	return changed
+}
+
+type AdminServerServicePolicy struct {
+	// Annotations specifies the annotations to attach to AdminServer service the operator
+	// creates.
+	Annotations map[string]string `json:"annotations,omitempty"`
+
+	Internal bool `json:"internal,omitempty"`
+}
+
+type ClientServicePolicy struct {
+	// Annotations specifies the annotations to attach to client service the operator
+	// creates.
+	Annotations map[string]string `json:"annotations,omitempty"`
+}
+
+type HeadlessServicePolicy struct {
+	// Annotations specifies the annotations to attach to headless service the operator
+	// creates.
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 func (s *Probes) withDefaults() (changed bool) {

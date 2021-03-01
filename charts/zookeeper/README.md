@@ -82,6 +82,13 @@ The following table lists the configurable parameters of the zookeeper chart and
 | `pod.terminationGracePeriodSeconds` | Amount of time given to the pod to shutdown normally | `30` |
 | `pod.serviceAccountName` | Name for the service account | `zookeeper` |
 | `pod.imagePullSecrets` | ImagePullSecrets is a list of references to secrets in the same namespace to use for pulling any images. | `[]` |
+| `clientService` | Defines the policy to create client Service for the zookeeper cluster. | {} |
+| `clientService.annotations` | Specifies the annotations to attach to client Service the operator creates. | {} |
+| `headlessService` | Defines the policy to create headless Service for the zookeeper cluster. | {} |
+| `headlessService.annotations` | Specifies the annotations to attach to headless Service the operator creates. | {} |
+| `adminServerService` | Defines the policy to create AdminServer Service for the zookeeper cluster. | {} |
+| `adminServerService.annotations` | Specifies the annotations to attach to AdminServer Service the operator creates. | {} |
+| `adminServerService.internal` | Specifies if LoadBalancer should be created for the AdminServer. False means LoadBalancer will be created, true - only ClusterIP will be used. | false |
 | `config.initLimit` | Amount of time (in ticks) to allow followers to connect and sync to a leader | `10` |
 | `config.tickTime` | Length of a single tick which is the basic time unit used by Zookeeper (measured in milliseconds) | `2000` |
 | `config.syncLimit` | Amount of time (in ticks) to allow followers to sync with Zookeeper | `2` |
