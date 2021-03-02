@@ -61,6 +61,7 @@ func testZookeeperCluster(t *testing.T) {
 		"testMultiZKCluster":        testMultiZKCluster,
 		"testUpgradeCluster":        testUpgradeCluster,
 		"testCreateRecreateCluster": testCreateRecreateCluster,
+		"testImagePullSecret":       testImagePullSecret,
 		"testScaleCluster":          testScaleCluster,
 		"testEphemeralStorage":      testEphemeralStorage,
 	}

@@ -231,3 +231,21 @@ func DeletePods(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z 
 	}
 	return nil
 }
+func CheckAdminService(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z *api.ZookeeperCluster) error {
+	listOptions := metav1.ListOptions{
+		LabelSelector: labels.SelectorFromSet(map[string]string{"app": z.GetName()}).String(),
+	}
+	serviceList, err := f.KubeClient.CoreV1().Services(z.Namespace).List(listOptions)
+	if err != nil {
+		return err
+	}
+
+	for _, sn := range serviceList.Items {
+		if sn.Name == "zookeeper-admin-server" {
+			t.Logf("Admin service is enabled")
+			t.Logf("servicenameis %v", sn.Name)
+			return nil
+		}
+	}
+	return fmt.Errorf("Admin Service is not enabled")
+}

@@ -48,6 +48,9 @@ func testCreateRecreateCluster(t *testing.T) {
 	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
 	g.Expect(err).NotTo(HaveOccurred())
 
+	err = zk_e2eutil.CheckAdminService(t, f, ctx, zk)
+	g.Expect(err).NotTo(HaveOccurred())
+
 	err = zk_e2eutil.DeleteCluster(t, f, ctx, zk)
 	g.Expect(err).NotTo(HaveOccurred())
 
