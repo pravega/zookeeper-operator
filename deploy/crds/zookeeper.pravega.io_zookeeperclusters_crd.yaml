@@ -2396,6 +2396,44 @@ spec:
                     type: object
                   type: array
               type: object
+            clientService:
+              description: ClientService defines the policy to create client Service
+                for the zookeeper cluster.
+              properties:
+                annotations:
+                  additionalProperties:
+                    type: string
+                  description: Annotations specifies the annotations to attach to
+                    client Service the operator creates.
+                  type: object
+              type: object
+            headlessService:
+              description: HeadlessService defines the policy to create headless Service
+                for the zookeeper cluster.
+              properties:
+                annotations:
+                  additionalProperties:
+                    type: string
+                  description: Annotations specifies the annotations to attach to
+                    headless Service the operator creates.
+                  type: object
+              type: object
+            adminServerService:
+              description: AdminServerService defines the policy to create AdminServer Service
+                for the zookeeper cluster.
+              properties:
+                internal:
+                  description: Internal specifies if LoadBalancer should be created for
+                    the AdminServer. False means LoadBalancer will be created, true means ClusterIP
+                    will be used. Default is false.
+                  type: boolean
+                annotations:
+                  additionalProperties:
+                    type: string
+                  description: Annotations specifies the annotations to attach to AdminServer
+                    Service the operator creates.
+                  type: object
+              type: object
             ports:
               items:
                 description: ContainerPort represents a network port in a single container.
