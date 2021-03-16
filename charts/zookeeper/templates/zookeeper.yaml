@@ -87,16 +87,21 @@ spec:
     imagePullSecrets:
 {{ toYaml .Values.pod.imagePullSecrets | indent 6 }}
     {{- end }}
+  {{- if .Values.clientService }}
   clientService:
     {{- if .Values.clientService.annotations }}
     annotations:
 {{ toYaml .Values.clientService.annotations | indent 6 }}
     {{- end }}
+  {{- end }}
+  {{- if .Values.headlessService }}
   headlessService:
     {{- if .Values.headlessService.annotations }}
     annotations:
 {{ toYaml .Values.headlessService.annotations | indent 6 }}
     {{- end }}
+  {{- end }}
+  {{- if .Values.adminServerService }}
   adminServerService:
     {{- if .Values.adminServerService.annotations }}
     annotations:
@@ -105,6 +110,7 @@ spec:
     {{- if .Values.adminServerService.internal }}
     internal: {{ .Values.adminServerService.internal }}
     {{- end }}
+  {{- end }}
   {{- if .Values.config }}
   config:
     {{- if .Values.config.initLimit }}
