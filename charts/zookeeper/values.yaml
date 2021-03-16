@@ -40,14 +40,14 @@ pod:
   serviceAccountName: zookeeper
   # imagePullSecrets: []
 
-adminServerService:
+adminServerService: {}
   # annotations: {}
   # internal: false
 
-clientService:
+clientService: {}
   # annotations: {}
 
-headlessService:
+headlessService: {}
   # annotations: {}
 
 config: {}
