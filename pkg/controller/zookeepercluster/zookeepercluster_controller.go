@@ -722,7 +722,7 @@ func (r *ReconcileZookeeperCluster) cleanupOrphanPVCs(instance *zookeeperv1beta1
 
 func (r *ReconcileZookeeperCluster) getPVCList(instance *zookeeperv1beta1.ZookeeperCluster) (pvList corev1.PersistentVolumeClaimList, err error) {
 	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
-		MatchLabels: map[string]string{"app": instance.GetName()},
+		MatchLabels: map[string]string{"app": instance.GetName(), "uid": string(instance.UID)},
 	})
 	pvclistOps := &client.ListOptions{
 		Namespace:     instance.Namespace,
