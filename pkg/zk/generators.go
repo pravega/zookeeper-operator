@@ -191,7 +191,7 @@ func MakeClientService(z *v1beta1.ZookeeperCluster) *v1.Service {
 	svcPorts := []v1.ServicePort{
 		{Name: "tcp-client", Port: ports.Client},
 	}
-	return makeService(z.GetClientServiceName(), svcPorts, true, false, z)
+	return makeService(z.GetClientServiceName(), svcPorts, true, false, z.Spec.ClientService.Annotations, z)
 }
 
 // MakeAdminServerService returns a service which provides an interface
@@ -201,7 +201,9 @@ func MakeAdminServerService(z *v1beta1.ZookeeperCluster) *v1.Service {
 	svcPorts := []v1.ServicePort{
 		{Name: "tcp-admin-server", Port: ports.AdminServer},
 	}
-	return makeService(z.GetAdminServerServiceName(), svcPorts, true, true, z)
+	external := z.Spec.AdminServerService.External
+	annotations := z.Spec.AdminServerService.Annotations
+	return makeService(z.GetAdminServerServiceName(), svcPorts, true, external, annotations, z)
 }
 
 // MakeConfigMap returns a zookeeper config map
@@ -236,7 +238,7 @@ func MakeHeadlessService(z *v1beta1.ZookeeperCluster) *v1.Service {
 		{Name: "tcp-metrics", Port: ports.Metrics},
 		{Name: "tcp-admin-server", Port: ports.AdminServer},
 	}
-	return makeService(headlessSvcName(z), svcPorts, false, false, z)
+	return makeService(headlessSvcName(z), svcPorts, false, false, z.Spec.HeadlessService.Annotations, z)
 }
 
 func makeZkConfigString(z *v1beta1.ZookeeperCluster) string {
@@ -300,9 +302,9 @@ func makeZkEnvConfigString(z *v1beta1.ZookeeperCluster) string {
 		"CLUSTER_SIZE=" + fmt.Sprint(z.Spec.Replicas) + "\n"
 }
 
-func makeService(name string, ports []v1.ServicePort, clusterIP bool, external bool, z *v1beta1.ZookeeperCluster) *v1.Service {
+func makeService(name string, ports []v1.ServicePort, clusterIP bool, external bool, annotations map[string]string, z *v1beta1.ZookeeperCluster) *v1.Service {
 	var dnsName string
-	var annotationMap map[string]string
+	var annotationMap = copyMap(annotations)
 	if !clusterIP && z.Spec.DomainName != "" {
 		domainName := strings.TrimSpace(z.Spec.DomainName)
 		if strings.HasSuffix(domainName, dot) {
@@ -310,9 +312,7 @@ func makeService(name string, ports []v1.ServicePort, clusterIP bool, external b
 		} else {
 			dnsName = name + dot + domainName + dot
 		}
-		annotationMap = map[string]string{externalDNSAnnotationKey: dnsName}
-	} else {
-		annotationMap = map[string]string{}
+		annotationMap[externalDNSAnnotationKey] = dnsName
 	}
 	service := v1.Service{
 		TypeMeta: metav1.TypeMeta{
@@ -334,7 +334,7 @@ func makeService(name string, ports []v1.ServicePort, clusterIP bool, external b
 		},
 	}
 	if external {
-		service.Spec.Type = "LoadBalancer"
+		service.Spec.Type = v1.ServiceTypeLoadBalancer
 	}
 	if !clusterIP {
 		service.Spec.ClusterIP = v1.ClusterIPNone
@@ -385,6 +385,16 @@ func mergeLabels(l ...map[string]string) map[string]string {
 		for lKey, lValue := range v {
 			res[lKey] = lValue
 		}
+	}
+	return res
+}
+
+// Make a copy of map
+func copyMap(s map[string]string) map[string]string {
+	res := make(map[string]string)
+
+	for lKey, lValue := range s {
+		res[lKey] = lValue
 	}
 	return res
 }
