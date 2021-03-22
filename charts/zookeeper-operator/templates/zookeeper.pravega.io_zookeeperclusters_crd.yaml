@@ -2426,9 +2426,9 @@ spec:
               description: AdminServerService defines the policy to create AdminServer Service
                 for the zookeeper cluster.
               properties:
-                internal:
-                  description: Internal specifies if LoadBalancer should be created for
-                    the AdminServer. False means LoadBalancer will be created, true means ClusterIP
+                external:
+                  description: External specifies if LoadBalancer should be created for
+                    the AdminServer. True means LoadBalancer will be created, false means ClusterIP
                     will be used. Default is false.
                   type: boolean
                 annotations:

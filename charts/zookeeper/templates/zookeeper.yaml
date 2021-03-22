@@ -107,8 +107,8 @@ spec:
     annotations:
 {{ toYaml .Values.adminServerService.annotations | indent 6 }}
     {{- end }}
-    {{- if .Values.adminServerService.internal }}
-    internal: {{ .Values.adminServerService.internal }}
+    {{- if .Values.adminServerService.external }}
+    external: {{ .Values.adminServerService.external }}
     {{- end }}
   {{- end }}
   {{- if .Values.config }}

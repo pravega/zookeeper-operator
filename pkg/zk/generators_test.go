@@ -493,12 +493,12 @@ var _ = Describe("Generators Spec", func() {
 				"exampleValue"))
 		})
 
-		It("should have LoadBalancer attached by default", func() {
-			Ω(s.Spec.Type).To(Equal(v1.ServiceTypeLoadBalancer))
+		It("should have no LoadBalancer attached by default", func() {
+			Ω(s.Spec.Type).NotTo(Equal(v1.ServiceTypeLoadBalancer))
 		})
 	})
 
-	Context("#MakeAdminServerService internal without LoadBalancer", func() {
+	Context("#MakeAdminServerService external with LoadBalancer", func() {
 		var s *v1.Service
 
 		BeforeEach(func() {
@@ -509,7 +509,7 @@ var _ = Describe("Generators Spec", func() {
 				},
 				Spec: v1beta1.ZookeeperClusterSpec{
 					AdminServerService: v1beta1.AdminServerServicePolicy{
-						Internal: true,
+						External: true,
 					},
 				},
 			}
@@ -517,8 +517,8 @@ var _ = Describe("Generators Spec", func() {
 			s = zk.MakeAdminServerService(z)
 		})
 
-		It("should have no LoadBalancer attached", func() {
-			Ω(s.Spec.Type).NotTo(Equal(v1.ServiceTypeLoadBalancer))
+		It("should have LoadBalancer attached", func() {
+			Ω(s.Spec.Type).To(Equal(v1.ServiceTypeLoadBalancer))
 		})
 	})
 

@@ -201,7 +201,7 @@ func MakeAdminServerService(z *v1beta1.ZookeeperCluster) *v1.Service {
 	svcPorts := []v1.ServicePort{
 		{Name: "tcp-admin-server", Port: ports.AdminServer},
 	}
-	external := !z.Spec.AdminServerService.Internal
+	external := z.Spec.AdminServerService.External
 	annotations := z.Spec.AdminServerService.Annotations
 	return makeService(z.GetAdminServerServiceName(), svcPorts, true, external, annotations, z)
 }

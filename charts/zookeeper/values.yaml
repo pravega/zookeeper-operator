@@ -42,7 +42,7 @@ pod:
 
 adminServerService: {}
   # annotations: {}
-  # internal: false
+  # external: false
 
 clientService: {}
   # annotations: {}

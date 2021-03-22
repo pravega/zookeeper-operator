@@ -499,7 +499,7 @@ type AdminServerServicePolicy struct {
 	// creates.
 	Annotations map[string]string `json:"annotations,omitempty"`
 
-	Internal bool `json:"internal,omitempty"`
+	External bool `json:"external,omitempty"`
 }
 
 type ClientServicePolicy struct {
