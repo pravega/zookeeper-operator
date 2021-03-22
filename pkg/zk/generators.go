@@ -57,7 +57,7 @@ func MakeStatefulSet(z *v1beta1.ZookeeperCluster) *appsv1.StatefulSet {
 				Name: zkDataVolume,
 				Labels: mergeLabels(
 					z.Spec.Labels,
-					map[string]string{"app": z.GetName()},
+					map[string]string{"app": z.GetName(), "uid": string(z.UID)},
 				),
 				Annotations: z.Spec.Persistence.Annotations,
 			},
