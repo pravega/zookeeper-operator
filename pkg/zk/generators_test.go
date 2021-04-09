@@ -79,10 +79,6 @@ var _ = Describe("Generators Spec", func() {
 					Ω(cfg).To(ContainSubstring("reconfigEnabled=true\n"))
 				})
 
-				It("should set skipACL to 'yes'", func() {
-					Ω(cfg).To(ContainSubstring("skipACL=yes"))
-				})
-
 				It("should set initLimit to '10'", func() {
 					Ω(cfg).To(ContainSubstring("initLimit=10\n"))
 				})

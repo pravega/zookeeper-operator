@@ -226,7 +226,6 @@ func makeZkConfigString(s v1beta1.ZookeeperClusterSpec) string {
 		"dataDir=/data\n" +
 		"standaloneEnabled=false\n" +
 		"reconfigEnabled=true\n" +
-		"skipACL=yes\n" +
 		"metricsProvider.className=org.apache.zookeeper.metrics.prometheus.PrometheusMetricsProvider\n" +
 		"metricsProvider.httpPort=7000\n" +
 		"metricsProvider.exportJvmInfo=true\n" +
