@@ -10,6 +10,8 @@
 package utils
 
 import (
+	"fmt"
+
 	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -46,4 +48,14 @@ var _ = Describe("Zookeeper Utils", func() {
 			Ω(containerport).To(Equal("port not found"))
 		})
 	})
+	Context("Testing loglevel Function", func() {
+		var ans string
+		BeforeEach(func() {
+			ans = fmt.Sprintf("%s", LogLevel())
+		})
+		It("should return true for result", func() {
+			Ω(ans).To(Equal("info"))
+		})
+	})
+
 })

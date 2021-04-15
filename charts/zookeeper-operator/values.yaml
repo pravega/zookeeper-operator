@@ -32,6 +32,9 @@ crd:
 ## Multiple namespaces can be configured using a comma separated list of namespaces
 watchNamespace: ""
 
+##Specify the loging level used by operator
+logLevel: "info"
+
 ## Operator pod resources
 resources: {}
   # limits:
