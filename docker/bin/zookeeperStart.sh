@@ -14,12 +14,18 @@ set -ex
 source /conf/env.sh
 source /usr/local/bin/zookeeperFunctions.sh
 
+START_DELAY=${START_DELAY:-0}
+
+
 HOST=`hostname -s`
 DATA_DIR=/data
 MYID_FILE=$DATA_DIR/myid
 LOG4J_CONF=/conf/log4j-quiet.properties
 DYNCONFIG=$DATA_DIR/zoo.cfg.dynamic
 STATIC_CONFIG=/data/conf/zoo.cfg
+
+# used when zkid starts from value grater then 1, default 1
+OFFSET=${OFFSET:-1}
 
 # Extract resource name and this members ordinal value from pod hostname
 if [[ $HOST =~ (.*)-([0-9]+)$ ]]; then
@@ -30,7 +36,27 @@ else
     exit 1
 fi
 
-MYID=$((ORD+1))
+MYID=$(($ORD+$OFFSET))
+
+# use SEED_NODE to bootstrap the current zookeeper cluster, else default to local cluster
+# CLIENT_HOST is used in zkConnectionString function already to create zkURL
+CLIENT_HOST=${SEED_NODE:-$CLIENT_HOST}
+
+
+# use FQDN_TEMPLATE to create an OUTSIDE_NAME that is going to be used to establish quorum election
+# this should be used along with the quorumListenOnAllIPs set to true
+# % from the FQDN_TEMPLATE will be replaced with pod index+1
+if [ -n "$FQDN_TEMPLATE" ]; then
+  OUTSIDE_NAME=$(echo ${FQDN_TEMPLATE} | sed "s/%/$(($ORD+1))/g")
+fi
+
+# domain should be the OUTSIDE_NAME for when it's set
+DOMAIN=${SEED_NODE:-$DOMAIN}
+
+# wait for loadbalancer registration and skip the first one
+if [ $MYID -gt $OFFSET ]; then
+  sleep $START_DELAY
+fi
 
 # Values for first startup
 WRITE_CONFIGURATION=true
@@ -114,10 +140,10 @@ fi
 if [[ "$WRITE_CONFIGURATION" == true ]]; then
   echo "Writing myid: $MYID to: $MYID_FILE."
   echo $MYID > $MYID_FILE
-  if [[ $MYID -eq 1 ]]; then
+  if [[ $MYID -eq $OFFSET && -z "$SEED_NODE" ]]; then
     ROLE=participant
     echo Initial initialization of ordinal 0 pod, creating new config.
-    ZKCONFIG=$(zkConfig)
+    ZKCONFIG=$(zkConfig $OUTSIDE_NAME)
     echo Writing bootstrap configuration with the following config:
     echo $ZKCONFIG
     echo $MYID > $MYID_FILE
@@ -128,7 +154,7 @@ fi
 if [[ "$REGISTER_NODE" == true ]]; then
     ROLE=observer
     ZKURL=$(zkConnectionString)
-    ZKCONFIG=$(zkConfig)
+    ZKCONFIG=$(zkConfig $OUTSIDE_NAME)
     set -e
     echo Registering node and writing local configuration to disk.
     java -Dlog4j.configuration=file:"$LOG4J_CONF" -jar /opt/libs/zu.jar add $ZKURL $MYID  $ZKCONFIG $DYNCONFIG

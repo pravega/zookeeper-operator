@@ -20,6 +20,14 @@ MYID_FILE=$DATA_DIR/myid
 LOG4J_CONF=/conf/log4j-quiet.properties
 STATIC_CONFIG=/data/conf/zoo.cfg
 
+# used when zkid starts from value grater then 1, default 1
+OFFSET=${OFFSET:-1}
+
+# use SEED_NODE to bootstrap the current zookeeper cluster, else default to local cluster
+# CLIENT_HOST is used in zkConnectionString function already to create zkURL
+CLIENT_HOST=${SEED_NODE:-$CLIENT_HOST}
+
+
 OK=$(echo ruok | socat stdio tcp:localhost:$CLIENT_PORT)
 
 # Check to see if zookeeper service answers
@@ -44,8 +52,16 @@ if [[ "$OK" == "imok" ]]; then
         echo Failed to parse name and ordinal of Pod
         exit 1
     fi
-    MYID=$((ORD+1))
+    MYID=$(($ORD+$OFFSET))
     ONDISK_CONFIG=false
+    
+    # use FQDN_TEMPLATE to create an OUTSIDE_NAME that is going to be used to establish quorum election
+    # this should be used along with the quorumListenOnAllIPs set to true
+    # % from the FQDN_TEMPLATE will be replaced with pod index+1
+    if [ -n "$FQDN_TEMPLATE" ]; then
+      OUTSIDE_NAME=$(echo ${FQDN_TEMPLATE} | sed "s/%/$(($ORD+1))/g")
+    fi
+    
     if [ -f $MYID_FILE ]; then
       EXISTING_ID="`cat $DATA_DIR/myid`"
       if [[ "$EXISTING_ID" == "$MYID" && -f $STATIC_CONFIG ]]; then
@@ -74,7 +90,7 @@ if [[ "$OK" == "imok" ]]; then
       echo "Zookeeper service is ready to be upgraded from observer to participant."
       ROLE=participant
       ZKURL=$(zkConnectionString)
-      ZKCONFIG=$(zkConfig)
+      ZKCONFIG=$(zkConfig $OUTSIDE_NAME)
       java -Dlog4j.configuration=file:"$LOG4J_CONF" -jar /opt/libs/zu.jar remove $ZKURL $MYID
       sleep 1
       java -Dlog4j.configuration=file:"$LOG4J_CONF" -jar /opt/libs/zu.jar add $ZKURL $MYID $ZKCONFIG

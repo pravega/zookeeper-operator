@@ -18,6 +18,13 @@ DATA_DIR=/data
 MYID_FILE=$DATA_DIR/myid
 LOG4J_CONF=/conf/log4j-quiet.properties
 
+# use SEED_NODE to bootstrap the current zookeeper cluster, else default to local cluster
+# CLIENT_HOST is used in zkConnectionString function already to create zkURL
+CLIENT_HOST=${SEED_NODE:-$CLIENT_HOST}
+
+# used when zkid starts from value grater then 1, default 1
+OFFSET=${OFFSET:-1}
+
 # Wait for client connections to drain. Kubernetes will wait until the confiugred
 # "terminationGracePeriodSeconds" before focibly killing the container
 for (( i = 0; i < 6; i++ )); do
@@ -40,7 +47,7 @@ MYID=`cat $MYID_FILE`
 ZNODE_PATH="/zookeeper-operator/$CLUSTER_NAME"
 CLUSTERSIZE=`java -Dlog4j.configuration=file:"$LOG4J_CONF" -jar /opt/libs/zu.jar sync $ZKURL $ZNODE_PATH`
 echo "CLUSTER_SIZE=$CLUSTERSIZE, MyId=$MYID"
-if [[ -n "$CLUSTERSIZE" && "$CLUSTERSIZE" -lt "$MYID" ]]; then
+if [[ -n "$CLUSTERSIZE" && "$(($CLUSTERSIZE+$OFFSET-1))" -lt "$MYID" ]]; then
   # If ClusterSize < MyId, this server is being permanantly removed.
   java -Dlog4j.configuration=file:"$LOG4J_CONF" -jar /opt/libs/zu.jar remove $ZKURL $MYID
   echo $?
