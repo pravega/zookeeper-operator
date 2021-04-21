@@ -13,26 +13,19 @@ package zookeepercluster
 import (
 	"context"
 	"fmt"
-	"os"
 	"strconv"
 	"time"
 
-	"k8s.io/client-go/kubernetes/scheme"
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-
-	"github.com/q8s-io/zookeeper-operator-pravega/pkg/utils"
-	"github.com/q8s-io/zookeeper-operator-pravega/pkg/yamlexporter"
-
 	"github.com/go-logr/logr"
-	appsv1 "k8s.io/api/apps/v1"
+	statefulpodv1 "github.com/q8s-io/iapetos/api/v1"
 	corev1 "k8s.io/api/core/v1"
-	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -41,7 +34,8 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	pingcapv1 "github.com/q8s-io/statefulset-pingcap/client/apis/apps/v1"
+	"github.com/q8s-io/zookeeper-operator-pravega/pkg/utils"
+	"github.com/q8s-io/zookeeper-operator-pravega/pkg/yamlexporter"
 
 	zookeeperv1beta1 "github.com/q8s-io/zookeeper-operator-pravega/pkg/apis/zookeeper/v1beta1"
 	"github.com/q8s-io/zookeeper-operator-pravega/pkg/zk"
@@ -80,7 +74,8 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 	// Watch for changes to zookeeper stateful-set secondary resources
-	err = c.Watch(&source.Kind{Type: &appsv1.StatefulSet{}}, &handler.EnqueueRequestForOwner{
+	// err = c.Watch(&source.Kind{Type: &appsv1.StatefulSet{}}, &handler.EnqueueRequestForOwner{
+	err = c.Watch(&source.Kind{Type: &statefulpodv1.StatefulPod{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &zookeeperv1beta1.ZookeeperCluster{},
 	})
@@ -151,14 +146,8 @@ func (r *ReconcileZookeeperCluster) Reconcile(request reconcile.Request) (reconc
 		return reconcile.Result{Requeue: true}, nil
 	}
 	for _, fun := range []reconcileFun{
-		r.reconcileFinalizers,
 		r.reconcileConfigMap,
-		r.reconcileStatefulSet,
-		r.reconcileClientService,
-		r.reconcileHeadlessService,
-		r.reconcilePodDisruptionBudget,
-		r.reconcilePodPendingTimeout,
-		r.reconcilePodTerminatingTimeout,
+		r.reconcileStatefulPod,
 		r.reconcileClusterStatus,
 	} {
 		if err = fun(instance); err != nil {
@@ -169,53 +158,32 @@ func (r *ReconcileZookeeperCluster) Reconcile(request reconcile.Request) (reconc
 	return reconcile.Result{RequeueAfter: ReconcileTime}, nil
 }
 
-func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
-
+func (r *ReconcileZookeeperCluster) reconcileStatefulPod(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
 	// we cannot upgrade if cluster is in UpgradeFailed
 	if instance.Status.IsClusterInUpgradeFailedState() {
 		return nil
 	}
-	if instance.Spec.Pod.ServiceAccountName != "default" {
-		serviceAccount := zk.MakeServiceAccount(instance)
-		if err = controllerutil.SetControllerReference(instance, serviceAccount, r.scheme); err != nil {
-			return err
-		}
-		// Check if this ServiceAccount already exists
-		foundServiceAccount := &corev1.ServiceAccount{}
-		err = r.client.Get(context.TODO(), types.NamespacedName{Name: serviceAccount.Name, Namespace: serviceAccount.Namespace}, foundServiceAccount)
-		if err != nil && errors.IsNotFound(err) {
-			r.log.Info("Creating a new ServiceAccount", "ServiceAccount.Namespace", serviceAccount.Namespace, "ServiceAccount.Name", serviceAccount.Name)
-			err = r.client.Create(context.TODO(), serviceAccount)
-			if err != nil {
-				return err
-			}
-		} else if err != nil {
-			return err
-		}
-	}
-	sts := zk.MakeStatefulSet(instance)
-	if err = controllerutil.SetControllerReference(instance, sts, r.scheme); err != nil {
+	statusFulPod := zk.MakeStatefulPod(instance)
+	if err = controllerutil.SetControllerReference(instance, statusFulPod, r.scheme); err != nil {
 		return err
 	}
-	foundSts := &pingcapv1.StatefulSet{}
+	foundStatefulPod := &statefulpodv1.StatefulPod{}
 	err = r.client.Get(context.TODO(), types.NamespacedName{
-		Name:      sts.Name,
-		Namespace: sts.Namespace,
-	}, foundSts)
+		Name:      statusFulPod.Name,
+		Namespace: statusFulPod.Namespace,
+	}, foundStatefulPod)
 	if err != nil && errors.IsNotFound(err) {
 		r.log.Info("Creating a new Zookeeper StatefulSet",
-			"StatefulSet.Namespace", sts.Namespace,
-			"StatefulSet.Name", sts.Name)
-		err = r.client.Create(context.TODO(), sts)
-		if err != nil {
-			return err
-		}
+			"StatefulSet.Namespace", statusFulPod.Namespace,
+			"StatefulSet.Name", statusFulPod.Name)
+		return r.client.Create(context.TODO(), statusFulPod)
+
 		return nil
 	} else if err != nil {
 		return err
 	} else {
-		foundSTSSize := *foundSts.Spec.Replicas
-		newSTSSize := *sts.Spec.Replicas
+		foundSTSSize := *foundStatefulPod.Spec.Size
+		newSTSSize := *statusFulPod.Spec.Size
 		if newSTSSize != foundSTSSize {
 			zkUri := utils.GetZkServiceUri(instance)
 			err = r.zkClient.Connect(zkUri)
@@ -234,31 +202,28 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 			data := "CLUSTER_SIZE=" + strconv.Itoa(int(newSTSSize))
 			r.log.Info("Updating Cluster Size.", "New Data:", data, "Version", version)
 			r.zkClient.UpdateNode(path, data, version)
+			return r.updateStatefulSet(instance, foundStatefulPod, statusFulPod)
 		}
-		err = r.updateStatefulSet(instance, foundSts, sts)
-		if err != nil {
-			return err
-		}
-		return r.upgradeStatefulSet(instance, foundSts)
 	}
+	return nil
 }
 
-func (r *ReconcileZookeeperCluster) updateStatefulSet(instance *zookeeperv1beta1.ZookeeperCluster, foundSts *pingcapv1.StatefulSet, sts *pingcapv1.StatefulSet) (err error) {
+func (r *ReconcileZookeeperCluster) updateStatefulSet(instance *zookeeperv1beta1.ZookeeperCluster,
+	foundSts *statefulpodv1.StatefulPod, statusFulPod *statefulpodv1.StatefulPod) (err error) {
 	r.log.Info("Updating StatefulSet",
 		"StatefulSet.Namespace", foundSts.Namespace,
 		"StatefulSet.Name", foundSts.Name)
-	zk.SyncStatefulSet(foundSts, sts)
+	zk.SyncStatefulSet(foundSts, statusFulPod)
 
 	err = r.client.Update(context.TODO(), foundSts)
 	if err != nil {
 		return err
 	}
-	instance.Status.Replicas = foundSts.Status.Replicas
-	instance.Status.ReadyReplicas = foundSts.Status.ReadyReplicas
+	instance.Status.Replicas = *foundSts.Spec.Size
 	return nil
 }
 
-func (r *ReconcileZookeeperCluster) upgradeStatefulSet(instance *zookeeperv1beta1.ZookeeperCluster, foundSts *pingcapv1.StatefulSet) (err error) {
+func (r *ReconcileZookeeperCluster) upgradeStatefulSet(instance *zookeeperv1beta1.ZookeeperCluster, foundSts *statefulpodv1.StatefulPod) (err error) {
 
 	//Getting the upgradeCondition from the zk clustercondition
 	_, upgradeCondition := instance.Status.GetClusterCondition(zookeeperv1beta1.ClusterConditionUpgrading)
@@ -272,7 +237,7 @@ func (r *ReconcileZookeeperCluster) upgradeStatefulSet(instance *zookeeperv1beta
 	//Setting the upgrade condition to true to trigger the upgrade
 	//When the zk cluster is upgrading Statefulset CurrentRevision and UpdateRevision are not equal and zk cluster image tag is not equal to CurrentVersion
 	if upgradeCondition.Status == corev1.ConditionFalse {
-		if instance.Status.IsClusterInReadyState() && foundSts.Status.CurrentRevision != foundSts.Status.UpdateRevision && instance.Spec.Image.Tag != instance.Status.CurrentVersion {
+		if instance.Status.IsClusterInReadyState() /*&& foundSts.Status.CurrentRevision != foundSts.Status.UpdateRevision */ && instance.Spec.Image.Tag != instance.Status.CurrentVersion {
 			instance.Status.TargetVersion = instance.Spec.Image.Tag
 			instance.Status.SetPodsReadyConditionFalse()
 			instance.Status.SetUpgradingConditionTrue("", "")
@@ -285,27 +250,6 @@ func (r *ReconcileZookeeperCluster) upgradeStatefulSet(instance *zookeeperv1beta
 		if instance.Status.TargetVersion == "" {
 			r.log.Info("upgrading to an unknown version: cancelling upgrade process")
 			return r.clearUpgradeStatus(instance)
-		}
-		//Checking for upgrade completion
-		if foundSts.Status.CurrentRevision == foundSts.Status.UpdateRevision {
-			instance.Status.CurrentVersion = instance.Status.TargetVersion
-			r.log.Info("upgrade completed")
-			return r.clearUpgradeStatus(instance)
-		}
-		//updating the upgradecondition if upgrade is in progress
-		if foundSts.Status.CurrentRevision != foundSts.Status.UpdateRevision {
-			r.log.Info("upgrade in progress")
-			if fmt.Sprint(foundSts.Status.UpdatedReplicas) != upgradeCondition.Message {
-				instance.Status.UpdateProgress(zookeeperv1beta1.UpdatingZookeeperReason, fmt.Sprint(foundSts.Status.UpdatedReplicas))
-			} else {
-				err = checkSyncTimeout(instance, zookeeperv1beta1.UpdatingZookeeperReason, foundSts.Status.UpdatedReplicas, 10*time.Minute)
-				if err != nil {
-					instance.Status.SetErrorConditionTrue("UpgradeFailed", err.Error())
-					return r.client.Status().Update(context.TODO(), instance)
-				} else {
-					return nil
-				}
-			}
 		}
 	}
 	return r.client.Status().Update(context.TODO(), instance)
@@ -340,112 +284,6 @@ func checkSyncTimeout(z *zookeeperv1beta1.ZookeeperCluster, reason string, updat
 			// timeout
 			return fmt.Errorf("progress deadline exceeded")
 		}
-	}
-	return nil
-}
-
-func (r *ReconcileZookeeperCluster) reconcileClientService(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
-	svc := zk.MakeClientService(instance)
-	if err = controllerutil.SetControllerReference(instance, svc, r.scheme); err != nil {
-		return err
-	}
-	foundSvc := &corev1.Service{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{
-		Name:      svc.Name,
-		Namespace: svc.Namespace,
-	}, foundSvc)
-	if err != nil && errors.IsNotFound(err) {
-		r.log.Info("Creating new client service",
-			"Service.Namespace", svc.Namespace,
-			"Service.Name", svc.Name)
-		err = r.client.Create(context.TODO(), svc)
-		if err != nil {
-			return err
-		}
-		return nil
-	} else if err != nil {
-		return err
-	} else {
-		r.log.Info("Updating existing client service",
-			"Service.Namespace", foundSvc.Namespace,
-			"Service.Name", foundSvc.Name)
-		zk.SyncService(foundSvc, svc)
-		err = r.client.Update(context.TODO(), foundSvc)
-		if err != nil {
-			return err
-		}
-		port := instance.ZookeeperPorts().Client
-		instance.Status.InternalClientEndpoint = fmt.Sprintf("%s:%d",
-			foundSvc.Spec.ClusterIP, port)
-		if foundSvc.Spec.Type == "LoadBalancer" {
-			for _, i := range foundSvc.Status.LoadBalancer.Ingress {
-				if i.IP != "" {
-					instance.Status.ExternalClientEndpoint = fmt.Sprintf("%s:%d",
-						i.IP, port)
-				}
-			}
-		} else {
-			instance.Status.ExternalClientEndpoint = "N/A"
-		}
-	}
-	return nil
-}
-
-func (r *ReconcileZookeeperCluster) reconcileHeadlessService(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
-	svc := zk.MakeHeadlessService(instance)
-	if err = controllerutil.SetControllerReference(instance, svc, r.scheme); err != nil {
-		return err
-	}
-	foundSvc := &corev1.Service{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{
-		Name:      svc.Name,
-		Namespace: svc.Namespace,
-	}, foundSvc)
-	if err != nil && errors.IsNotFound(err) {
-		r.log.Info("Creating new headless service",
-			"Service.Namespace", svc.Namespace,
-			"Service.Name", svc.Name)
-		err = r.client.Create(context.TODO(), svc)
-		if err != nil {
-			return err
-		}
-		return nil
-	} else if err != nil {
-		return err
-	} else {
-		r.log.Info("Updating existing headless service",
-			"Service.Namespace", foundSvc.Namespace,
-			"Service.Name", foundSvc.Name)
-		zk.SyncService(foundSvc, svc)
-		err = r.client.Update(context.TODO(), foundSvc)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (r *ReconcileZookeeperCluster) reconcilePodDisruptionBudget(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
-	pdb := zk.MakePodDisruptionBudget(instance)
-	if err = controllerutil.SetControllerReference(instance, pdb, r.scheme); err != nil {
-		return err
-	}
-	foundPdb := &policyv1beta1.PodDisruptionBudget{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{
-		Name:      pdb.Name,
-		Namespace: pdb.Namespace,
-	}, foundPdb)
-	if err != nil && errors.IsNotFound(err) {
-		r.log.Info("Creating new pod-disruption-budget",
-			"PodDisruptionBudget.Namespace", pdb.Namespace,
-			"PodDisruptionBudget.Name", pdb.Name)
-		err = r.client.Create(context.TODO(), pdb)
-		if err != nil {
-			return err
-		}
-		return nil
-	} else if err != nil {
-		return err
 	}
 	return nil
 }
@@ -490,6 +328,7 @@ func (r *ReconcileZookeeperCluster) reconcileClusterStatus(instance *zookeeperv1
 	}
 	instance.Status.Init()
 	foundPods := &corev1.PodList{}
+	// foundPods := &statefulpodv1.StatefulPodList{}
 	labelSelector := labels.SelectorFromSet(map[string]string{"app": instance.GetName()})
 	listOps := &client.ListOptions{
 		Namespace:     instance.Namespace,
@@ -505,10 +344,8 @@ func (r *ReconcileZookeeperCluster) reconcileClusterStatus(instance *zookeeperv1
 	)
 	for _, p := range foundPods.Items {
 		ready := true
-		for _, c := range p.Status.ContainerStatuses {
-			if !c.Ready {
-				ready = false
-			}
+		if p.Status.Phase != corev1.PodRunning {
+			ready = false
 		}
 		if ready {
 			readyMembers = append(readyMembers, p.Name)
@@ -518,6 +355,7 @@ func (r *ReconcileZookeeperCluster) reconcileClusterStatus(instance *zookeeperv1
 	}
 	instance.Status.Members.Ready = readyMembers
 	instance.Status.Members.Unready = unreadyMembers
+	instance.Status.ReadyReplicas = int32(len(foundPods.Items))
 
 	//If Cluster is in a ready state...
 	if instance.Spec.Replicas == instance.Status.ReadyReplicas && (!instance.Status.MetaRootCreated) {
@@ -582,10 +420,10 @@ func (r *ReconcileZookeeperCluster) GenerateYAML(inst *zookeeperv1beta1.Zookeepe
 
 // yamlStatefulSet will generates YAML file for StatefulSet
 func (r *ReconcileZookeeperCluster) yamlStatefulSet(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
-	sts := zk.MakeStatefulSet(instance)
+	statefulPod := zk.MakeStatefulPod(instance)
 
-	subdir, err := yamlexporter.CreateOutputSubDir("ZookeeperCluster", sts.Labels["component"])
-	return yamlexporter.GenerateOutputYAMLFile(subdir, sts.Kind, sts)
+	subdir, err := yamlexporter.CreateOutputSubDir("ZookeeperCluster", statefulPod.Labels["component"])
+	return yamlexporter.GenerateOutputYAMLFile(subdir, statefulPod.Kind, statefulPod)
 }
 
 // yamlClientService will generates YAML file for zookeeper client service
@@ -630,304 +468,4 @@ func (r *ReconcileZookeeperCluster) yamlConfigMap(instance *zookeeperv1beta1.Zoo
 		return err
 	}
 	return yamlexporter.GenerateOutputYAMLFile(subdir, cm.Kind, cm)
-}
-
-func (r *ReconcileZookeeperCluster) reconcileFinalizers(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
-	if instance.Spec.Persistence != nil && instance.Spec.Persistence.VolumeReclaimPolicy != zookeeperv1beta1.VolumeReclaimPolicyDelete {
-		return nil
-	}
-	if instance.DeletionTimestamp.IsZero() {
-		if !utils.ContainsString(instance.ObjectMeta.Finalizers, utils.ZkFinalizer) {
-			instance.ObjectMeta.Finalizers = append(instance.ObjectMeta.Finalizers, utils.ZkFinalizer)
-			if err = r.client.Update(context.TODO(), instance); err != nil {
-				return err
-			}
-		}
-		return r.cleanupOrphanPVCs(instance)
-	} else {
-		if utils.ContainsString(instance.ObjectMeta.Finalizers, utils.ZkFinalizer) {
-			if err = r.cleanUpAllPVCs(instance); err != nil {
-				return err
-			}
-			instance.ObjectMeta.Finalizers = utils.RemoveString(instance.ObjectMeta.Finalizers, utils.ZkFinalizer)
-			if err = r.client.Update(context.TODO(), instance); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-func (r *ReconcileZookeeperCluster) getPVCCount(instance *zookeeperv1beta1.ZookeeperCluster) (pvcCount int, err error) {
-	pvcList, err := r.getPVCList(instance)
-	if err != nil {
-		return -1, err
-	}
-	pvcCount = len(pvcList.Items)
-	return pvcCount, nil
-}
-
-func (r *ReconcileZookeeperCluster) cleanupOrphanPVCs(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
-	// this check should make sure we do not delete the PVCs before the STS has scaled down
-	if instance.Status.ReadyReplicas == instance.Spec.Replicas {
-		pvcCount, err := r.getPVCCount(instance)
-		if err != nil {
-			return err
-		}
-		r.log.Info("cleanupOrphanPVCs", "PVC Count", pvcCount, "ReadyReplicas Count", instance.Status.ReadyReplicas)
-		if pvcCount > int(instance.Spec.Replicas) {
-			pvcList, err := r.getPVCList(instance)
-			if err != nil {
-				return err
-			}
-			for _, pvcItem := range pvcList.Items {
-				// delete only Orphan PVCs
-				if utils.IsPVCOrphan(pvcItem.Name, instance.Spec.Replicas) {
-					r.deletePVC(pvcItem)
-				}
-			}
-		}
-	}
-	return nil
-}
-
-func (r *ReconcileZookeeperCluster) getPVCList(instance *zookeeperv1beta1.ZookeeperCluster) (pvList corev1.PersistentVolumeClaimList, err error) {
-	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
-		MatchLabels: map[string]string{"app": instance.GetName()},
-	})
-	pvclistOps := &client.ListOptions{
-		Namespace:     instance.Namespace,
-		LabelSelector: selector,
-	}
-	pvcList := &corev1.PersistentVolumeClaimList{}
-	err = r.client.List(context.TODO(), pvcList, pvclistOps)
-	return *pvcList, err
-}
-
-func (r *ReconcileZookeeperCluster) cleanUpAllPVCs(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
-	pvcList, err := r.getPVCList(instance)
-	if err != nil {
-		return err
-	}
-	for _, pvcItem := range pvcList.Items {
-		r.deletePVC(pvcItem)
-	}
-	return nil
-}
-
-func (r *ReconcileZookeeperCluster) deletePVC(pvcItem corev1.PersistentVolumeClaim) {
-	pvcDelete := &corev1.PersistentVolumeClaim{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      pvcItem.Name,
-			Namespace: pvcItem.Namespace,
-		},
-	}
-	r.log.Info("Deleting PVC", "With Name", pvcItem.Name)
-	err := r.client.Delete(context.TODO(), pvcDelete)
-	if err != nil {
-		r.log.Error(err, "Error deleteing PVC.", "Name", pvcDelete.Name)
-	}
-}
-
-func (r *ReconcileZookeeperCluster) deletePod(podItem *corev1.Pod) {
-	podDelete := &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      podItem.Name,
-			Namespace: podItem.Namespace,
-		},
-	}
-	r.log.Info("Deleting Pod", "With Name", podItem.Name)
-	err := r.client.Delete(context.TODO(), podDelete)
-	if err != nil {
-		r.log.Error(err, "Error deleteing Pod.", "Name", podDelete.Name)
-	}
-}
-
-func (r *ReconcileZookeeperCluster) scaleIn(sts *pingcapv1.StatefulSet , index int) {
-	podName := fmt.Sprintf("%s-%d", sts.Name, index + 1)
-	r.log.Info("Scale in StatefulSet", "With Name", sts.Name)
-
-	sts.Annotations = make(map[string]string)
-	value := fmt.Sprintf("[%d]", index + 1)
-
-	sts.Annotations["delete-slot"] = value
-	replicas := sts.Spec.Replicas
-	*replicas = *replicas - 1
-	sts.Spec.Replicas = replicas
-
-	err := r.client.Update(context.TODO(), sts)
-	if err != nil {
-		r.log.Error(err, "Error deleteing Pod.", "Name", podName)
-	}
-}
-
-func (r *ReconcileZookeeperCluster) deletePodForcefully(podItem corev1.Pod) {
-	podDelete := &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      podItem.Name,
-			Namespace: podItem.Namespace,
-		},
-	}
-	gracePeriod := int64(0)
-	deleteOption := &client.DeleteOptions{GracePeriodSeconds: &gracePeriod}
-	r.log.Info("Deleting Pod forcefully", "With Name", podItem.Name)
-	err := r.client.Delete(context.TODO(), podDelete, deleteOption)
-	if err != nil {
-		r.log.Error(err, "Error deleteing Pod.", "Name", podDelete.Name)
-	}
-}
-
-func (r *ReconcileZookeeperCluster) getPodList(instance *zookeeperv1beta1.ZookeeperCluster) (corev1.PodList, error) {
-	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
-		MatchLabels: map[string]string{"app": instance.GetName()},
-	})
-	podListOps := &client.ListOptions{
-		Namespace:     instance.Namespace,
-		LabelSelector: selector,
-	}
-	podList := &corev1.PodList{}
-	err = r.client.List(context.TODO(), podList, podListOps)
-	return *podList, err
-}
-
-// Reconcile Pod whose pending status last more than 2 minutes. We will match pvc's node name with pod's node name. Only if different,
-// then delete unmatched pvc forcing, finally delete the pod of timeout pending status. The StatefulSet will automatically recreate a new Pod and PVC .
-func (r *ReconcileZookeeperCluster) reconcilePodPendingTimeout(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
-	// if no instance ready, do nothing.
-	if instance.Status.ReadyReplicas < 1 {
-		return nil
-	}
-	podList, err := r.getPodList(instance)
-	if err != nil || podList.Items == nil || len(podList.Items) == 0 {
-		return err
-	}
-
-	var podPendingLongest *corev1.Pod
-	// get time from OS ENV
-	pdEnv := os.Getenv("PENDING_TIMEOUT_TIME")
-	// default: 2 minutes
-	if pdEnv == "" {
-		pdEnv = "120"
-	}
-	pendingTimeoutThreshold, err := strconv.Atoi(pdEnv)
-	if err != nil {
-		return err
-	}
-	longestTime := (int64)(pendingTimeoutThreshold)
-
-	// process pod that has longest pending time in this namespace
-	for _, pod := range podList.Items {
-		if pod.Status.Phase == corev1.PodPending {
-			pendingTime := time.Now().Unix() - pod.CreationTimestamp.Unix()
-			if pendingTime > longestTime {
-				podPendingLongest = &pod
-				longestTime = pendingTime
-			}
-		}
-	}
-	if podPendingLongest == nil {
-		return nil
-	}
-
-	// get matched PVC and process it.
-	podName := podPendingLongest.Name
-	var pvcBounded *corev1.PersistentVolumeClaim
-	pvcList, err := r.getPVCList(instance)
-	if err != nil {
-		return err
-	}
-	pvcName := zk.GetPVCName() + "-" + podName
-	for _, pvc := range pvcList.Items {
-		if pvc.Name == pvcName {
-			pvcBounded = &pvc
-			break
-		}
-	}
-	if pvcBounded == nil {
-		return nil
-	}
-	annotations := pvcBounded.Annotations
-	if nodeName, ok := annotations["volume.kubernetes.io/selected-node"]; ok {
-		// Compare pod's nodeName and pvc's nodeName, if not equal, delete it.
-		if nodeName != podPendingLongest.Spec.NodeName {
-			r.deletePVC(*pvcBounded)
-			r.deletePod(podPendingLongest)
-			// delete only one at a time.
-			return nil
-		}
-	}
-	return nil
-}
-
-// When the continuous time of a pod in terminating status more than a value that given from env, delete the pod forcefully.
-func (r *ReconcileZookeeperCluster) reconcilePodTerminatingTimeout(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
-	// if no one instance ready, do nothing.
-	if instance.Status.ReadyReplicas < 1 {
-		return nil
-	}
-	podList, err := r.getPodList(instance)
-	if err != nil || podList.Items == nil || len(podList.Items) == 0 {
-		return err
-	}
-
-	tmEnv := os.Getenv("TERMINATING_TIMEOUT_TIME")
-	// default value: 6 minutes
-	if tmEnv == "" {
-		tmEnv = "360"
-	}
-
-	timeout, err := strconv.Atoi(tmEnv)
-	if err != nil {
-		return err
-	}
-	terminatingTimeoutThreshold := int64(timeout)
-
-	for _, pod := range podList.Items {
-		if getPodStatus(&pod) == "Terminating" {
-			terminatingTime := time.Now().Unix() - pod.CreationTimestamp.Unix()
-			if terminatingTime > terminatingTimeoutThreshold {
-				r.deletePodForcefully(pod)
-				// delete one pod forcefully at a reconcile loop
-				return nil
-			}
-		}
-	}
-
-	return nil
-}
-
-func getPodStatus(pod *corev1.Pod) string {
-	// Terminating
-	if pod.DeletionTimestamp != nil {
-		return "Terminating"
-	}
-
-	// not running
-	if pod.Status.Phase != corev1.PodRunning {
-		return string(pod.Status.Phase)
-	}
-
-	ready := false
-	notReadyReason := ""
-	for _, c := range pod.Status.Conditions {
-		if c.Type == corev1.PodReady {
-			ready = c.Status == corev1.ConditionTrue
-			notReadyReason = c.Reason
-		}
-	}
-
-	if pod.Status.Reason != "" {
-		return pod.Status.Reason
-	}
-
-	if notReadyReason != "" {
-		return notReadyReason
-	}
-
-	if ready {
-		return string(corev1.PodRunning)
-	}
-
-	// Unknown?
-	return "Unknown"
 }

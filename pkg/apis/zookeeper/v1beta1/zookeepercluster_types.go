@@ -256,7 +256,7 @@ func (z *ZookeeperCluster) ZookeeperPorts() Ports {
 
 // GetClientServiceName returns the name of the client service for the cluster
 func (z *ZookeeperCluster) GetClientServiceName() string {
-	return fmt.Sprintf("%s-client", z.GetName())
+	return fmt.Sprintf("%s-service", z.GetName())
 }
 
 // Ports groups the ports for a zookeeper cluster node for easy access

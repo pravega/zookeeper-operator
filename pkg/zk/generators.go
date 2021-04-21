@@ -16,8 +16,10 @@ import (
 	"strconv"
 	"strings"
 
-	pingcapv1 "github.com/q8s-io/statefulset-pingcap/client/apis/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	statefulpodv1 "github.com/q8s-io/iapetos/api/v1"
+
+	// pingcapv1 "github.com/q8s-io/statefulset-pingcap/client/apis/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -28,11 +30,11 @@ import (
 const (
 	externalDNSAnnotationKey = "external-dns.alpha.kubernetes.io/hostname"
 	dot                      = "."
-	apiVersion               = "apps.pingcap.com/v1"
 )
 
 func headlessDomain(z *v1beta1.ZookeeperCluster) string {
-	return fmt.Sprintf("%s.%s.svc.%s", headlessSvcName(z), z.GetNamespace(), z.GetKubernetesClusterDomain())
+	// return fmt.Sprintf("%s.%s.svc.%s", headlessSvcName(z), z.GetNamespace(), z.GetKubernetesClusterDomain())
+	return fmt.Sprintf("%s", z.GetKubernetesClusterDomain())
 }
 
 func headlessSvcName(z *v1beta1.ZookeeperCluster) string {
@@ -42,19 +44,19 @@ func headlessSvcName(z *v1beta1.ZookeeperCluster) string {
 var zkDataVolume = "data"
 
 // MakeStatefulSet return a zookeeper stateful set from the zk spec
-func MakeStatefulSet(z *v1beta1.ZookeeperCluster) *pingcapv1.StatefulSet {
-	extraVolumes := []v1.Volume{}
+func MakeStatefulPod(z *v1beta1.ZookeeperCluster) *statefulpodv1.StatefulPod {
+	var extraVolumes []corev1.Volume
 	persistence := z.Spec.Persistence
-	pvcs := []v1.PersistentVolumeClaim{}
+	var pvcs []corev1.PersistentVolumeClaim
 	if strings.EqualFold(z.Spec.StorageType, "ephemeral") {
-		extraVolumes = append(extraVolumes, v1.Volume{
+		extraVolumes = append(extraVolumes, corev1.Volume{
 			Name: zkDataVolume,
-			VolumeSource: v1.VolumeSource{
+			VolumeSource: corev1.VolumeSource{
 				EmptyDir: &z.Spec.Ephemeral.EmptyDirVolumeSource,
 			},
 		})
 	} else {
-		pvcs = append(pvcs, v1.PersistentVolumeClaim{
+		pvcs = append(pvcs, corev1.PersistentVolumeClaim{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: zkDataVolume,
 				Labels: mergeLabels(
@@ -65,84 +67,75 @@ func MakeStatefulSet(z *v1beta1.ZookeeperCluster) *pingcapv1.StatefulSet {
 			Spec: persistence.PersistentVolumeClaimSpec,
 		})
 	}
-	return &pingcapv1.StatefulSet{
+	podSpec := makeZkPodSpec(z, extraVolumes)
+	var port []corev1.ServicePort
+	port = append(port, corev1.ServicePort{
+		Port: 80,
+	})
+	return &statefulpodv1.StatefulPod{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       "StatefulSet",
-			APIVersion: "apps.pingcap.com/v1",
+			Kind:       "Pod",
+			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      z.GetName(),
 			Namespace: z.Namespace,
 			Labels:    z.Spec.Labels,
 		},
-		Spec: pingcapv1.StatefulSetSpec{
-			ServiceName: headlessSvcName(z),
-			Replicas:    &z.Spec.Replicas,
+		Spec: statefulpodv1.StatefulPodSpec{
+			Size: &z.Spec.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"app": z.GetName(),
 				},
 			},
-			UpdateStrategy: pingcapv1.StatefulSetUpdateStrategy{
-				Type: pingcapv1.RollingUpdateStatefulSetStrategyType,
+			PodTemplate: podSpec,
+			ServiceTemplate: &corev1.ServiceSpec{
+				Ports: port,
+				// Selector:  myselector,
+				Selector:  map[string]string{"app": z.GetName()},
+				ClusterIP: "None",
 			},
-			PodManagementPolicy: pingcapv1.OrderedReadyPodManagement,
-			Template: v1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					GenerateName: z.GetName(),
-					Labels: mergeLabels(
-						z.Spec.Labels,
-						map[string]string{
-							"app":  z.GetName(),
-							"kind": "ZookeeperMember",
-						},
-					),
-					Annotations: z.Spec.Pod.Annotations,
-				},
-				Spec: makeZkPodSpec(z, extraVolumes),
-			},
-			VolumeClaimTemplates: pvcs,
 		},
 	}
 }
 
-func makeZkPodSpec(z *v1beta1.ZookeeperCluster, volumes []v1.Volume) v1.PodSpec {
-	zkContainer := v1.Container{
+func makeZkPodSpec(z *v1beta1.ZookeeperCluster, volumes []corev1.Volume) corev1.PodSpec {
+	zkContainer := corev1.Container{
 		Name:  "zookeeper",
 		Image: z.Spec.Image.ToString(),
 		Ports: z.Spec.Ports,
-		Env: []v1.EnvVar{
+		Env: []corev1.EnvVar{
 			{
 				Name: "ENVOY_SIDECAR_STATUS",
-				ValueFrom: &v1.EnvVarSource{
-					FieldRef: &v1.ObjectFieldSelector{
+				ValueFrom: &corev1.EnvVarSource{
+					FieldRef: &corev1.ObjectFieldSelector{
 						FieldPath: `metadata.annotations['sidecar.istio.io/status']`,
 					},
 				},
 			},
 		},
 		ImagePullPolicy: z.Spec.Image.PullPolicy,
-		ReadinessProbe: &v1.Probe{
+		// ReadinessProbe: &corev1.Probe{
+		// 	InitialDelaySeconds: 10,
+		// 	TimeoutSeconds:      10,
+		// 	Handler: corev1.Handler{
+		// 		Exec: &corev1.ExecAction{Command: []string{"/usr/local/bin/zookeeperReady.sh"}},
+		// 	},
+		// },
+		LivenessProbe: &corev1.Probe{
 			InitialDelaySeconds: 10,
 			TimeoutSeconds:      10,
-			Handler: v1.Handler{
-				Exec: &v1.ExecAction{Command: []string{"zookeeperReady.sh"}},
+			Handler: corev1.Handler{
+				Exec: &corev1.ExecAction{Command: []string{"/usr/local/bin/zookeeperLive.sh"}},
 			},
 		},
-		LivenessProbe: &v1.Probe{
-			InitialDelaySeconds: 10,
-			TimeoutSeconds:      10,
-			Handler: v1.Handler{
-				Exec: &v1.ExecAction{Command: []string{"zookeeperLive.sh"}},
-			},
-		},
-		VolumeMounts: []v1.VolumeMount{
-			{Name: "data", MountPath: "/data"},
+		VolumeMounts: []corev1.VolumeMount{
 			{Name: "conf", MountPath: "/conf"},
 		},
-		Lifecycle: &v1.Lifecycle{
-			PreStop: &v1.Handler{
-				Exec: &v1.ExecAction{
+		Lifecycle: &corev1.Lifecycle{
+			PreStop: &corev1.Handler{
+				Exec: &corev1.ExecAction{
 					Command: []string{"zookeeperTeardown.sh"},
 				},
 			},
@@ -152,11 +145,11 @@ func makeZkPodSpec(z *v1beta1.ZookeeperCluster, volumes []v1.Volume) v1.PodSpec 
 	if z.Spec.Pod.Resources.Limits != nil || z.Spec.Pod.Resources.Requests != nil {
 		zkContainer.Resources = z.Spec.Pod.Resources
 	}
-	volumes = append(volumes, v1.Volume{
+	volumes = append(volumes, corev1.Volume{
 		Name: "conf",
-		VolumeSource: v1.VolumeSource{
-			ConfigMap: &v1.ConfigMapVolumeSource{
-				LocalObjectReference: v1.LocalObjectReference{
+		VolumeSource: corev1.VolumeSource{
+			ConfigMap: &corev1.ConfigMapVolumeSource{
+				LocalObjectReference: corev1.LocalObjectReference{
 					Name: z.ConfigMapName(),
 				},
 			},
@@ -164,12 +157,12 @@ func makeZkPodSpec(z *v1beta1.ZookeeperCluster, volumes []v1.Volume) v1.PodSpec 
 	})
 
 	zkContainer.Env = append(zkContainer.Env, z.Spec.Pod.Env...)
-	podSpec := v1.PodSpec{
+	podSpec := corev1.PodSpec{
 		Containers: append(z.Spec.Containers, zkContainer),
 		Affinity:   z.Spec.Pod.Affinity,
 		Volumes:    append(z.Spec.Volumes, volumes...),
 	}
-	if reflect.DeepEqual(v1.PodSecurityContext{}, z.Spec.Pod.SecurityContext) {
+	if reflect.DeepEqual(corev1.PodSecurityContext{}, z.Spec.Pod.SecurityContext) {
 		podSpec.SecurityContext = z.Spec.Pod.SecurityContext
 	}
 	podSpec.NodeSelector = z.Spec.Pod.NodeSelector
@@ -181,17 +174,17 @@ func makeZkPodSpec(z *v1beta1.ZookeeperCluster, volumes []v1.Volume) v1.PodSpec 
 }
 
 // MakeClientService returns a client service resource for the zookeeper cluster
-func MakeClientService(z *v1beta1.ZookeeperCluster) *v1.Service {
+func MakeClientService(z *v1beta1.ZookeeperCluster) *corev1.Service {
 	ports := z.ZookeeperPorts()
-	svcPorts := []v1.ServicePort{
+	svcPorts := []corev1.ServicePort{
 		{Name: "tcp-client", Port: ports.Client},
 	}
 	return makeService(z.GetClientServiceName(), svcPorts, true, z)
 }
 
 // MakeConfigMap returns a zookeeper config map
-func MakeConfigMap(z *v1beta1.ZookeeperCluster) *v1.ConfigMap {
-	return &v1.ConfigMap{
+func MakeConfigMap(z *v1beta1.ZookeeperCluster) *corev1.ConfigMap {
+	return &corev1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ConfigMap",
 			APIVersion: "v1",
@@ -212,9 +205,9 @@ func MakeConfigMap(z *v1beta1.ZookeeperCluster) *v1.ConfigMap {
 
 // MakeHeadlessService returns an internal headless-service for the zk
 // stateful-set
-func MakeHeadlessService(z *v1beta1.ZookeeperCluster) *v1.Service {
+func MakeHeadlessService(z *v1beta1.ZookeeperCluster) *corev1.Service {
 	ports := z.ZookeeperPorts()
-	svcPorts := []v1.ServicePort{
+	svcPorts := []corev1.ServicePort{
 		{Name: "tcp-client", Port: ports.Client},
 		{Name: "tcp-quorum", Port: ports.Quorum},
 		{Name: "tcp-leader-election", Port: ports.Leader},
@@ -247,7 +240,9 @@ func makeZkConfigString(s v1beta1.ZookeeperClusterSpec) string {
 		"autopurge.snapRetainCount=" + strconv.Itoa(s.Conf.AutoPurgeSnapRetainCount) + "\n" +
 		"autopurge.purgeInterval=" + strconv.Itoa(s.Conf.AutoPurgePurgeInterval) + "\n" +
 		"quorumListenOnAllIPs=" + strconv.FormatBool(s.Conf.QuorumListenOnAllIPs) + "\n" +
-		"dynamicConfigFile=/data/zoo.cfg.dynamic\n"
+		"dynamicConfigFile=/data/zoo.cfg.dynamic\n" +
+		// clientPort
+		"clientPort=2181"
 }
 
 func makeZkLog4JQuietConfigString() string {
@@ -271,7 +266,8 @@ func makeZkLog4JConfigString() string {
 func makeZkEnvConfigString(z *v1beta1.ZookeeperCluster) string {
 	ports := z.ZookeeperPorts()
 	return "#!/usr/bin/env bash\n\n" +
-		"DOMAIN=" + headlessDomain(z) + "\n" +
+		// "DOMAIN=" + headlessDomain(z) + "\n" +
+		"DOMAIN=" + z.GetName() + "-service" + "\n" +
 		"QUORUM_PORT=" + strconv.Itoa(int(ports.Quorum)) + "\n" +
 		"LEADER_PORT=" + strconv.Itoa(int(ports.Leader)) + "\n" +
 		"CLIENT_HOST=" + z.GetClientServiceName() + "\n" +
@@ -280,7 +276,7 @@ func makeZkEnvConfigString(z *v1beta1.ZookeeperCluster) string {
 		"CLUSTER_SIZE=" + fmt.Sprint(z.Spec.Replicas) + "\n"
 }
 
-func makeService(name string, ports []v1.ServicePort, clusterIP bool, z *v1beta1.ZookeeperCluster) *v1.Service {
+func makeService(name string, ports []corev1.ServicePort, clusterIP bool, z *v1beta1.ZookeeperCluster) *corev1.Service {
 	var dnsName string
 	var annotationMap map[string]string
 	if !clusterIP && z.Spec.DomainName != "" {
@@ -294,7 +290,7 @@ func makeService(name string, ports []v1.ServicePort, clusterIP bool, z *v1beta1
 	} else {
 		annotationMap = map[string]string{}
 	}
-	service := v1.Service{
+	service := corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
 			APIVersion: "v1",
@@ -308,13 +304,13 @@ func makeService(name string, ports []v1.ServicePort, clusterIP bool, z *v1beta1
 			),
 			Annotations: annotationMap,
 		},
-		Spec: v1.ServiceSpec{
+		Spec: corev1.ServiceSpec{
 			Ports:    ports,
 			Selector: map[string]string{"app": z.GetName()},
 		},
 	}
 	if !clusterIP {
-		service.Spec.ClusterIP = v1.ClusterIPNone
+		service.Spec.ClusterIP = corev1.ClusterIPNone
 	}
 	return &service
 }
@@ -344,8 +340,8 @@ func MakePodDisruptionBudget(z *v1beta1.ZookeeperCluster) *policyv1beta1.PodDisr
 }
 
 //MakeServiceAccount returns the service account for zookeeper Cluster
-func MakeServiceAccount(z *v1beta1.ZookeeperCluster) *v1.ServiceAccount {
-	return &v1.ServiceAccount{
+func MakeServiceAccount(z *v1beta1.ZookeeperCluster) *corev1.ServiceAccount {
+	return &corev1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      z.Spec.Pod.ServiceAccountName,
 			Namespace: z.Namespace,

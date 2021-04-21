@@ -15,13 +15,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/q8s-io/zookeeper-operator-pravega/pkg/apis/zookeeper/v1beta1"
-	"github.com/q8s-io/zookeeper-operator-pravega/pkg/utils"
-	"github.com/q8s-io/zookeeper-operator-pravega/pkg/zk"
-	appsv1 "k8s.io/api/apps/v1"
+	pingcapstsv1 "github.com/q8s-io/statefulset-pingcap/client/apis/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/q8s-io/zookeeper-operator-pravega/pkg/apis/zookeeper/v1beta1"
+	"github.com/q8s-io/zookeeper-operator-pravega/pkg/utils"
+	"github.com/q8s-io/zookeeper-operator-pravega/pkg/zk"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -164,7 +165,7 @@ var _ = Describe("Generators Spec", func() {
 	})
 
 	Context("#MakeStatefulSet", func() {
-		var sts *appsv1.StatefulSet
+		var sts *pingcapstsv1.StatefulSet
 
 		Context("with defaults", func() {
 
@@ -226,7 +227,7 @@ var _ = Describe("Generators Spec", func() {
 	})
 
 	Context("#MakeStatefulSet with Ephemeral storage", func() {
-		var sts *appsv1.StatefulSet
+		var sts *pingcapstsv1.StatefulSet
 
 		Context("with defaults", func() {
 
@@ -250,7 +251,7 @@ var _ = Describe("Generators Spec", func() {
 		})
 	})
 	Context("#MakeStatefulSet with non default service account", func() {
-		var sts *appsv1.StatefulSet
+		var sts *pingcapstsv1.StatefulSet
 
 		Context("with defaults", func() {
 

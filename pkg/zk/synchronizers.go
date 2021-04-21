@@ -11,15 +11,15 @@
 package zk
 
 import (
-	pingcapv1 "github.com/q8s-io/statefulset-pingcap/client/apis/apps/v1"
+	statefulpodv1 "github.com/q8s-io/iapetos/api/v1"
 	"k8s.io/api/core/v1"
 )
 
 // SyncStatefulSet synchronizes any updates to the stateful-set
-func SyncStatefulSet(curr *pingcapv1.StatefulSet, next *pingcapv1.StatefulSet) {
-	curr.Spec.Replicas = next.Spec.Replicas
-	curr.Spec.Template = next.Spec.Template
-	curr.Spec.UpdateStrategy = next.Spec.UpdateStrategy
+func SyncStatefulSet(curr *statefulpodv1.StatefulPod, next *statefulpodv1.StatefulPod) {
+	curr.Spec.Size = next.Spec.Size
+	curr.Spec.PodTemplate = next.Spec.PodTemplate
+	// curr.Spec.UpdateStrategy = next.Spec.UpdateStrategy
 	curr.Annotations = nil
 }
 

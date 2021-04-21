@@ -9,6 +9,7 @@ require (
 	github.com/onsi/gomega v1.9.0
 	github.com/operator-framework/operator-sdk v0.17.0
 	github.com/pkg/errors v0.9.1
+	github.com/q8s-io/iapetos v0.0.0-20210325074111-3337fb08772a
 	github.com/q8s-io/statefulset-pingcap v0.4.1-0.20201120090223-e7e4a4323345
 	github.com/samuel/go-zookeeper v0.0.0-20190923202752-2cc03de413da
 	golang.org/x/lint v0.0.0-20191125180803-fdd1cda4f05f // indirect

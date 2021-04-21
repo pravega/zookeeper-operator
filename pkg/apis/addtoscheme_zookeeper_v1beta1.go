@@ -11,7 +11,7 @@
 package apis
 
 import (
-	pingcapstsv1 "github.com/q8s-io/statefulset-pingcap/client/apis/apps/v1"
+	statefulpodv1 "github.com/q8s-io/iapetos/api/v1"
 
 	"github.com/q8s-io/zookeeper-operator-pravega/pkg/apis/zookeeper/v1beta1"
 )
@@ -20,5 +20,6 @@ func init() {
 	// Register the types with the Scheme so the components can map objects to
 	// GroupVersionKinds and back
 	// also add pingcap.statefulset to scheme
-	AddToSchemes = append(AddToSchemes, v1beta1.SchemeBuilder.AddToScheme, pingcapstsv1.SchemeBuilder.AddToScheme)
+	// AddToSchemes = append(AddToSchemes, v1beta1.SchemeBuilder.AddToScheme, pingcapstsv1.SchemeBuilder.AddToScheme,statefulpodv1.SchemeBuilder.AddToScheme)
+	AddToSchemes = append(AddToSchemes, v1beta1.SchemeBuilder.AddToScheme, statefulpodv1.SchemeBuilder.AddToScheme)
 }

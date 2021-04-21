@@ -1,437 +1,176 @@
-# Zookeeper Operator
-[![Build Status](https://travis-ci.org/q8s-io/zookeeper-operator-pravega.svg?branch=master)](https://travis-ci.org/q8s-io/zookeeper-operator-pravega)
-### Project status: alpha
+# Kubectl-debug
 
-The project is currently alpha. While no breaking API changes are currently planned, we reserve the right to address bugs and change the API before the project is declared stable.
+![license](https://img.shields.io/hexpm/l/plug.svg)
+[![travis](https://travis-ci.org/aylei/kubectl-debug.svg?branch=master)](https://travis-ci.org/aylei/kubectl-debug)
+[![Go Report Card](https://goreportcard.com/badge/github.com/aylei/kubectl-debug)](https://goreportcard.com/report/github.com/aylei/kubectl-debug)
+[![docker](https://img.shields.io/docker/pulls/aylei/debug-agent.svg)](https://hub.docker.com/r/aylei/debug-agent)
 
-## Table of Contents
+[简体中文](/docs/zh-cn.md)
 
- * [Overview](#overview)
- * [Requirements](#requirements)
- * [Usage](#usage)    
-    * [Installation of the Operator](#install-the-operator)
-    * [Deploy a sample Zookeeper Cluster](#deploy-a-sample-zookeeper-cluster)
-    * [Deploy a sample ZooKeeper Cluster with Ephemeral Storage](#Deploy-a-sample-zookeeper-cluster-with-ephemeral-storage)
-    * [Deploy a sample Zookeeper Cluster to a cluster using Istio](#deploy-a-sample-zookeeper-cluster-with-istio)
-    * [Upgrade a Zookeeper Cluster](#upgrade-a-zookeeper-cluster)
-    * [Uninstall the Zookeeper Cluster](#uninstall-the-zookeeper-cluster)
-    * [Upgrade the Zookeeper Operator](#upgrade-the-operator)
-    * [Uninstall the Operator](#uninstall-the-operator)
- * [Development](#development)
-    * [Build the Operator Image](#build-the-operator-image)
-    * [Direct Access to Cluster](#direct-access-to-the-cluster)
-    * [Run the Operator Locally](#run-the-operator-locally)
-    * [Installation on GKE](#installation-on-google-kubernetes-engine)
-    * [Installation on Minikube](#installation-on-minikube)
+# Overview
 
+`kubectl-debug` is an out-of-tree solution for [troubleshooting running pods](https://github.com/kubernetes/community/blob/master/contributors/design-proposals/node/troubleshoot-running-pods.md), which allows you to run a new container in running pods for debugging purpose ([examples](/docs/examples.md)). The new container will join the `pid`, `network`, `user` and `ipc` namespaces of the target container, so you can use arbitrary trouble-shooting tools without pre-installing them in your production container image.
 
-### Overview
+- [screenshots](#screenshots)
+- [quick start](#quick-start)
+- [build from source](#build-from-source)
+- [port-forward and agentless](#port-forward-mode-And-agentless-mode)
+- [configuration](#configuration)
+- [roadmap](#roadmap)
+- [authorization](#authorization)
+- [contribute](#contribute)
 
-This operator runs a Zookeeper 3.6.1 cluster, and uses Zookeeper dynamic reconfiguration to handle node membership.
+# Screenshots
 
-The operator itself is built with the [Operator framework](https://github.com/operator-framework/operator-sdk).
+![gif](/docs/kube-debug.gif)
 
-## Requirements
+# Quick Start
 
-- Access to a Kubernetes v1.15.0+ cluster
+## Install the kubectl debug plugin
 
-## Usage
-
-We recommend using our [helm charts](charts) for all installation and upgrades. Since version 0.2.8 onwards, the helm charts for zookeeper operator and zookeeper cluster are published in [https://charts.pravega.io](https://charts.pravega.io/). To add this repository to your Helm repos, use the following command
-```
-helm repo add pravega https://charts.pravega.io
-```
-However there are manual deployment and upgrade options available as well.
-
-### Install the operator
-
-> Note: if you are running on Google Kubernetes Engine (GKE), please [check this first](#installation-on-google-kubernetes-engine).
-
-#### Install via helm
-
-To understand how to deploy the zookeeper operator using helm, refer to [this](charts/zookeeper-operator#installing-the-chart).
-
-#### Manual deployment
-
-Register the `ZookeeperCluster` custom resource definition (CRD).
-
-```
-$ kubectl create -f deploy/crds
+Homebrew:
+```shell
+brew install aylei/tap/kubectl-debug
 ```
 
-You can choose to enable Zookeeper operator for all namespaces or just for a specific namespace. The example is using the `default` namespace, but feel free to edit the Yaml files and use a different namespace.
+Download the binary:
+```bash
+export PLUGIN_VERSION=0.1.1
+# linux x86_64
+curl -Lo kubectl-debug.tar.gz https://github.com/aylei/kubectl-debug/releases/download/v${PLUGIN_VERSION}/kubectl-debug_${PLUGIN_VERSION}_linux_amd64.tar.gz
+# macos
+curl -Lo kubectl-debug.tar.gz https://github.com/aylei/kubectl-debug/releases/download/v${PLUGIN_VERSION}/kubectl-debug_${PLUGIN_VERSION}_darwin_amd64.tar.gz
 
-Create the operator role and role binding.
-
-```
-// default namespace
-$ kubectl create -f deploy/default_ns/rbac.yaml
-
-// all namespaces
-$ kubectl create -f deploy/all_ns/rbac.yaml
-```
-
-Deploy the Zookeeper operator.
-
-```
-// default namespace
-$ kubectl create -f deploy/default_ns/operator.yaml
-
-// all namespaces
-$ kubectl create -f deploy/all_ns/operator.yaml
+tar -zxvf kubectl-debug.tar.gz kubectl-debug
+sudo mv kubectl-debug /usr/local/bin/
 ```
 
-Verify that the Zookeeper operator is running.
+For windows users, download the latest archive from the [release page](https://github.com/aylei/kubectl-debug/releases/tag/v0.1.1), decompress the package and add it to your PATH.
 
+## (Optional) Install the debug agent DaemonSet
+
+`kubectl-debug` requires an agent pod to communicate with the container runtime. In the [agentless mode](#port-forward-mode-And-agentless-mode), the agent pod can be created when a debug session starts and to be cleaned up when the session ends.
+
+While convenient, creating pod before debugging can be time consuming. You can install the debug agent DaemonSet in advance to skip this:
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/aylei/kubectl-debug/master/scripts/agent_daemonset.yml
+# or using helm
+helm install -n=debug-agent ./contrib/helm/kubectl-debug
 ```
-$ kubectl get deploy
-NAME                 DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
-zookeeper-operator   1         1         1            1           12m
+
+## Debug instructions
+
+Try it out!
+
+```bash
+# kubectl 1.12.0 or higher
+kubectl debug -h
+# you can omit --agentless to reduce start time if you have installed the debug agent daemonset
+# we will omit this flag in the following commands
+kubectl debug POD_NAME --agentless
+
+# in case of your pod stuck in `CrashLoopBackoff` state and cannot be connected to,
+# you can fork a new pod and diagnose the problem in the forked pod
+kubectl debug POD_NAME --fork
+
+# if the node ip is not directly accessible, try port-forward mode
+kubectl debug POD_NAME --port-forward --daemonset-ns=kube-system --daemonset-name=debug-agent
+
+# old versions of kubectl cannot discover plugins, you may execute the binary directly
+kubect-debug POD_NAME
 ```
 
-### Deploy a sample Zookeeper cluster
+* You can configure the default arguments to simplify usage, refer to [Configuration](#configuration)
+* Refer to [Examples](/docs/examples.md) for practical debugging examples
 
-#### Install via helm
+# Build from source
 
-To understand how to deploy a sample zookeeper cluster using helm, refer to [this](charts/zookeeper#installing-the-chart).
+Clone this repo and:
+```bash
+# make will build plugin binary and debug-agent image
+make
+# install plugin
+mv kubectl-debug /usr/local/bin
 
-#### Manual deployment
+# build plugin only
+make plugin
+# build agent only
+make agent-docker
+```
 
-Create a Yaml file called `zk.yaml` with the following content to install a 3-node Zookeeper cluster.
+# port-forward mode And agentless mode
+
+- `port-foward` mode: By default, `kubectl-debug` will directly connect with the target host. When `kubectl-debug` cannot connect to `targetHost:agentPort`, you can enable `port-forward` mode. In `port-forward` mode, the local machine listens on `localhost:agentPort` and forwards data to/from `targetPod:agentPort`.
+
+- `agentless` mode: By default, `debug-agent` needs to be pre-deployed on each node of the cluster, which consumes cluster resources all the time. Unfortunately, debugging Pod is a low-frequency operation. To avoid loss of cluster resources, the `agentless` mode has been added in [#31](https://github.com/aylei/kubectl-debug/pull/31). In `agentless` mode, `kubectl-debug` will first start `debug-agent` on the host where the target Pod is located, and then `debug-agent`  starts the debug container. After the user exits, `kubectl-debug` will delete the debug container and `kubectl-debug` will delete the `debug-agent` pod  at last.
+
+# Configuration
+
+`kubectl-debug` uses [nicolaka/netshoot](https://github.com/nicolaka/netshoot) as the default image to run debug container, and use `bash` as default entrypoint.
+
+You can override the default image and entrypoint with cli flag, or even better, with config file `~/.kube/debug-config`:
 
 ```yaml
-apiVersion: "zookeeper.pravega.io/v1beta1"
-kind: "ZookeeperCluster"
-metadata:
-  name: "zookeeper"
-spec:
-  replicas: 3
+# debug agent listening port(outside container)
+# default to 10027
+agentPort: 10027
+
+# whether using agentless mode
+# default to false
+agentless: true
+# namespace of debug-agent pod, used in agentless mode
+# default to 'default'
+agentPodNamespace: default
+# prefix of debug-agent pod, used in agentless mode
+# default to  'debug-agent-pod'
+agentPodNamePrefix: debug-agent-pod
+# image of debug-agent pod, used in agentless mode
+# default to 'aylei/debug-agent:latest'
+agentImage: aylei/debug-agent:latest
+
+# daemonset name of the debug-agent, used in port-forward
+# default to 'debug-agent'
+debugAgentDaemonset: debug-agent
+# daemonset namespace of the debug-agent, used in port-forwad
+# default to 'default'
+debugAgentNamespace: kube-system
+# whether using port-forward when connecting debug-agent
+# default false
+portForward: true
+# image of the debug container
+# default as showed
+image: nicolaka/netshoot:latest
+# start command of the debug container
+# default ['bash']
+command:
+- '/bin/bash'
+- '-l'
 ```
 
-```
-$ kubectl create -f zk.yaml
-```
+If the debug-agent is not accessible from host port, it is recommended to set `portForward: true` to using port-forawrd mode.
 
-After a couple of minutes, all cluster members should become ready.
+PS: `kubectl-debug` will always override the entrypoint of the container, which is by design to avoid users running an unwanted service by mistake(of course you can always do this explicitly).
 
-```
-$ kubectl get zk
+# Authorization
 
-NAME        REPLICAS   READY REPLICAS    VERSION   DESIRED VERSION   INTERNAL ENDPOINT    EXTERNAL ENDPOINT   AGE
-zookeeper   3          3                 0.2.8     0.2.8             10.100.200.18:2181   N/A                 94s
-```
->Note: when the Version field is set as well as Ready Replicas are equal to Replicas that signifies our cluster is in Ready state
+Currently, `kubectl-debug` reuse the privilege of the `pod/exec` sub resource to do authorization, which means that it has the same privilege requirements with the `kubectl exec` command.
 
-Additionally, check the output of describe command which should show the following cluster condition
+# Roadmap
 
-```
-$ kubectl describe zk
+`kubectl-debug` is supposed to be just a troubleshooting helper, and is going be replaced by the native `kubectl debug` command when [this proposal](https://github.com/kubernetes/community/blob/master/contributors/design-proposals/node/troubleshoot-running-pods.md) is implemented and merged in the future kubernetes release. But for now, there is still some works to do to improve `kubectl-debug`.
 
-Conditions:
-  Last Transition Time:    2020-05-18T10:17:03Z
-  Last Update Time:        2020-05-18T10:17:03Z
-  Status:                  True
-  Type:                    PodsReady
+- [ ] Security: currently, `kubectl-debug` do authorization in the client-side, which should be moved to the server-side (debug-agent)
+- [ ] More unit tests
+- [ ] More real world debugging example
+- [ ] e2e tests
 
-```
->Note: User should wait for the Pods Ready condition to be True
+If you are interested in any of the above features, please file an issue to avoid potential duplication.
 
-```
-$ kubectl get all -l app=zookeeper
-NAME                     DESIRED   CURRENT   AGE
-statefulsets/zookeeper   3         3         2m
+# Contribute
 
-NAME             READY     STATUS    RESTARTS   AGE
-po/zookeeper-0   1/1       Running   0          2m
-po/zookeeper-1   1/1       Running   0          1m
-po/zookeeper-2   1/1       Running   0          1m
+Feel free to open issues and pull requests. Any feedback is highly appreciated!
 
-NAME                     TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)             AGE
-svc/zookeeper-client     ClusterIP   10.31.243.173   <none>        2181/TCP            2m
-svc/zookeeper-headless   ClusterIP   None            <none>        2888/TCP,3888/TCP   2m
-```
+# Acknowledgement
 
->Note: If you want to configure non default service accounts to zookeeper pods, set the service account inside pod.This support is added from zookeeper operator version `0.2.9` onwards.
-
-```
-apiVersion: "zookeeper.pravega.io/v1beta1"
-kind: "ZookeeperCluster"
-metadata:
-  name: "example"
-spec:
-  pod:
-    serviceAccountName: "zookeeper"
-```
-
-### Deploy a sample Zookeeper cluster with Ephemeral storage
-
-Create a Yaml file called `zk.yaml` with the following content to install a 3-node Zookeeper cluster.
-
-```yaml
-apiVersion: "zookeeper.pravega.io/v1beta1"
-kind: "ZookeeperCluster"
-metadata:
-  name: "example"
-spec:
-  replicas: 3        
-  storageType: ephemeral
-```
-
-```
-$ kubectl create -f zk.yaml
-```
-
-After a couple of minutes, all cluster members should become ready.
-
-```
-$ kubectl get zk
-
-NAME      REPLICAS   READY REPLICAS   VERSION   DESIRED VERSION   INTERNAL ENDPOINT    EXTERNAL ENDPOINT   AGE
-example   3          3                 0.2.7     0.2.7             10.100.200.18:2181   N/A                 94s
-```
->Note: User should only provide value for either the field persistence or ephemeral in the spec if none of the values is specified default is persistence
-
->Note: In case of ephemeral storage, the cluster may not be able to come back up if more than quorum number of nodes are restarted simultaneously.
-
->Note: In case of ephemeral storage, there will be loss of data when the node gets restarted.
-
-### Deploy a sample Zookeeper cluster with Istio
-Create a Yaml file called `zk-with-istio.yaml` with the following content to install a 3-node Zookeeper cluster.
-
-```yaml
-apiVersion: zookeeper.pravega.io/v1beta1
-kind: ZookeeperCluster
-metadata:
-  name: zk-with-istio
-spec:
-  replicas: 3
-  config:
-    initLimit: 10
-    tickTime: 2000
-    syncLimit: 5
-    quorumListenOnAllIPs: true
-```
-
-```
-$ kubectl create -f zk-with-istio.yaml
-```
-
-### Upgrade a Zookeeper cluster
-
-#### Trigger the upgrade via helm
-
-To understand how to upgrade the zookeeper cluster using helm, refer to [this](charts/zookeeper#upgrading-the-chart).
-
-#### Trigger the upgrade manually
-
-To initiate an upgrade process manually, a user has to update the `spec.image.tag` field of the `ZookeeperCluster` custom resource. This can be done in three different ways using the `kubectl` command.
-1. `kubectl edit zk <name>`, modify the `tag` value in the YAML resource, save, and exit.
-2. If you have the custom resource defined in a local YAML file, e.g. `zk.yaml`, you can modify the `tag` value, and reapply the resource with `kubectl apply -f zk.yaml`.
-3. `kubectl patch zk <name> --type='json' -p='[{"op": "replace", "path": "/spec/image/tag", "value": "X.Y.Z"}]'`.
-
-After the `tag` field is updated, the StatefulSet will detect the version change and it will trigger the upgrade process.
-
-To detect whether a `ZookeeperCluster` upgrade is in progress or not, check the output of the command `kubectl describe zk`. Output of this command should contain the following entries
-
-```
-$ kubectl describe zk
-
-status:
-Last Transition Time:    2020-05-18T10:25:12Z
-Last Update Time:        2020-05-18T10:25:12Z
-Message:                 0
-Reason:                  Updating Zookeeper
-Status:                  True
-Type:                    Upgrading
-```
-Additionally, the Desired Version will be set to the version that we are upgrading our cluster to.
-
-```
-$ kubectl get zk
-
-NAME            REPLICAS   READY REPLICAS   VERSION   DESIRED VERSION   INTERNAL ENDPOINT     EXTERNAL ENDPOINT   AGE
-zookeeper       3          3                0.2.6     0.2.7             10.100.200.126:2181   N/A                 11m
-
-```
-Once the upgrade completes, the Version field is set to the Desired Version, as shown below
-
-```
-$ kubectl get zk
-
-NAME            REPLICAS   READY REPLICAS   VERSION   DESIRED VERSION   INTERNAL ENDPOINT     EXTERNAL ENDPOINT   AGE
-zookeeper       3          3                0.2.7     0.2.7             10.100.200.126:2181   N/A                 11m
-
-
-```
-Additionally, the Upgrading status is set to False and PodsReady status is set to True, which signifies that the upgrade has completed, as shown below
-
-```
-$ kubectl describe zk
-
-Status:
-  Conditions:
-    Last Transition Time:    2020-05-18T10:28:22Z
-    Last Update Time:        2020-05-18T10:28:22Z
-    Status:                  True
-    Type:                    PodsReady
-    Last Transition Time:    2020-05-18T10:28:22Z
-    Last Update Time:        2020-05-18T10:28:22Z
-    Status:                  False
-    Type:                    Upgrading
-```
->Note: The value of the tag field should not be modified while an upgrade is already in progress.
-
-### Upgrade the Operator
-
-For upgrading the zookeeper operator check the document [operator-upgrade](doc/operator-upgrade.md)
-
-### Uninstall the Zookeeper cluster
-
-#### Uninstall via helm
-
-Refer to [this](charts/zookeeper#uninstalling-the-chart).
-
-#### Manual uninstall
-
-```
-$ kubectl delete -f zk.yaml
-```
-
-### Uninstall the operator
-
-> Note that the Zookeeper clusters managed by the Zookeeper operator will NOT be deleted even if the operator is uninstalled.
-
-#### Uninstall via helm
-
-Refer to [this](charts/zookeeper-operator#uninstalling-the-chart).
-
-#### Manual uninstall
-
-To delete all clusters, delete all cluster CR objects before uninstalling the operator.
-
-```
-$ kubectl delete -f deploy/default_ns
-// or, depending on how you deployed it
-$ kubectl delete -f deploy/all_ns
-```
-
-## Development
-
-### Build the operator image
-
-Requirements:
-  - Go 1.13+
-
-Use the `make` command to build the Zookeeper operator image.
-
-```
-$ make build
-```
-That will generate a Docker image with the format
-`<latest_release_tag>-<number_of_commits_after_the_release>` (it will append-dirty if there are uncommitted changes). The image will also be tagged as `latest`.
-
-Example image after running `make build`.
-
-The Zookeeper operator image will be available in your Docker environment.
-
-```
-$ docker images q8s-io/zookeeper-operator-pravega
-
-REPOSITORY                    TAG              IMAGE ID        CREATED         SIZE   
-
-q8s-io/zookeeper-operator-pravega    0.1.1-3-dirty    2b2d5bcbedf5    10 minutes ago  41.7MB
-
-q8s-io/zookeeper-operator-pravega    latest           2b2d5bcbedf5    10 minutes ago  41.7MB
-
-```
-Optionally push it to a Docker registry.
-
-```
-docker tag q8s-io/zookeeper-operator-pravega [REGISTRY_HOST]:[REGISTRY_PORT]/q8s-io/zookeeper-operator-pravega
-docker push [REGISTRY_HOST]:[REGISTRY_PORT]/q8s-io/zookeeper-operator-pravega
-```
-
-where:
-
-- `[REGISTRY_HOST]` is your registry host or IP (e.g. `registry.example.com`)
-- `[REGISTRY_PORT]` is your registry port (e.g. `5000`)
-
-### Direct access to the cluster
-
-For debugging and development you might want to access the Zookeeper cluster directly. For example, if you created the cluster with name `zookeeper` in the `default` namespace you can forward the Zookeeper port from any of the pods (e.g. `zookeeper-0`) as follows:
-
-```
-$ kubectl port-forward -n default zookeeper-0 2181:2181
-```
-
-### Run the operator locally
-
-You can run the operator locally to help with development, testing, and debugging tasks.
-
-The following command will run the operator locally with the default Kubernetes config file present at `$HOME/.kube/config`. Use the `--kubeconfig` flag to provide a different path.
-
-```
-$ operator-sdk up local
-```
-
-### Installation on Google Kubernetes Engine
-
-The Operator requires elevated privileges in order to watch for the custom resources.
-
-According to Google Container Engine docs:
-
-> Ensure the creation of RoleBinding as it grants all the permissions included in the role that we want to create. Because of the way Container Engine checks permissions when we create a Role or ClusterRole.
->
-> An example workaround is to create a RoleBinding that gives your Google identity a cluster-admin role before attempting to create additional Role or ClusterRole permissions.
->
-> This is a known issue in the Beta release of Role-Based Access Control in Kubernetes and Container Engine version 1.6.
-
-On GKE, the following command must be run before installing the operator, replacing the user with your own details.
-
-```
-$ kubectl create clusterrolebinding your-user-cluster-admin-binding --clusterrole=cluster-admin --user=your.google.cloud.email@example.org
-```
-
-### Installation on Minikube
-
-#### Minikube Setup
-To setup minikube locally you can follow the steps mentioned [here](https://github.com/pravega/pravega/wiki/Kubernetes-Based-System-Test-Framework#minikube-setup).
-
-Once minikube setup is complete, `minikube start` will create a minikube VM.
-
-#### Cluster Deployment
-First install the zookeeper operator in either of the ways mentioned [here](#install-the-operator).
-Since minikube provides a single node Kubernetes cluster which has a low resource provisioning, we provide a simple way to install a small zookeeper cluster on a minikube environment using the following command.
-
-```
-helm install zookeeper charts/zookeeper --values charts/zookeeper/values/minikube.yaml
-```
-
-#### Zookeeper YAML  Exporter
-
-Zookeeper Exporter is a binary which is used to generate YAML file for all the secondary resources which Zookeeper Operator deploys to the Kubernetes Cluster. It takes ZookeeperCluster resource YAML file as input and generates bunch of secondary resources YAML files. The generated output look like the following:
-
-```
->tree  ZookeeperCluster/
-ZookeeperCluster/
-├── client
-│   └── Service.yaml
-├── config
-│   └── ConfigMap.yaml
-├── headless
-│   └── Service.yaml
-├── pdb
-│   └── PodDisruptionBudget.yaml
-└── zk
-    └── StatefulSet.yaml
-```
-
-##### How to build Zookeeper Operator
-
-When you build Operator, the Exporter is built along with it.
-`make build-go` - will build both Operator as well as Exporter.
-
-##### How to use exporter
-
-Just run zookeeper-exporter binary with -help option. It will guide you to input ZookeeperCluster YAML file. There are couple of more options to specify.
-Example: `./zookeeper-exporter -i ./ZookeeperCluster.yaml -o .`
+This project would not be here without the effort of [our contributors](https://github.com/aylei/kubectl-debug/graphs/contributors), thanks!
