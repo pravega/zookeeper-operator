@@ -26,7 +26,7 @@ const (
 
 	// DefaultZkContainerVersion is the default tag used for for the zookeeper
 	// container
-	DefaultZkContainerVersion = "0.2.8"
+	DefaultZkContainerVersion = "0.2.10"
 
 	// DefaultZkContainerPolicy is the default container pull policy used
 	DefaultZkContainerPolicy = "Always"
@@ -79,7 +79,7 @@ const (
 
 // ZookeeperClusterSpec defines the desired state of ZookeeperCluster
 type ZookeeperClusterSpec struct {
-	// Image is the  container image. default is zookeeper:0.2.7
+	// Image is the  container image. default is zookeeper:0.2.10
 	Image ContainerImage `json:"image,omitempty"`
 
 	// Labels specifies the labels to attach to pods the operator creates for
