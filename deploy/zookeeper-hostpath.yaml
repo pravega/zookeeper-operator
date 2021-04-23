@@ -8,7 +8,7 @@ spec:
   image:
 #    repository: uhub.service.ucloud.cn/infra/zookeeper
     repository: uhub.service.ucloud.cn/infra/zookeeper
-    tag: 0.2.9
+    tag: 3.6.1
     pullPolicy: Always
   storageType: "persistence"
   persistence:

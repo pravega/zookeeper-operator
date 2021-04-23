@@ -10,7 +10,7 @@ WORKDIR $GOPATH/src/$CODE_PATH
 
 #COPY . .
 #RUN GO111MODULE=on GOOS=linux GOARCH=amd64 CGO_ENABLED=0 GOPROXY=https://goproxy.cn go build -o /tmp/${PROJECT_NAME} -ldflags "-X ${CODE_PATH}/pkg/version.Version=${VERSION} -X ${CODE_PATH}/pkg/version.GitSHA=${GIT_SHA}" ${CODE_PATH}/cmd/manager
-COPY main /tmp/${PROJECT_NAME}
+COPY ${PROJECT_NAME} /tmp/${PROJECT_NAME}
 # build server
 FROM alpine:3.8
 

@@ -15,8 +15,8 @@ import (
 	"k8s.io/api/core/v1"
 )
 
-// SyncStatefulSet synchronizes any updates to the stateful-set
-func SyncStatefulSet(curr *statefulpodv1.StatefulPod, next *statefulpodv1.StatefulPod) {
+// SyncStatefulPod synchronizes any updates to the stateful-set
+func SyncStatefulPod(curr *statefulpodv1.StatefulPod, next *statefulpodv1.StatefulPod) {
 	curr.Spec.Size = next.Spec.Size
 	curr.Spec.PodTemplate = next.Spec.PodTemplate
 	// curr.Spec.UpdateStrategy = next.Spec.UpdateStrategy

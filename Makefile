@@ -7,7 +7,7 @@ SHELL:=/usr/bin/env bash
 .DEFAULT_GOAL := help
 
 # Code
-VERSION := dev-1
+VERSION := 3.6.1
 GIT_SHA := $(shell git rev-parse --short HEAD)
 PROJECT_NAME := zookeeper-operator
 CODE_PATH := github.com/q8s-io/zookeeper-operator-pravega
@@ -34,6 +34,13 @@ export GO111MODULE=on
 GOLANGCI_LINT := $(TOOLS_BIN_DIR)/golangci-lint
 
 .PHONY: server
+
+
+dev:
+	rm $(PROJECT_NAME) -f
+	go build -o $(PROJECT_NAME) cmd/manager/main.go
+	docker build --no-cache --build-arg PROJECT_NAME=$(PROJECT_NAME) -t $(CONTROLLER_IMG):$(VERSION) .
+	docker push $(CONTROLLER_IMG):$(VERSION)
 
 run:
 	GOPROXY=https://goproxy.cn GO111MODULE=on go run ./cmd/manager/main.go #-conf "./configs/pro.toml"
