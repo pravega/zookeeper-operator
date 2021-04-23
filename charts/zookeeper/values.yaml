@@ -2,7 +2,7 @@ replicas: 3
 
 image:
   repository: pravega/zookeeper
-  tag: 0.2.9
+  tag: 0.2.10
   pullPolicy: IfNotPresent
 
 domainName:
