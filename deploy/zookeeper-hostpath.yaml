@@ -6,7 +6,6 @@ metadata:
 spec:
   replicas: 3
   image:
-#    repository: uhub.service.ucloud.cn/infra/zookeeper
     repository: uhub.service.ucloud.cn/infra/zookeeper
     tag: 3.6.1
     pullPolicy: Always

@@ -17,7 +17,7 @@ spec:
       containers:
         - name: zookeeper-operator
           # Replace this with the built image name
-          image: uhub.service.ucloud.cn/infra/zookeeper-operator:0.2.9
+          image: uhub.service.ucloud.cn/infra/zookeeper-operator:v1
           ports:
           - containerPort: 60000
             name: metrics
