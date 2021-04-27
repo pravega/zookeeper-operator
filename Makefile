@@ -7,14 +7,14 @@ SHELL:=/usr/bin/env bash
 .DEFAULT_GOAL := help
 
 # Code
-VERSION := 3.6.1
+VERSION := v1
 GIT_SHA := $(shell git rev-parse --short HEAD)
 PROJECT_NAME := zookeeper-operator
 CODE_PATH := github.com/q8s-io/zookeeper-operator-pravega
 
 # Define Docker related variables. Releases should modify and double check these vars.
-#REGISTRY := uhub.service.ucloud.cn/infra
-REGISTRY := registry.foundary.zone:8360/infra
+REGISTRY := uhub.service.ucloud.cn/infra
+#REGISTRY := registry.foundary.zone:8360/infra
 IMAGE := zookeeper-operator
 CONTROLLER_IMG := $(REGISTRY)/$(IMAGE)
 
@@ -34,7 +34,7 @@ export GO111MODULE=on
 GOLANGCI_LINT := $(TOOLS_BIN_DIR)/golangci-lint
 
 .PHONY: server
-
+export CGO_ENABLED=0
 
 dev:
 	rm $(PROJECT_NAME) -f

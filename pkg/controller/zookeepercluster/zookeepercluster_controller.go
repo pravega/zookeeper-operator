@@ -71,7 +71,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	// err = c.Watch(&source.Kind{Type: &appsv1.StatefulSet{}}, &handler.EnqueueRequestForOwner{
 	err = c.Watch(&source.Kind{Type: &statefulpodv1.StatefulPod{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &zookeeperv1beta1.ZookeeperCluster{},
+		OwnerType:    &statefulpodv1.StatefulPod{},
 	})
 	if err != nil {
 		return err
