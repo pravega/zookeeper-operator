@@ -234,7 +234,7 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 		return err
 	} else {
 		// check whether zookeeperCluster is updated before updating the sts
-		if ! r.zookeeperClusterUpdated(instance, sts) {
+		if !r.zookeeperClusterUpdated(instance, sts) {
 			return fmt.Errorf("Staleness: cr.ResourceVersion %s is smaller than labeledRV %s", instance.ResourceVersion, sts.Labels["owner-rv"])
 		}
 		foundSTSSize := *foundSts.Spec.Replicas
