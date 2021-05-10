@@ -164,6 +164,28 @@ func (r *ReconcileZookeeperCluster) Reconcile(request reconcile.Request) (reconc
 	return reconcile.Result{RequeueAfter: ReconcileTime}, nil
 }
 
+func (r *ReconcileZookeeperCluster) zookeeperClusterUpdated(instance *zookeeperv1beta1.ZookeeperCluster, sts *appsv1.StatefulSet) bool {
+	labeledRV, ok := sts.Labels["owner-rv"]
+	if !ok {
+		log.Info("Fail to find owner-rv in statefulset's labels; skip checking resource version")
+		return true
+	}
+	largerRV, err := strconv.Atoi(instance.ResourceVersion)
+	if err != nil {
+		log.Info("Fail to convert %s to integer; skip checking resource version", instance.ResourceVersion)
+		return true
+	}
+	smallerRV, err := strconv.Atoi(labeledRV)
+	if err != nil {
+		log.Info("Fail to convert %s to integer; skip checking resource version", labeledRV)
+		return true
+	}
+	if largerRV < smallerRV {
+		return false
+	}
+	return true
+}
+
 func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
 
 	// we cannot upgrade if cluster is in UpgradeFailed
@@ -201,6 +223,8 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 		r.log.Info("Creating a new Zookeeper StatefulSet",
 			"StatefulSet.Namespace", sts.Namespace,
 			"StatefulSet.Name", sts.Name)
+		// label the RV of the zookeeperCluster when creating the sts
+		sts.Labels["owner-rv"] = instance.ResourceVersion
 		err = r.client.Create(context.TODO(), sts)
 		if err != nil {
 			return err
@@ -229,6 +253,10 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 			data := "CLUSTER_SIZE=" + strconv.Itoa(int(newSTSSize))
 			r.log.Info("Updating Cluster Size.", "New Data:", data, "Version", version)
 			r.zkClient.UpdateNode(path, data, version)
+		}
+		// check whether zookeeperCluster is updated before updating the sts
+		if ! r.zookeeperClusterUpdated(instance, sts) {
+			return fmt.Errorf("Staleness: cr.ResourceVersion %s is smaller than labeledRV %s", instance.ResourceVersion, sts.Labels["owner-rv"])
 		}
 		err = r.updateStatefulSet(instance, foundSts, sts)
 		if err != nil {
