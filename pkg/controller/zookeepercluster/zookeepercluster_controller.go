@@ -233,6 +233,10 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 	} else if err != nil {
 		return err
 	} else {
+		// check whether zookeeperCluster is updated before updating the sts
+		if ! r.zookeeperClusterUpdated(instance, sts) {
+			return fmt.Errorf("Staleness: cr.ResourceVersion %s is smaller than labeledRV %s", instance.ResourceVersion, sts.Labels["owner-rv"])
+		}
 		foundSTSSize := *foundSts.Spec.Replicas
 		newSTSSize := *sts.Spec.Replicas
 		if newSTSSize != foundSTSSize {
@@ -253,10 +257,6 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 			data := "CLUSTER_SIZE=" + strconv.Itoa(int(newSTSSize))
 			r.log.Info("Updating Cluster Size.", "New Data:", data, "Version", version)
 			r.zkClient.UpdateNode(path, data, version)
-		}
-		// check whether zookeeperCluster is updated before updating the sts
-		if ! r.zookeeperClusterUpdated(instance, sts) {
-			return fmt.Errorf("Staleness: cr.ResourceVersion %s is smaller than labeledRV %s", instance.ResourceVersion, sts.Labels["owner-rv"])
 		}
 		err = r.updateStatefulSet(instance, foundSts, sts)
 		if err != nil {
