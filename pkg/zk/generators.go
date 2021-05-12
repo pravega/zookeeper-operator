@@ -142,10 +142,10 @@ func makeZkPodSpec(z *v1beta1.ZookeeperCluster, volumes []v1.Volume) v1.PodSpec 
 				Exec: &v1.ExecAction{Command: []string{"zookeeperLive.sh"}},
 			},
 		},
-		VolumeMounts: []v1.VolumeMount{
+		VolumeMounts: append(z.Spec.VolumeMounts, []v1.VolumeMount{
 			{Name: "data", MountPath: "/data"},
 			{Name: "conf", MountPath: "/conf"},
-		},
+		}...),
 		Lifecycle: &v1.Lifecycle{
 			PreStop: &v1.Handler{
 				Exec: &v1.ExecAction{
