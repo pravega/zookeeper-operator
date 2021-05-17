@@ -9,16 +9,28 @@
 #
 
 ARG DOCKER_REGISTRY
+ARG ZK_VERSION=3.6.3
 FROM  ${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}openjdk:11-jdk
 RUN mkdir /zu
 COPY zu /zu
 WORKDIR /zu
 RUN ./gradlew --console=verbose --info shadowJar
 
-FROM ${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}zookeeper:3.6.3
+FROM ${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}zookeeper:${ZK_VERSION}
+ARG ZK_VERSION=3.6.3
 COPY bin /usr/local/bin
 RUN chmod +x /usr/local/bin/*
 COPY --from=0 /zu/build/libs/zu.jar /opt/libs/
-
+COPY log4j.properties /apache-zookeeper-${ZK_VERSION}-bin/conf/log4j.properties
+COPY zk-sp.sh /zk-sp.sh
+RUN chmod +x /zk-sp.sh
+RUN chmod +x -R /docker-entrypoint.sh
+RUN chgrp -R 0 /apache-zookeeper-${ZK_VERSION}-bin && \
+    chmod -R g=u /apache-zookeeper-${ZK_VERSION}-bin
+RUN chgrp -R 0 /root && \
+    chmod -R g=u /root
+ENV ZOO_LOG_DIR=/opt/zookeeper/logs
+ENV ZOO_LOG4J_PROP=INFO,ROLLINGFILE
+RUN sed -i 's/ZOO_LOG_FILE=.*/ZOO_LOG_FILE=zookeeper.log/' /apache-zookeeper-${ZK_VERSION}-bin/bin/zkServer.sh
 RUN apt-get -q update && \
     apt-get install -y dnsutils curl procps
