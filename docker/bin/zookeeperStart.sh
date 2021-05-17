@@ -20,6 +20,7 @@ MYID_FILE=$DATA_DIR/myid
 LOG4J_CONF=/conf/log4j-quiet.properties
 DYNCONFIG=$DATA_DIR/zoo.cfg.dynamic
 STATIC_CONFIG=/data/conf/zoo.cfg
+ZK_VERSION=3.6.3
 
 # Extract resource name and this members ordinal value from pod hostname
 if [[ $HOST =~ (.*)-([0-9]+)$ ]]; then
@@ -148,7 +149,7 @@ else
   echo Copying the /conf/zoo.cfg contents except the dynamic config file during restart
   echo -e "$( head -n -1 /conf/zoo.cfg )""\n""$( tail -n 1 "$STATIC_CONFIG" )" > $STATIC_CONFIG
 fi
-cp -f /conf/log4j.properties $ZOOCFGDIR
+cp -f /apache-zookeeper-${ZK_VERSION}-bin/conf/log4j.properties $ZOOCFGDIR
 cp -f /conf/log4j-quiet.properties $ZOOCFGDIR
 cp -f /conf/env.sh $ZOOCFGDIR
 
