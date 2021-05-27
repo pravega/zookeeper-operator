@@ -136,6 +136,9 @@ type ZookeeperClusterSpec struct {
 	// Volumes defines to support customized volumes
 	Volumes []v1.Volume `json:"volumes,omitempty"`
 
+	// VolumeMounts defines to support customized volumeMounts
+	VolumeMounts []v1.VolumeMount `json:"volumeMounts,omitempty"`
+
 	// Probes specifies the timeout values for the Readiness and Liveness Probes
 	// for the zookeeper pods.
 	// +optional

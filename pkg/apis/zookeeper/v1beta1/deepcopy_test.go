@@ -51,6 +51,12 @@ var _ = Describe("ZookeeperCluster DeepCopy", func() {
 						Name: "testvolume",
 					},
 				},
+				VolumeMounts: []v1.VolumeMount{
+					{
+						Name:      "testvolume",
+						MountPath: "/test/volume",
+					},
+				},
 			}
 
 			z1.WithDefaults()

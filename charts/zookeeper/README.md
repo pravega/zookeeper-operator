@@ -113,3 +113,4 @@ The following table lists the configurable parameters of the zookeeper chart and
 | `ephemeral.emptydirvolumesource.sizeLimit` | Total amount of local storage required for the EmptyDir volume. | `20Gi` |
 | `containers` | Application containers run with the zookeeper pod | `[]` |
 | `volumes` | Named volumes that may be accessed by any container in the pod | `[]` |
+| `volumeMounts` | Customized volumeMounts for zookeeper container that can be configured to mount volumes to zookeeper container | `[]` |
