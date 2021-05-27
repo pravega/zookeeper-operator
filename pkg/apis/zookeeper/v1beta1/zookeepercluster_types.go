@@ -100,10 +100,16 @@ type ZookeeperClusterSpec struct {
 	// Updating the Pod does not take effect on any existing pods.
 	Pod PodPolicy `json:"pod,omitempty"`
 
+	// AdminServerService defines the policy to create AdminServer Service
+	// for the zookeeper cluster.
 	AdminServerService AdminServerServicePolicy `json:"adminServerService,omitempty"`
 
+	// ClientService defines the policy to create client Service
+	// for the zookeeper cluster.
 	ClientService ClientServicePolicy `json:"clientService,omitempty"`
 
+	// HeadlessService defines the policy to create headless Service
+	// for the zookeeper cluster.
 	HeadlessService HeadlessServicePolicy `json:"headlessService,omitempty"`
 
 	//StorageType is used to tell which type of storage we will be using
@@ -132,6 +138,9 @@ type ZookeeperClusterSpec struct {
 
 	// Containers defines to support multi containers
 	Containers []v1.Container `json:"containers,omitempty"`
+
+	// Init containers to support initialization
+	InitContainers []v1.Container `json:"initContainers,omitempty"`
 
 	// Volumes defines to support customized volumes
 	Volumes []v1.Volume `json:"volumes,omitempty"`
