@@ -67,6 +67,30 @@ spec:
         spec:
           description: ZookeeperClusterSpec defines the desired state of ZookeeperCluster
           properties:
+            adminServerService:
+              description: AdminServerService defines the policy to create AdminServer
+                Service for the zookeeper cluster.
+              properties:
+                annotations:
+                  additionalProperties:
+                    type: string
+                  description: Annotations specifies the annotations to attach to
+                    AdminServer service the operator creates.
+                  type: object
+                external:
+                  type: boolean
+              type: object
+            clientService:
+              description: ClientService defines the policy to create client Service
+                for the zookeeper cluster.
+              properties:
+                annotations:
+                  additionalProperties:
+                    type: string
+                  description: Annotations specifies the annotations to attach to
+                    client service the operator creates.
+                  type: object
+              type: object
             config:
               description: Conf is the zookeeper configuration, which will be used
                 to generate the static zookeeper configuration. If no configuration
@@ -1236,6 +1260,17 @@ spec:
                       x-kubernetes-int-or-string: true
                   type: object
               type: object
+            headlessService:
+              description: HeadlessService defines the policy to create headless Service
+                for the zookeeper cluster.
+              properties:
+                annotations:
+                  additionalProperties:
+                    type: string
+                  description: Annotations specifies the annotations to attach to
+                    headless service the operator creates.
+                  type: object
+              type: object
             image:
               description: Image is the  container image. default is zookeeper:0.2.7
               properties:
@@ -2318,6 +2353,12 @@ spec:
                 layer. PersistentVolumeClaimSpec and VolumeReclaimPolicy can be specified
                 in here.
               properties:
+                annotations:
+                  additionalProperties:
+                    type: string
+                  description: Annotations specifies the annotations to attach to
+                    pvc the operator creates.
+                  type: object
                 reclaimPolicy:
                   description: VolumeReclaimPolicy is a zookeeper operator configuration.
                     If it's set to Delete, the corresponding PVCs will be deleted
@@ -2327,12 +2368,6 @@ spec:
                   - Delete
                   - Retain
                   type: string
-                annotations:
-                  additionalProperties:
-                    type: string
-                  description: Annotations specifies the annotations to attach to
-                    pvc the operator creates.
-                  type: object
                 spec:
                   description: PersistentVolumeClaimSpec is the spec to describe PVC
                     for the container This field is optional. If no PVC is specified
@@ -3231,6 +3266,19 @@ spec:
                     - name
                     type: object
                   type: array
+                imagePullSecrets:
+                  description: ImagePullSecrets is a list of references to secrets
+                    in the same namespace to use for pulling any images
+                  items:
+                    description: LocalObjectReference contains enough information
+                      to let you locate the referenced object inside the same namespace.
+                    properties:
+                      name:
+                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                          TODO: Add other useful fields. apiVersion, kind, uid?'
+                        type: string
+                    type: object
+                  type: array
                 labels:
                   additionalProperties:
                     type: string
@@ -3395,19 +3443,6 @@ spec:
                 serviceAccountName:
                   description: Service Account to be used in pods
                   type: string
-                imagePullSecrets:
-                  description: ImagePullSecrets is a list of references to secrets
-                      in the same namespace to use for pulling any images.
-                  items:
-                    description: LocalObjectReference contains enough information
-                      to let you locate the referenced object inside the same namespace.
-                    properties:
-                      name:
-                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                          TODO: Add other useful fields. apiVersion, kind, uid?'
-                        type: string
-                    type: object
-                  type: array
                 terminationGracePeriodSeconds:
                   description: TerminationGracePeriodSeconds is the amount of time
                     that kubernetes will give for a pod instance to shutdown normally.
@@ -3455,44 +3490,6 @@ spec:
                         type: string
                     type: object
                   type: array
-              type: object
-            clientService:
-              description: ClientService defines the policy to create client Service
-                for the zookeeper cluster.
-              properties:
-                annotations:
-                  additionalProperties:
-                    type: string
-                  description: Annotations specifies the annotations to attach to
-                    client Service the operator creates.
-                  type: object
-              type: object
-            headlessService:
-              description: HeadlessService defines the policy to create headless Service
-                for the zookeeper cluster.
-              properties:
-                annotations:
-                  additionalProperties:
-                    type: string
-                  description: Annotations specifies the annotations to attach to
-                    headless Service the operator creates.
-                  type: object
-              type: object
-            adminServerService:
-              description: AdminServerService defines the policy to create AdminServer Service
-                for the zookeeper cluster.
-              properties:
-                external:
-                  description: External specifies if LoadBalancer should be created for
-                    the AdminServer. True means LoadBalancer will be created, false means ClusterIP
-                    will be used. Default is false.
-                  type: boolean
-                annotations:
-                  additionalProperties:
-                    type: string
-                  description: Annotations specifies the annotations to attach to AdminServer
-                    Service the operator creates.
-                  type: object
               type: object
             ports:
               items:
@@ -3601,6 +3598,44 @@ spec:
               - ephemeral
               - persistence
               type: string
+            volumeMounts:
+              description: VolumeMounts defines to support customized volumeMounts
+              items:
+                description: VolumeMount describes a mounting of a Volume within a
+                  container.
+                properties:
+                  mountPath:
+                    description: Path within the container at which the volume should
+                      be mounted.  Must not contain ':'.
+                    type: string
+                  mountPropagation:
+                    description: mountPropagation determines how mounts are propagated
+                      from the host to container and the other way around. When not
+                      set, MountPropagationNone is used. This field is beta in 1.10.
+                    type: string
+                  name:
+                    description: This must match the Name of a Volume.
+                    type: string
+                  readOnly:
+                    description: Mounted read-only if true, read-write otherwise (false
+                      or unspecified). Defaults to false.
+                    type: boolean
+                  subPath:
+                    description: Path within the volume from which the container's
+                      volume should be mounted. Defaults to "" (volume's root).
+                    type: string
+                  subPathExpr:
+                    description: Expanded path within the volume from which the container's
+                      volume should be mounted. Behaves similarly to SubPath but environment
+                      variable references $(VAR_NAME) are expanded using the container's
+                      environment. Defaults to "" (volume's root). SubPathExpr and
+                      SubPath are mutually exclusive.
+                    type: string
+                required:
+                - mountPath
+                - name
+                type: object
+              type: array
             volumes:
               description: Volumes defines to support customized volumes
               items:
@@ -4788,47 +4823,6 @@ spec:
                     - volumePath
                     type: object
                 required:
-                - name
-                type: object
-              type: array
-            volumeMounts:
-              description: Customized volumeMounts for zookeeper container.
-                Cannot be updated.
-              items:
-                description: VolumeMount describes a mounting of a Volume within
-                  a container.
-                properties:
-                  mountPath:
-                    description: Path within the container at which the volume
-                      should be mounted.  Must not contain ':'.
-                    type: string
-                  mountPropagation:
-                    description: mountPropagation determines how mounts are
-                      propagated from the host to container and the other way
-                      around. When not set, MountPropagationNone is used. This
-                      field is beta in 1.10.
-                    type: string
-                  name:
-                    description: This must match the Name of a Volume.
-                    type: string
-                  readOnly:
-                    description: Mounted read-only if true, read-write otherwise
-                      (false or unspecified). Defaults to false.
-                    type: boolean
-                  subPath:
-                    description: Path within the volume from which the container's
-                      volume should be mounted. Defaults to "" (volume's root).
-                    type: string
-                  subPathExpr:
-                    description: Expanded path within the volume from which
-                      the container's volume should be mounted. Behaves similarly
-                      to SubPath but environment variable references $(VAR_NAME)
-                      are expanded using the container's environment. Defaults
-                      to "" (volume's root). SubPathExpr and SubPath are mutually
-                      exclusive.
-                    type: string
-                required:
-                - mountPath
                 - name
                 type: object
               type: array

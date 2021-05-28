@@ -42,14 +42,21 @@ spec:
   volumes:
 {{ toYaml .Values.volumes | indent 4 }}
   {{- end }}
+  {{- if .Values.volumeMounts }}
+{{ toYaml .Values.volumeMounts | indent 4 }}
+  {{- end }}
   {{- if .Values.initContainers }}
   initContainers:
 {{ toYaml .Values.initContainers| indent 4 }}
   {{- end }}
+  {{- if .Values.labels }}
   labels:
 {{ toYaml .Values.labels | indent 4 }}
+  {{- end }}
+  {{- if .Values.ports }}
   ports:
 {{ toYaml .Values.ports | indent 4 }}
+  {{- end }}
   pod:
     {{- if .Values.pod.labels }}
     labels:
