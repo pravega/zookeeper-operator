@@ -53,3 +53,6 @@ The following table lists the configurable parameters of the zookeeper-operator 
 | `nodeSelector` | Map of key-value pairs to be present as labels in the node in which the pod should run | `{}` |
 | `affinity` | Specifies scheduling constraints on pods | `{}` |
 | `tolerations` | Specifies the pod's tolerations | `[]` |
+| `additionalEnv` | Additional Environment Variables | `[]` |
+| `additionalSidecars` | Additional Sidecars Configuration | `[]` |
+| `additionalVolumes` | Additional volumes required for sidecars | `[]` |
