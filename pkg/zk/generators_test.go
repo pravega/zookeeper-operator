@@ -12,6 +12,9 @@ package zk_test
 
 import (
 	"fmt"
+
+	log "github.com/sirupsen/logrus"
+
 	"strings"
 	"testing"
 
@@ -277,6 +280,37 @@ var _ = Describe("Generators Spec", func() {
 			})
 			It("Checking the sts service account", func() {
 				Ω(sts.Spec.Template.Spec.ServiceAccountName).To(Equal("zookeeper"))
+			})
+		})
+	})
+
+	Context("#MakeStatefulSet with init containers", func() {
+		var sts *appsv1.StatefulSet
+
+		Context("with defaults", func() {
+
+			BeforeEach(func() {
+				z := &v1beta1.ZookeeperCluster{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "example",
+						Namespace: "default",
+					},
+					Spec: v1beta1.ZookeeperClusterSpec{},
+				}
+				z.WithDefaults()
+				z.Spec.InitContainers = []v1.Container{
+					v1.Container{
+						Name:    "testing",
+						Image:   "dummy-image",
+						Command: []string{"sh", "-c", "ls;pwd"},
+					},
+				}
+				sts = zk.MakeStatefulSet(z)
+			})
+			It("Checking the init containers", func() {
+				log.Printf("init container is %v", sts.Spec.Template.Spec)
+				Ω(sts.Spec.Template.Spec.InitContainers[0].Name).To(Equal("testing"))
+				Ω(sts.Spec.Template.Spec.InitContainers[0].Image).To(Equal("dummy-image"))
 			})
 		})
 	})
