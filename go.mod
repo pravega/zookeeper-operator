@@ -10,22 +10,23 @@ require (
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
 	github.com/go-logr/logr v0.1.0
 	github.com/gordonklaus/ineffassign v0.0.0-20201107091007-3b93a8888063 // indirect
-	github.com/mdempsky/maligned v0.0.0-20180708014732-6e39bd26a8c8 // indirect
 	github.com/mdempsky/unconvert v0.0.0-20200228143138-95ecdbfc0b5f // indirect
 	github.com/mibk/dupl v1.0.0 // indirect
 	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.9.0
 	github.com/operator-framework/operator-sdk v0.17.0
 	github.com/pkg/errors v0.9.1
+	github.com/pravega/pravega-operator v0.5.2 // indirect
 	github.com/prometheus/common v0.9.1
+	github.com/rs/zerolog v1.21.0
 	github.com/samuel/go-zookeeper v0.0.0-20190923202752-2cc03de413da
-	github.com/securego/gosec v0.0.0-20200401082031-e946c8c39989 // indirect
 	github.com/sirupsen/logrus v1.5.0
-	github.com/stripe/safesql v0.2.0 // indirect
+	github.com/spf13/pflag v1.0.5
 	k8s.io/api v0.17.5
 	k8s.io/apimachinery v0.17.5
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/code-generator v0.19.3 // indirect
+	mvdan.cc/unparam v0.0.0-20210104141923-aac4ce9116a7 // indirect
 	sigs.k8s.io/controller-runtime v0.5.2
 )
 

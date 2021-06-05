@@ -12,9 +12,11 @@ package utils
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 
 	v1beta1 "github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
+	"github.com/rs/zerolog"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -41,4 +43,16 @@ func ContainerPortByName(ports []corev1.ContainerPort, name string) (cPort int32
 		}
 	}
 	return cPort, fmt.Errorf("port not found")
+}
+func LogLevel() zerolog.Level {
+	logLevel, ok := os.LookupEnv("LOG_LEVEL")
+	if !ok {
+		logLevel = "info"
+	}
+
+	level, err := zerolog.ParseLevel(logLevel)
+	if err != nil {
+		panic(err)
+	}
+	return level
 }

@@ -13,7 +13,6 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"os"
 	"runtime"
 	"strings"
@@ -23,7 +22,10 @@ import (
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
 	"github.com/pravega/zookeeper-operator/pkg/apis"
 	"github.com/pravega/zookeeper-operator/pkg/controller"
+	"github.com/pravega/zookeeper-operator/pkg/utils"
 	"github.com/pravega/zookeeper-operator/pkg/version"
+	"github.com/rs/zerolog"
+	log "github.com/rs/zerolog/log"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
@@ -34,7 +36,6 @@ import (
 )
 
 var (
-	log         = logf.Log.WithName("cmd")
 	versionFlag bool
 )
 
@@ -43,14 +44,15 @@ func init() {
 }
 
 func printVersion() {
-	log.Info(fmt.Sprintf("zookeeper-operator Version: %v", version.Version))
-	log.Info(fmt.Sprintf("Git SHA: %s", version.GitSHA))
-	log.Info(fmt.Sprintf("Go Version: %s", runtime.Version()))
-	log.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
-	log.Info(fmt.Sprintf("operator-sdk Version: %v", sdkVersion.Version))
+	log.Info().Msgf("zookeeper-operator Version: %v", version.Version)
+	log.Info().Msgf("Git SHA: %s", version.GitSHA)
+	log.Info().Msgf("Go Version: %s", runtime.Version())
+	log.Info().Msgf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH)
+	log.Info().Msgf("operator-sdk Version: %v", sdkVersion.Version)
 }
 
 func main() {
+	zerolog.SetGlobalLevel(utils.LogLevel())
 	flag.Parse()
 
 	// The logger instantiated here can be changed to any logger
@@ -67,7 +69,7 @@ func main() {
 
 	namespaces, err := k8sutil.GetWatchNamespace()
 	if err != nil {
-		log.Error(err, "failed to get watch namespace")
+		log.Fatal().Err(err).Msg("failed to get watch namespace")
 		os.Exit(1)
 	}
 	//When operator is started to watch resources in a specific set of namespaces, we use the MultiNamespacedCacheBuilder cache.
@@ -87,7 +89,7 @@ func main() {
 	// Get a config to talk to the apiserver
 	cfg, err := config.GetConfig()
 	if err != nil {
-		log.Error(err, "")
+		log.Fatal().Err(err).Msg("")
 		os.Exit(1)
 	}
 
@@ -97,29 +99,29 @@ func main() {
 	// Create a new Cmd to provide shared dependencies and start components
 	mgr, err := manager.New(cfg, manager.Options{NewCache: managerWatchCache})
 	if err != nil {
-		log.Error(err, "")
+		log.Fatal().Err(err).Msg("")
 		os.Exit(1)
 	}
 
-	log.Info("Registering Components.")
+	log.Info().Msg("Registering Components")
 
 	// Setup Scheme for all resources
 	if err := apis.AddToScheme(mgr.GetScheme()); err != nil {
-		log.Error(err, "")
+		log.Fatal().Err(err).Msg("")
 		os.Exit(1)
 	}
 
 	// Setup all Controllers
 	if err := controller.AddToManager(mgr); err != nil {
-		log.Error(err, "")
+		log.Fatal().Err(err).Msg("")
 		os.Exit(1)
 	}
 
-	log.Info("Starting the Cmd.")
+	log.Info().Msg("Starting the Cmd")
 
 	// Start the Cmd
 	if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
-		log.Error(err, "manager exited non-zero")
+		log.Fatal().Err(err).Msg("manager exited non-zero")
 		os.Exit(1)
 	}
 }

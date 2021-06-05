@@ -33,6 +33,8 @@ spec:
         env:
         - name: WATCH_NAMESPACE
           value: "{{ .Values.watchNamespace }}"
+        - name: LOG_LEVEL
+          value: "{{ .Values.logLevel }}"
         - name: POD_NAME
           valueFrom:
             fieldRef:

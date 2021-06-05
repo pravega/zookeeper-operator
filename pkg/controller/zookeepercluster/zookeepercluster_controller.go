@@ -22,9 +22,10 @@ import (
 	"github.com/pravega/zookeeper-operator/pkg/utils"
 	"github.com/pravega/zookeeper-operator/pkg/yamlexporter"
 
-	"github.com/go-logr/logr"
 	zookeeperv1beta1 "github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	"github.com/pravega/zookeeper-operator/pkg/zk"
+	"github.com/rs/zerolog"
+	log "github.com/rs/zerolog/log"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
@@ -39,14 +40,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 // ReconcileTime is the delay between reconciliations
 const ReconcileTime = 30 * time.Second
-
-var log = logf.Log.WithName("controller_zookeepercluster")
 
 // AddZookeeperReconciler creates a new ZookeeperCluster Controller and adds it
 // to the Manager. The Manager will set fields on the Controller and Start it
@@ -62,10 +61,12 @@ func newZookeeperClusterReconciler(mgr manager.Manager) reconcile.Reconciler {
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
 func add(mgr manager.Manager, r reconcile.Reconciler) error {
+	zerolog.SetGlobalLevel(utils.LogLevel())
 	// Create a new controller
 	c, err := controller.New("zookeepercluster-controller", mgr,
 		controller.Options{Reconciler: r})
 	if err != nil {
+
 		return err
 	}
 
@@ -110,7 +111,6 @@ type ReconcileZookeeperCluster struct {
 	// that reads objects from the cache and writes to the apiserver
 	client   client.Client
 	scheme   *runtime.Scheme
-	log      logr.Logger
 	zkClient zk.ZookeeperClient
 }
 
@@ -119,10 +119,7 @@ type reconcileFun func(cluster *zookeeperv1beta1.ZookeeperCluster) error
 // Reconcile reads that state of the cluster for a ZookeeperCluster object and
 // makes changes based on the state read and what is in the ZookeeperCluster.Spec
 func (r *ReconcileZookeeperCluster) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	r.log = log.WithValues(
-		"Request.Namespace", request.Namespace,
-		"Request.Name", request.Name)
-	r.log.Info("Reconciling ZookeeperCluster")
+	log.Info().Msgf("Reconciling ZookeeperCluster %s", fmt.Sprintf("%s/%s", request.Namespace, request.Name))
 
 	// Fetch the ZookeeperCluster instance
 	instance := &zookeeperv1beta1.ZookeeperCluster{}
@@ -140,7 +137,7 @@ func (r *ReconcileZookeeperCluster) Reconcile(request reconcile.Request) (reconc
 	}
 	changed := instance.WithDefaults()
 	if changed {
-		r.log.Info("Setting default settings for zookeeper-cluster")
+		log.Info().Msgf("Setting default settings for zookeeper-cluster %s", fmt.Sprintf("%s/%s", request.Namespace, request.Name))
 		if err := r.client.Update(context.TODO(), instance); err != nil {
 			return reconcile.Result{}, err
 		}
@@ -179,7 +176,7 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 		foundServiceAccount := &corev1.ServiceAccount{}
 		err = r.client.Get(context.TODO(), types.NamespacedName{Name: serviceAccount.Name, Namespace: serviceAccount.Namespace}, foundServiceAccount)
 		if err != nil && errors.IsNotFound(err) {
-			r.log.Info("Creating a new ServiceAccount", "ServiceAccount.Namespace", serviceAccount.Namespace, "ServiceAccount.Name", serviceAccount.Name)
+			log.Info().Msgf("Creating a new ServiceAccount ServiceAccount.Namespace: %s ServiceAccount.Name: %s", serviceAccount.Namespace, serviceAccount.Name)
 			err = r.client.Create(context.TODO(), serviceAccount)
 			if err != nil {
 				return err
@@ -198,9 +195,8 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 		Namespace: sts.Namespace,
 	}, foundSts)
 	if err != nil && errors.IsNotFound(err) {
-		r.log.Info("Creating a new Zookeeper StatefulSet",
-			"StatefulSet.Namespace", sts.Namespace,
-			"StatefulSet.Name", sts.Name)
+		log.Info().Msgf("Creating a new Zookeeper StatefulSet %s", fmt.Sprintf("%s/%s", sts.Namespace, sts.Name))
+
 		err = r.client.Create(context.TODO(), sts)
 		if err != nil {
 			return err
@@ -218,7 +214,9 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 				return fmt.Errorf("Error storing cluster size %v", err)
 			}
 			defer r.zkClient.Close()
-			r.log.Info("Connected to ZK", "ZKURI", zkUri)
+			log.Info().
+				Str("ZKURI", zkUri).
+				Msg("Connected to ZK")
 
 			path := utils.GetMetaPath(instance)
 			version, err := r.zkClient.NodeExists(path)
@@ -227,7 +225,8 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 			}
 
 			data := "CLUSTER_SIZE=" + strconv.Itoa(int(newSTSSize))
-			r.log.Info("Updating Cluster Size.", "New Data:", data, "Version", version)
+			log.Info().Msgf("Updating Cluster Size. New Data: %s Version: %d", data, version)
+
 			r.zkClient.UpdateNode(path, data, version)
 		}
 		err = r.updateStatefulSet(instance, foundSts, sts)
@@ -239,9 +238,7 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 }
 
 func (r *ReconcileZookeeperCluster) updateStatefulSet(instance *zookeeperv1beta1.ZookeeperCluster, foundSts *appsv1.StatefulSet, sts *appsv1.StatefulSet) (err error) {
-	r.log.Info("Updating StatefulSet",
-		"StatefulSet.Namespace", foundSts.Namespace,
-		"StatefulSet.Name", foundSts.Name)
+	log.Info().Msgf("Updating StatefulSet StatefulSet.Namespace: %s StatefulSet.Name: %s", foundSts.Namespace, foundSts.Name)
 	zk.SyncStatefulSet(foundSts, sts)
 
 	err = r.client.Update(context.TODO(), foundSts)
@@ -278,18 +275,18 @@ func (r *ReconcileZookeeperCluster) upgradeStatefulSet(instance *zookeeperv1beta
 	if upgradeCondition.Status == corev1.ConditionTrue {
 		//checking when the targetversion is empty
 		if instance.Status.TargetVersion == "" {
-			r.log.Info("upgrading to an unknown version: cancelling upgrade process")
+			log.Info().Msgf("upgrading to an unknown version: cancelling upgrade process")
 			return r.clearUpgradeStatus(instance)
 		}
 		//Checking for upgrade completion
 		if foundSts.Status.CurrentRevision == foundSts.Status.UpdateRevision {
 			instance.Status.CurrentVersion = instance.Status.TargetVersion
-			r.log.Info("upgrade completed")
+			log.Info().Msgf("upgrade completed")
 			return r.clearUpgradeStatus(instance)
 		}
 		//updating the upgradecondition if upgrade is in progress
 		if foundSts.Status.CurrentRevision != foundSts.Status.UpdateRevision {
-			r.log.Info("upgrade in progress")
+			log.Info().Msgf("upgrade in progress")
 			if fmt.Sprint(foundSts.Status.UpdatedReplicas) != upgradeCondition.Message {
 				instance.Status.UpdateProgress(zookeeperv1beta1.UpdatingZookeeperReason, fmt.Sprint(foundSts.Status.UpdatedReplicas))
 			} else {
@@ -350,9 +347,7 @@ func (r *ReconcileZookeeperCluster) reconcileClientService(instance *zookeeperv1
 		Namespace: svc.Namespace,
 	}, foundSvc)
 	if err != nil && errors.IsNotFound(err) {
-		r.log.Info("Creating new client service",
-			"Service.Namespace", svc.Namespace,
-			"Service.Name", svc.Name)
+		log.Info().Msgf("Creating new client service Service.Namespace: %s Service.Name: %s", svc.Namespace, svc.Name)
 		err = r.client.Create(context.TODO(), svc)
 		if err != nil {
 			return err
@@ -361,9 +356,7 @@ func (r *ReconcileZookeeperCluster) reconcileClientService(instance *zookeeperv1
 	} else if err != nil {
 		return err
 	} else {
-		r.log.Info("Updating existing client service",
-			"Service.Namespace", foundSvc.Namespace,
-			"Service.Name", foundSvc.Name)
+		log.Info().Msgf("Updating existing client service Service.Namespace: %s Service.Name: %s", foundSvc.Namespace, foundSvc.Name)
 		zk.SyncService(foundSvc, svc)
 		err = r.client.Update(context.TODO(), foundSvc)
 		if err != nil {
@@ -397,9 +390,7 @@ func (r *ReconcileZookeeperCluster) reconcileHeadlessService(instance *zookeeper
 		Namespace: svc.Namespace,
 	}, foundSvc)
 	if err != nil && errors.IsNotFound(err) {
-		r.log.Info("Creating new headless service",
-			"Service.Namespace", svc.Namespace,
-			"Service.Name", svc.Name)
+		log.Info().Msgf("Creating new headless service Service.Namespace: %s Service.Name: %s", svc.Namespace, svc.Name)
 		err = r.client.Create(context.TODO(), svc)
 		if err != nil {
 			return err
@@ -408,9 +399,8 @@ func (r *ReconcileZookeeperCluster) reconcileHeadlessService(instance *zookeeper
 	} else if err != nil {
 		return err
 	} else {
-		r.log.Info("Updating existing headless service",
-			"Service.Namespace", foundSvc.Namespace,
-			"Service.Name", foundSvc.Name)
+		log.Info().Msgf("Updating existing headless service Service.Namespace: %s Service.Name %s", foundSvc.Namespace, foundSvc.Name)
+
 		zk.SyncService(foundSvc, svc)
 		err = r.client.Update(context.TODO(), foundSvc)
 		if err != nil {
@@ -431,9 +421,8 @@ func (r *ReconcileZookeeperCluster) reconcileAdminServerService(instance *zookee
 		Namespace: svc.Namespace,
 	}, foundSvc)
 	if err != nil && errors.IsNotFound(err) {
-		r.log.Info("Creating admin server service",
-			"Service.Namespace", svc.Namespace,
-			"Service.Name", svc.Name)
+		log.Info().Msgf("Creating admin server service, Service.Namespace: %s Service.Name: %s", svc.Namespace,
+			svc.Name)
 		err = r.client.Create(context.TODO(), svc)
 		if err != nil {
 			return err
@@ -442,9 +431,8 @@ func (r *ReconcileZookeeperCluster) reconcileAdminServerService(instance *zookee
 	} else if err != nil {
 		return err
 	} else {
-		r.log.Info("Updating existing admin server service",
-			"Service.Namespace", foundSvc.Namespace,
-			"Service.Name", foundSvc.Name)
+		log.Info().Msgf("Updating existing admin server service, Service.Namespace: %s Service.Name: %s", foundSvc.Namespace, foundSvc.Name)
+
 		zk.SyncService(foundSvc, svc)
 		err = r.client.Update(context.TODO(), foundSvc)
 		if err != nil {
@@ -465,9 +453,9 @@ func (r *ReconcileZookeeperCluster) reconcilePodDisruptionBudget(instance *zooke
 		Namespace: pdb.Namespace,
 	}, foundPdb)
 	if err != nil && errors.IsNotFound(err) {
-		r.log.Info("Creating new pod-disruption-budget",
-			"PodDisruptionBudget.Namespace", pdb.Namespace,
-			"PodDisruptionBudget.Name", pdb.Name)
+		log.Info().Msgf("Creating new pod-disruption-budget PodDisruptionBudget.Namespace: %s PodDisruptionBudget.Name: %s",
+			pdb.Namespace, pdb.Name)
+
 		err = r.client.Create(context.TODO(), pdb)
 		if err != nil {
 			return err
@@ -490,9 +478,9 @@ func (r *ReconcileZookeeperCluster) reconcileConfigMap(instance *zookeeperv1beta
 		Namespace: cm.Namespace,
 	}, foundCm)
 	if err != nil && errors.IsNotFound(err) {
-		r.log.Info("Creating a new Zookeeper Config Map",
-			"ConfigMap.Namespace", cm.Namespace,
-			"ConfigMap.Name", cm.Name)
+		log.Info().Msgf("Creating a new Zookeeper Config Map config-map ConfigMap.Namespace: %s ConfigMap.Name: %s ",
+			cm.Namespace, cm.Name)
+
 		err = r.client.Create(context.TODO(), cm)
 		if err != nil {
 			return err
@@ -501,9 +489,9 @@ func (r *ReconcileZookeeperCluster) reconcileConfigMap(instance *zookeeperv1beta
 	} else if err != nil {
 		return err
 	} else {
-		r.log.Info("Updating existing config-map",
-			"ConfigMap.Namespace", foundCm.Namespace,
-			"ConfigMap.Name", foundCm.Name)
+		log.Info().Msgf("Updating existing config-map ConfigMap.Namespace: %s ConfigMap.Name: %s ",
+			foundCm.Namespace, foundCm.Name)
+
 		zk.SyncConfigMap(foundCm, cm)
 		err = r.client.Update(context.TODO(), foundCm)
 		if err != nil {
@@ -550,7 +538,7 @@ func (r *ReconcileZookeeperCluster) reconcileClusterStatus(instance *zookeeperv1
 
 	//If Cluster is in a ready state...
 	if instance.Spec.Replicas == instance.Status.ReadyReplicas && (!instance.Status.MetaRootCreated) {
-		r.log.Info("Cluster is Ready, Creating ZK Metadata...")
+		log.Info().Msgf("Cluster is Ready, Creating ZK Metadata...")
 		zkUri := utils.GetZkServiceUri(instance)
 		err := r.zkClient.Connect(zkUri)
 		if err != nil {
@@ -558,16 +546,15 @@ func (r *ReconcileZookeeperCluster) reconcileClusterStatus(instance *zookeeperv1
 		}
 		defer r.zkClient.Close()
 		metaPath := utils.GetMetaPath(instance)
-		r.log.Info("Connected to zookeeper:", "ZKUri", zkUri, "Creating Path", metaPath)
+		log.Info().Msgf("Connected to zookeeper: ZKUri: %s Creating Path: %s", zkUri, metaPath)
 		if err := r.zkClient.CreateNode(instance, metaPath); err != nil {
 			return fmt.Errorf("Error creating cluster metadata path %s, %v", metaPath, err)
 		}
-		r.log.Info("Metadata znode created.")
+		log.Info().Msgf("Metadata znode created.")
 		instance.Status.MetaRootCreated = true
 	}
-	r.log.Info("Updating zookeeper status",
-		"StatefulSet.Namespace", instance.Namespace,
-		"StatefulSet.Name", instance.Name)
+	log.Info().Msgf("Updating zookeeper status, StatefulSet.Namespace: %s StatefulSet.Name: %s", instance.Namespace, instance.Name)
+
 	if instance.Status.ReadyReplicas == instance.Spec.Replicas {
 		instance.Status.SetPodsReadyConditionTrue()
 	} else {
@@ -703,7 +690,7 @@ func (r *ReconcileZookeeperCluster) cleanupOrphanPVCs(instance *zookeeperv1beta1
 		if err != nil {
 			return err
 		}
-		r.log.Info("cleanupOrphanPVCs", "PVC Count", pvcCount, "ReadyReplicas Count", instance.Status.ReadyReplicas)
+		log.Info().Msgf("cleanupOrphanPVCs, PVC Count: %v ReadyReplicas Count: %v", pvcCount, instance.Status.ReadyReplicas)
 		if pvcCount > int(instance.Spec.Replicas) {
 			pvcList, err := r.getPVCList(instance)
 			if err != nil {
@@ -751,9 +738,9 @@ func (r *ReconcileZookeeperCluster) deletePVC(pvcItem corev1.PersistentVolumeCla
 			Namespace: pvcItem.Namespace,
 		},
 	}
-	r.log.Info("Deleting PVC", "With Name", pvcItem.Name)
+	log.Info().Msgf("Deleting PVC With Name %s", pvcItem.Name)
 	err := r.client.Delete(context.TODO(), pvcDelete)
 	if err != nil {
-		r.log.Error(err, "Error deleteing PVC.", "Name", pvcDelete.Name)
+		log.Error().Err(err).Msgf("Error deleteing PVC Name %s", pvcDelete.Name)
 	}
 }
