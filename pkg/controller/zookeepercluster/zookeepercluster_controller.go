@@ -164,7 +164,7 @@ func (r *ReconcileZookeeperCluster) Reconcile(request reconcile.Request) (reconc
 	return reconcile.Result{RequeueAfter: ReconcileTime}, nil
 }
 
-func (r *ReconcileZookeeperCluster) zookeeperClusterUpdated(instance *zookeeperv1beta1.ZookeeperCluster, sts *appsv1.StatefulSet) bool {
+func zookeeperClusterFresherThanSts(instance *zookeeperv1beta1.ZookeeperCluster, sts *appsv1.StatefulSet) bool {
 	labeledRV, ok := sts.Labels["owner-rv"]
 	if !ok {
 		log.Info("Fail to find owner-rv in statefulset's labels; skip checking resource version")
@@ -234,7 +234,7 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 		return err
 	} else {
 		// check whether zookeeperCluster is updated before updating the sts
-		if !r.zookeeperClusterUpdated(instance, sts) {
+		if !zookeeperClusterFresherThanSts(instance, sts) {
 			return fmt.Errorf("Staleness: cr.ResourceVersion %s is smaller than labeledRV %s", instance.ResourceVersion, sts.Labels["owner-rv"])
 		}
 		foundSTSSize := *foundSts.Spec.Replicas

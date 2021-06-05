@@ -563,5 +563,36 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				Ω(err).To(BeNil())
 			})
 		})
+
+		Context("Checking resource version", func(){
+			var (
+				sts *appsv1.StatefulSet
+			)
+
+			BeforeEach(func() {
+				z.WithDefaults()
+				z.ResourceVersion = "100"
+				sts = &appsv1.StatefulSet{}
+				sts.Labels = make(map[string]string)
+			})
+
+			It("should return true as 99 < 100", func() {
+				sts.Labels["owner-rv"] = "99"
+				updated := zookeeperClusterFresherThanSts(z, sts)
+				Ω(updated).To(BeTrue())
+			})
+
+			It("should return true as 100 == 100", func() {
+				sts.Labels["owner-rv"] = "100"
+				updated := zookeeperClusterFresherThanSts(z, sts)
+				Ω(updated).To(BeTrue())
+			})
+
+			It("should return false as 101 > 100", func() {
+				sts.Labels["owner-rv"] = "101"
+				updated := zookeeperClusterFresherThanSts(z, sts)
+				Ω(updated).To(BeFalse())
+			})
+		})
 	})
 })
