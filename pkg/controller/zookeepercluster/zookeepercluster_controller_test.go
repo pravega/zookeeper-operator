@@ -564,7 +564,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 			})
 		})
 
-		Context("Checking resource version", func(){
+		Context("Checking resource version", func() {
 			var (
 				sts *appsv1.StatefulSet
 			)
