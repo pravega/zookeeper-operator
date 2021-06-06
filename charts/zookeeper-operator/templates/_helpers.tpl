@@ -43,8 +43,7 @@ additionalPrinterColumns:
       name: Replicas
       type: integer
     - jsonPath: .status.readyReplicas
-      description: The number of ZooKeeper servers in the ensemble that are in a Ready
-        state
+      description: The number of ZooKeeper servers in the ensemble that are in a Ready state
       name: Ready Replicas
       type: integer
     - jsonPath: .status.currentVersion
@@ -75,8 +74,7 @@ additionalPrinterColumns:
       name: Replicas
       type: integer
     - JSONPath: .status.readyReplicas
-      description: The number of ZooKeeper servers in the ensemble that are in a Ready
-        state
+      description: The number of ZooKeeper servers in the ensemble that are in a Ready sstate
       name: Ready Replicas
       type: integer
     - JSONPath: .status.currentVersion
