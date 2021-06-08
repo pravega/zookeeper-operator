@@ -75,9 +75,9 @@ if [[ "$OK" == "imok" ]]; then
       ROLE=participant
       ZKURL=$(zkConnectionString)
       ZKCONFIG=$(zkConfig)
-      java -Dlog4j.configuration=file:"$LOG4J_CONF" -jar /root/zu.jar remove $ZKURL $MYID
+      java -Dlog4j.configuration=file:"$LOG4J_CONF" -jar /opt/libs/zu.jar remove $ZKURL $MYID
       sleep 1
-      java -Dlog4j.configuration=file:"$LOG4J_CONF" -jar /root/zu.jar add $ZKURL $MYID $ZKCONFIG
+      java -Dlog4j.configuration=file:"$LOG4J_CONF" -jar /opt/libs/zu.jar add $ZKURL $MYID $ZKCONFIG
       exit 0
     else
       echo "Something has gone wrong. Unable to determine zookeeper role."
