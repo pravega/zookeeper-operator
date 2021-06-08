@@ -18,7 +18,7 @@ RUN ./gradlew --console=verbose --info shadowJar
 FROM ${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}zookeeper:3.6.1
 COPY bin /usr/local/bin
 RUN chmod +x /usr/local/bin/*
-COPY --from=0 /zu/build/libs/zu.jar /root/
+COPY --from=0 /zu/build/libs/zu.jar /opt/libs/
 
 RUN apt-get -q update && \
     apt-get install -y dnsutils curl procps
