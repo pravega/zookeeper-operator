@@ -58,3 +58,18 @@ hooks:
   ## the operator cannot be deleted till the zookeeper cluster
   ## custom resources have been cleaned up
   delete: true
+
+## Additional Sidecars Configuration.
+additionalSidecars: {}
+# - name: nginx
+#   image: nginx:latest
+
+## Additional Environment Variables.
+additionalEnv: {}
+
+## Additional volumes required for sidecars.
+additionalVolumes: {}
+# - name: volume1
+#   emptyDir: {}
+# - name: volume2
+#   emptyDir: {}
