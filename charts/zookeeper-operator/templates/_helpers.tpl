@@ -4948,17 +4948,3 @@ openAPIV3Schema:
           type: object
       type: object
 {{- end }}
-
-{{/*
-Sidecar implementation details
-*/}}
-{{- define "chart.additionalSidecars"}}
-{{ toYaml .Values.additionalSidecars }}
-{{- end}}
-
-{{/*
-Sidecar volume implementation details
-*/}}
-{{- define "chart.additionalVolumes"}}
-{{ toYaml .Values.additionalVolumes }}
-{{- end}}
