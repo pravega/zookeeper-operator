@@ -56,20 +56,6 @@ tolerations: []
 # Pod annotations
 annotations: {}
 
-hooks:
-  backoffLimit: 10
-  image:
-    repository: lachlanevenson/k8s-kubectl
-    tag: v1.23.2
-  ## Whether to create pre-delete hook which ensures that
-  ## the operator cannot be deleted till the zookeeper cluster
-  ## custom resources have been cleaned up
-  delete: true
-  securityContext: {}
-  #  runAsUser: 1001
-  #  runAsGroup: 1001
-
-
 ## Additional Sidecars Configuration.
 additionalSidecars: {}
 # - name: nginx
