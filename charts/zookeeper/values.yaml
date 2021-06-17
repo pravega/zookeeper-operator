@@ -1,5 +1,4 @@
 replicas: 3
-
 restartOnConfigChange: false
 
 image:
