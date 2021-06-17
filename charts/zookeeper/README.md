@@ -54,6 +54,7 @@ The following table lists the configurable parameters of the zookeeper chart and
 | Parameter | Description | Default |
 | ----- | ----------- | ------ |
 | `replicas` | Expected size of the zookeeper cluster (valid range is from 1 to 7) | `3` |
+| `restartOnConfigChange` | Determines whether the zookeeper cluster needs to be automatically restarted when static configs present in zoo.cfg are changes | false |
 | `image.repository` | Image repository | `pravega/zookeeper` |
 | `image.tag` | Image tag | `0.2.11` |
 | `image.pullPolicy` | Image pull policy | `IfNotPresent` |

@@ -82,9 +82,14 @@ spec:
     env:
 {{ toYaml .Values.pod.env | indent 6 }}
     {{- end }}
-    {{- if .Values.pod.annotations }}
+    {{- if or (.Values.pod.annotations) (eq .Values.restartOnConfigChange true) }}
     annotations:
+      {{- if eq .Values.restartOnConfigChange true }}
+      checksum/config: {{ .Values.config | toString | sha256sum }}
+      {{- end }}
+      {{- if .Values.pod.annotations }}
 {{ toYaml .Values.pod.annotations | indent 6 }}
+      {{- end }}
     {{- end }}
     {{- if .Values.pod.securityContext }}
     securityContext:

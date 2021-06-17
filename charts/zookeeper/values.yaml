@@ -1,4 +1,5 @@
 replicas: 3
+restartOnConfigChange: false
 
 image:
   repository: pravega/zookeeper
