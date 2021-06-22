@@ -36,6 +36,20 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
 {{- end -}}
 
+{{/*
+Default sidecar template
+*/}}
+{{- define "chart.additionalSidecars"}}
+{{ toYaml .Values.additionalSidecars }}
+{{- end}}
+
+{{/*
+Default volume template
+*/}}
+{{- define "chart.additionalVolumes"}}
+{{ toYaml .Values.additionalVolumes }}
+{{- end}}
+
 {{- define "crd.additionalPrinterColumns" }}
 additionalPrinterColumns:
     - jsonPath: .spec.replicas
