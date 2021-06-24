@@ -64,6 +64,12 @@ func MakeStatefulPod(z *v1beta1.ZookeeperCluster) *statefulpodv1.StatefulPod {
 				Selector:  map[string]string{"app": z.GetName()},
 				ClusterIP: "None",
 			},
+			PVCTemplate: &corev1.PersistentVolumeClaimSpec{
+				AccessModes:      z.Spec.Persistence.PersistentVolumeClaimSpec.AccessModes,
+				Resources:        z.Spec.Persistence.PersistentVolumeClaimSpec.Resources,
+				StorageClassName: z.Spec.Persistence.PersistentVolumeClaimSpec.StorageClassName,
+			},
+			PVRecyclePolicy: corev1.PersistentVolumeReclaimPolicy(z.Spec.Persistence.VolumeReclaimPolicy),
 		},
 	}
 }
@@ -123,7 +129,6 @@ func makeZkPodSpec(z *v1beta1.ZookeeperCluster, volumes []corev1.Volume) corev1.
 			},
 		},
 	})
-
 	zkContainer.Env = append(zkContainer.Env, z.Spec.Pod.Env...)
 	podSpec := corev1.PodSpec{
 		Containers: append(z.Spec.Containers, zkContainer),
