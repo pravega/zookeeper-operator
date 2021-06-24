@@ -106,7 +106,7 @@ func makeZkPodSpec(z *v1beta1.ZookeeperCluster, volumes []corev1.Volume) corev1.
 		},
 		VolumeMounts: []corev1.VolumeMount{
 			{Name: "conf", MountPath: "/conf"},
-			{Name:"data",MountPath: "/data"},
+			{Name: "data", MountPath: "/data"},
 		},
 		Lifecycle: &corev1.Lifecycle{
 			PreStop: &corev1.Handler{
@@ -120,8 +120,8 @@ func makeZkPodSpec(z *v1beta1.ZookeeperCluster, volumes []corev1.Volume) corev1.
 	if z.Spec.Pod.Resources.Limits != nil || z.Spec.Pod.Resources.Requests != nil {
 		zkContainer.Resources = z.Spec.Pod.Resources
 	}
-	volumes=append(volumes,corev1.Volume{
-		Name:         "data",
+	volumes = append(volumes, corev1.Volume{
+		Name: "data",
 		VolumeSource: corev1.VolumeSource{PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
 			ClaimName: "data",
 			ReadOnly:  false,

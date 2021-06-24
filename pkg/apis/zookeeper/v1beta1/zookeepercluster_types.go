@@ -366,29 +366,29 @@ func (p *PodPolicy) withDefaults(z *ZookeeperCluster) (changed bool) {
 		p.Labels["release"] = z.GetName()
 		changed = true
 	}
-	if p.Affinity == nil {
-		p.Affinity = &v1.Affinity{}
-		changed = true
-	}
-	if p.Affinity.PodAntiAffinity == nil {
-		p.Affinity.PodAntiAffinity = &v1.PodAntiAffinity{
-			RequiredDuringSchedulingIgnoredDuringExecution: []v1.PodAffinityTerm{
-				{
-					TopologyKey: "kubernetes.io/hostname",
-					LabelSelector: &metav1.LabelSelector{
-						MatchExpressions: []metav1.LabelSelectorRequirement{
-							{
-								Key:      "app",
-								Operator: metav1.LabelSelectorOpIn,
-								Values:   []string{z.GetName()},
-							},
-						},
-					},
-				},
-			},
-		}
-		changed = true
-	}
+	// if p.Affinity == nil {
+	// 	p.Affinity = &v1.Affinity{}
+	// 	changed = true
+	// }
+	// if p.Affinity.PodAntiAffinity == nil {
+	// 	p.Affinity.PodAntiAffinity = &v1.PodAntiAffinity{
+	// 		RequiredDuringSchedulingIgnoredDuringExecution: []v1.PodAffinityTerm{
+	// 			{
+	// 				TopologyKey: "kubernetes.io/hostname",
+	// 				LabelSelector: &metav1.LabelSelector{
+	// 					MatchExpressions: []metav1.LabelSelectorRequirement{
+	// 						{
+	// 							Key:      "app",
+	// 							Operator: metav1.LabelSelectorOpIn,
+	// 							Values:   []string{z.GetName()},
+	// 						},
+	// 					},
+	// 				},
+	// 			},
+	// 		},
+	// 	}
+	// 	changed = true
+	// }
 	return changed
 }
 
