@@ -155,6 +155,15 @@ openAPIV3Schema:
                   description: "Retain the snapshots according to retain count \n
                     The default value is 3"
                   type: integer
+                clientPortListenBacklog:
+                  description: ClientPortListenBacklog The socket backlog length for
+                    the ZooKeeper server socket. This controls the number of requests
+                    that will be queued server-side to be processed by the ZooKeeper
+                    server. Connections that exceed this length will receive a network
+                    timeout (30s) which may cause ZooKeeper session expiry issues.
+                    By default, this value is unset (-1) which, on Linux, uses a backlog
+                    of 50. This value must be a positive number.
+                  type: integer
                 commitLogCount:
                   description: "Zookeeper maintains an in-memory list of last committed
                     requests for fast synchronization with followers \n The default
@@ -204,6 +213,11 @@ openAPIV3Schema:
                     the ZAB protocol and the Fast Leader Election protocol. \n The
                     default value is false."
                   type: boolean
+                serverCnxnFactory:
+                  description: ServerCnxnFactory Specifies ServerCnxnFactory implementation.
+                    This should be set to NettyServerCnxnFactory in order to use TLS
+                    based server communication. Default is NIOServerCnxnFactory.
+                  type: string
                 snapCount:
                   description: "ZooKeeper records its transactions using snapshots
                     and a transaction log The number of transactions recorded in the

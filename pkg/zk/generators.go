@@ -263,8 +263,10 @@ func makeZkConfigString(z *v1beta1.ZookeeperCluster) string {
 		"snapCount=" + strconv.Itoa(z.Spec.Conf.SnapCount) + "\n" +
 		"commitLogCount=" + strconv.Itoa(z.Spec.Conf.CommitLogCount) + "\n" +
 		"snapSizeLimitInKb=" + strconv.Itoa(z.Spec.Conf.SnapSizeLimitInKb) + "\n" +
+		"serverCnxnFactory=" + z.Spec.Conf.ServerCnxnFactory + "\n" +
 		"maxCnxns=" + strconv.Itoa(z.Spec.Conf.MaxCnxns) + "\n" +
 		"maxClientCnxns=" + strconv.Itoa(z.Spec.Conf.MaxClientCnxns) + "\n" +
+		"clientPortListenBacklog=" + strconv.Itoa(z.Spec.Conf.ClientPortListenBacklog) + "\n" +
 		"minSessionTimeout=" + strconv.Itoa(z.Spec.Conf.MinSessionTimeout) + "\n" +
 		"maxSessionTimeout=" + strconv.Itoa(z.Spec.Conf.MaxSessionTimeout) + "\n" +
 		"autopurge.snapRetainCount=" + strconv.Itoa(z.Spec.Conf.AutoPurgeSnapRetainCount) + "\n" +

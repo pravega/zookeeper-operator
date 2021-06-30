@@ -148,6 +148,12 @@ spec:
     {{- if .Values.config.snapSizeLimitInKb }}
     snapSizeLimitInKb: {{ .Values.config.snapSizeLimitInKb }}
     {{- end }}
+    {{- if .Values.config.clientPortListenBacklog }}
+    clientPortListenBacklog: {{ .Values.config.clientPortListenBacklog }}
+    {{- end }}
+    {{- if .Values.config.serverCnxnFactory }}
+    serverCnxnFactory: {{ .Values.config.serverCnxnFactory }}
+    {{- end }}
     {{- if .Values.config.maxCnxns }}
     maxCnxns: {{ .Values.config.maxCnxns }}
     {{- end }}

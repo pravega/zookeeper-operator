@@ -59,6 +59,8 @@ config: {}
   # snapCount: 100000
   # commitLogCount: 500
   # snapSizeLimitInKb: 4194304
+  # clientPortListenBacklog: -1
+  # serverCnxnFactory: "org.apache.zookeeper.server.NIOServerCnxnFactory"
   # maxCnxns: 0
   # maxClientCnxns: 60
   # minSessionTimeout: 4000

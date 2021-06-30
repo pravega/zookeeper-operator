@@ -613,6 +613,18 @@ type ZookeeperConfig struct {
 	// The default value is 60
 	MaxClientCnxns int `json:"maxClientCnxns,omitempty"`
 
+	// ClientPortListenBacklog The socket backlog length for the ZooKeeper server socket.
+	// This controls the number of requests that will be queued server-side to be processed by the ZooKeeper server.
+	// Connections that exceed this length will receive a network timeout (30s) which may cause ZooKeeper session expiry
+	// issues. By default, this value is unset (-1) which, on Linux, uses a backlog of 50.
+	// This value must be a positive number.
+	ClientPortListenBacklog int `json:"clientPortListenBacklog,omitempty"`
+
+	// ServerCnxnFactory Specifies ServerCnxnFactory implementation.
+	// This should be set to NettyServerCnxnFactory in order to use TLS based server communication.
+	// Default is NIOServerCnxnFactory.
+	ServerCnxnFactory string `json:"serverCnxnFactory,omitempty"`
+
 	// The minimum session timeout in milliseconds that the server will allow the
 	// client to negotiate
 	//
@@ -680,6 +692,14 @@ func (c *ZookeeperConfig) withDefaults() (changed bool) {
 	if c.MaxClientCnxns == 0 {
 		changed = true
 		c.MaxClientCnxns = 60
+	}
+	if c.ClientPortListenBacklog == 0 {
+		changed = true
+		c.ClientPortListenBacklog = -1
+	}
+	if c.ServerCnxnFactory == "" {
+		changed = true
+		c.ServerCnxnFactory = "org.apache.zookeeper.server.NIOServerCnxnFactory"
 	}
 	if c.MinSessionTimeout == 0 {
 		changed = true
