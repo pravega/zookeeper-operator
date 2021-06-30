@@ -3,30 +3,34 @@ module github.com/pravega/zookeeper-operator
 go 1.13
 
 require (
-	4d63.com/gochecknoglobals v0.0.0-20201008074935-acfc0b28355a // indirect
-	dmitri.shuralyov.com/go/generated v0.0.0-20170818220700-b1254a446363 // indirect
-	github.com/alecthomas/gocyclo v0.0.0-20150208221726-aa8f8b160214 // indirect
-	github.com/alexkohler/nakedret v1.0.0 // indirect
+	github.com/Azure/go-autorest/autorest v0.9.8 // indirect
+	github.com/Azure/go-autorest/autorest/adal v0.8.3 // indirect
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
 	github.com/go-logr/logr v0.1.0
-	github.com/gordonklaus/ineffassign v0.0.0-20201107091007-3b93a8888063 // indirect
-	github.com/mdempsky/maligned v0.0.0-20180708014732-6e39bd26a8c8 // indirect
-	github.com/mdempsky/unconvert v0.0.0-20200228143138-95ecdbfc0b5f // indirect
-	github.com/mibk/dupl v1.0.0 // indirect
-	github.com/onsi/ginkgo v1.12.0
-	github.com/onsi/gomega v1.9.0
-	github.com/operator-framework/operator-sdk v0.17.0
+	github.com/gobuffalo/envy v1.7.1 // indirect
+	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/golang/protobuf v1.4.3 // indirect
+	github.com/google/uuid v1.1.5 // indirect
+	github.com/imdario/mergo v0.3.12 // indirect
+	github.com/json-iterator/go v1.1.11 // indirect
+	github.com/konsorten/go-windows-terminal-sequences v1.0.3 // indirect
+	github.com/onsi/ginkgo v1.12.1
+	github.com/onsi/gomega v1.10.1
+	github.com/operator-framework/operator-sdk v0.17.2
+	github.com/pborman/uuid v1.2.1 // indirect
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/common v0.9.1
+	github.com/rogpeppe/go-internal v1.5.2 // indirect
 	github.com/samuel/go-zookeeper v0.0.0-20190923202752-2cc03de413da
-	github.com/securego/gosec v0.0.0-20200401082031-e946c8c39989 // indirect
 	github.com/sirupsen/logrus v1.5.0
-	github.com/stripe/safesql v0.2.0 // indirect
-	k8s.io/api v0.17.5
-	k8s.io/apimachinery v0.17.5
+	github.com/spf13/cobra v0.0.7 // indirect
+	golang.org/x/lint v0.0.0-20191125180803-fdd1cda4f05f // indirect
+	golang.org/x/text v0.3.6 // indirect
+	google.golang.org/appengine v1.6.7 // indirect
+	k8s.io/api v0.17.17
+	k8s.io/apiextensions-apiserver v0.17.17 // indirect
+	k8s.io/apimachinery v0.17.17
 	k8s.io/client-go v12.0.0+incompatible
-	k8s.io/code-generator v0.19.3 // indirect
-	sigs.k8s.io/controller-runtime v0.5.2
+	sigs.k8s.io/controller-runtime v0.5.14
 )
 
 replace (
