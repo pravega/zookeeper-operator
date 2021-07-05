@@ -58,7 +58,7 @@ var _ = Describe("ZookeeperCluster DeepCopy", func() {
 					},
 				},
 				InitContainers: []v1.Container{
-					v1.Container{
+					{
 						Name:    "testing",
 						Image:   "dummy-image",
 						Command: []string{"sh", "-c", "ls;pwd"},
@@ -223,6 +223,15 @@ var _ = Describe("ZookeeperCluster DeepCopy", func() {
 			var zooconfig *v1beta1.ZookeeperConfig
 			zooconfig2 := zooconfig.DeepCopy()
 			Ω(zooconfig2).To(BeNil())
+		})
+		It("checking for deepcopy for zookeeperconfig", func() {
+			var zkConfig = v1beta1.ZookeeperConfig{
+				AdditionalConfig: map[string]string{
+					"tcpKeepAlive": "true",
+				},
+			}
+			zkConfig2 := zkConfig.DeepCopy()
+			Ω(zkConfig2.AdditionalConfig["tcpKeepAlive"]).To(Equal("true"))
 		})
 		It("checking for nil clusterlist", func() {
 			var clusterlist *v1beta1.ZookeeperClusterList

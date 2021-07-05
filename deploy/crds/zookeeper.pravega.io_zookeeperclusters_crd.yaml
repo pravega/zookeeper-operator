@@ -92,6 +92,13 @@ spec:
                 is provided required default values will be provided, and optional
                 values will be excluded.
               properties:
+                additionalConfig:
+                  additionalProperties:
+                    type: string
+                  description: key-value map of additional zookeeper configuration
+                    parameters
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
                 autoPurgePurgeInterval:
                   description: "The time interval in hours for which the purge task
                     has to be triggered \n Disabled by default"

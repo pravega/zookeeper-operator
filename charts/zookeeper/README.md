@@ -104,6 +104,7 @@ The following table lists the configurable parameters of the zookeeper chart and
 | `config.autoPurgeSnapRetainCount` | The number of snapshots to be retained | `3`
 | `config.autoPurgePurgeInterval` | The time interval in hours for which the purge task has to be triggered | `1`
 | `config.quorumListenOnAllIPs` | Whether Zookeeper server will listen for connections from its peers on all available IP addresses | `false` |
+| `config.additionalConfig` | Additional zookeeper coniguration parameters that should be defined in generated zoo.cfg file | `{}` |
 | `storageType` | Type of storage that can be used it can take either ephemeral or persistence as value | `persistence` |
 | `persistence.reclaimPolicy` | Reclaim policy for persistent volumes | `Delete` |
 | `persistence.annotations` | Specifies the annotations to attach to pvcs | `{}` |`

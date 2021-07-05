@@ -642,6 +642,11 @@ type ZookeeperConfig struct {
 	//
 	// The default value is false.
 	QuorumListenOnAllIPs bool `json:"quorumListenOnAllIPs,omitempty"`
+
+	// key-value map of additional zookeeper configuration parameters
+	// +kubebuilder:pruning:PreserveUnknownFields
+	// +optional
+	AdditionalConfig map[string]string `json:"additionalConfig,omitempty"`
 }
 
 func (c *ZookeeperConfig) withDefaults() (changed bool) {
