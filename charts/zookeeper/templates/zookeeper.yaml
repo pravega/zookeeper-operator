@@ -169,6 +169,10 @@ spec:
     {{- if .Values.config.quorumListenOnAllIPs }}
     quorumListenOnAllIPs: {{ .Values.config.quorumListenOnAllIPs }}
     {{- end }}
+    {{- if .Values.config.additionalConfig }}
+    additionalConfig:
+    {{- toYaml .Values.config.additionalConfig | nindent 6 }}
+    {{- end }}
   {{- end }}
   storageType: {{ $storageType }}
   {{- if eq $storageType "ephemeral" }}

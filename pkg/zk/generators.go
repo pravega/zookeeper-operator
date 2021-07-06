@@ -247,7 +247,12 @@ func MakeHeadlessService(z *v1beta1.ZookeeperCluster) *v1.Service {
 
 func makeZkConfigString(z *v1beta1.ZookeeperCluster) string {
 	ports := z.ZookeeperPorts()
-	return "4lw.commands.whitelist=cons, envi, conf, crst, srvr, stat, mntr, ruok\n" +
+
+	var zkConfig = ""
+	for key, value := range z.Spec.Conf.AdditionalConfig {
+		zkConfig = zkConfig + fmt.Sprintf("%s=%s\n", key, value)
+	}
+	return zkConfig + "4lw.commands.whitelist=cons, envi, conf, crst, srvr, stat, mntr, ruok\n" +
 		"dataDir=/data\n" +
 		"standaloneEnabled=false\n" +
 		"reconfigEnabled=true\n" +

@@ -53,6 +53,11 @@ var _ = Describe("Generators Spec", func() {
 						Labels: map[string]string{
 							"exampleLabel": "exampleValue",
 						},
+						Conf: v1beta1.ZookeeperConfig{
+							AdditionalConfig: map[string]string{
+								"tcpKeepAlive": "true",
+							},
+						},
 					},
 				}
 				z.WithDefaults()
@@ -96,6 +101,10 @@ var _ = Describe("Generators Spec", func() {
 
 				It("should set syncLimit to '2'", func() {
 					Ω(cfg).To(ContainSubstring("syncLimit=2\n"))
+				})
+
+				It("should set additional configuration tcpKeepAlive to 'true'", func() {
+					Ω(cfg).To(ContainSubstring("tcpKeepAlive=true\n"))
 				})
 
 				It("should have a dynamicConfigFile", func() {
