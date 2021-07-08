@@ -67,7 +67,10 @@ data:
   validations.sh: |
     #!/bin/sh
     set -e
-    sleep 30
+    sleep 20
+    echo "$(kubectl api-resources )"
+    sleep 3000
+
 
     if [ -z "$(kubectl api-resources | grep ZookeeperCluster)" ]; then
         exit 1
