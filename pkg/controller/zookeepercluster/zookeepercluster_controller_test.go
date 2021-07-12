@@ -576,22 +576,35 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				sts.Labels = make(map[string]string)
 			})
 
-			It("should return true as 99 < 100", func() {
+			It("should return 1 as 100 > 99", func() {
 				sts.Labels["owner-rv"] = "99"
-				updated := zookeeperClusterFresherThanSts(z, sts)
-				Ω(updated).To(BeTrue())
+				updated := compareResourceVersion(z, sts)
+				Ω(updated).To(Equal(1))
 			})
 
-			It("should return true as 100 == 100", func() {
+			It("should return 0 as 100 == 100", func() {
 				sts.Labels["owner-rv"] = "100"
-				updated := zookeeperClusterFresherThanSts(z, sts)
-				Ω(updated).To(BeTrue())
+				updated := compareResourceVersion(z, sts)
+				Ω(updated).To(Equal(0))
 			})
 
-			It("should return false as 101 > 100", func() {
+			It("should return -1 as 100 < 101", func() {
 				sts.Labels["owner-rv"] = "101"
-				updated := zookeeperClusterFresherThanSts(z, sts)
-				Ω(updated).To(BeFalse())
+				updated := compareResourceVersion(z, sts)
+				Ω(updated).To(Equal(-1))
+			})
+
+			It("should return 1 as 100 > invalid numeric version 'xoxo'", func() {
+				sts.Labels["owner-rv"] = "xoxo"
+				updated := compareResourceVersion(z, sts)
+				Ω(updated).To(Equal(1))
+			})
+
+			It("should return 0 as invalid zk version z0z0 == invalid numeric version 'x0x0'", func() {
+				sts.Labels["owner-rv"] = "x0x0"
+				z.ResourceVersion = "z0z0"
+				updated := compareResourceVersion(z, sts)
+				Ω(updated).To(Equal(0))
 			})
 		})
 	})
