@@ -17,6 +17,7 @@ TEST_REPO=testzkop/$(PROJECT_NAME)
 APP_REPO=pravega/$(APP_NAME)
 ALTREPO=emccorp/$(PROJECT_NAME)
 APP_ALTREPO=emccorp/$(APP_NAME)
+OSDK_VERSION=$(shell operator-sdk version | cut -f2 -d'"')
 VERSION=$(shell git describe --always --tags --dirty | tr -d "v" | sed "s/\(.*\)-g`git rev-parse --short HEAD`/\1/")
 GIT_SHA=$(shell git rev-parse --short HEAD)
 TEST_IMAGE=$(TEST_REPO)-testimages:$(VERSION)
@@ -24,7 +25,12 @@ DOCKER_TEST_PASS=testzkop@123
 DOCKER_TEST_USER=testzkop
 .PHONY: all build check clean test
 
-all: check build
+all: generate check build
+
+generate:
+	[[ ${OSDK_VERSION} == v0.19* ]] || ( echo "operator-sdk version 0.19 required" ; exit 1 )
+	operator-sdk generate crds --crd-version v1
+	env GOROOT=$(shell go env GOROOT) operator-sdk generate k8s
 
 build: test build-go build-image
 
