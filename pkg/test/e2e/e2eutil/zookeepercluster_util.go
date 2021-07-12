@@ -160,7 +160,7 @@ func WaitForClusterToTerminate(t *testing.T, f *framework.Framework, ctx *framew
 
 	// Wait for Pods to terminate
 	err := wait.Poll(RetryInterval, TerminateTimeout, func() (done bool, err error) {
-		podList, err := f.KubeClient.CoreV1().Pods(z.Namespace).List(listOptions)
+		podList, err := f.KubeClient.CoreV1().Pods(z.Namespace).List(goctx.TODO(), listOptions)
 		if err != nil {
 			return false, err
 		}
@@ -183,7 +183,7 @@ func WaitForClusterToTerminate(t *testing.T, f *framework.Framework, ctx *framew
 
 	// Wait for PVCs to terminate
 	err = wait.Poll(RetryInterval, TerminateTimeout, func() (done bool, err error) {
-		pvcList, err := f.KubeClient.CoreV1().PersistentVolumeClaims(z.Namespace).List(listOptions)
+		pvcList, err := f.KubeClient.CoreV1().PersistentVolumeClaims(z.Namespace).List(goctx.TODO(), listOptions)
 		if err != nil {
 			return false, err
 		}
@@ -212,7 +212,7 @@ func DeletePods(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z 
 	listOptions := metav1.ListOptions{
 		LabelSelector: labels.SelectorFromSet(map[string]string{"app": z.GetName()}).String(),
 	}
-	podList, err := f.KubeClient.CoreV1().Pods(z.Namespace).List(listOptions)
+	podList, err := f.KubeClient.CoreV1().Pods(z.Namespace).List(goctx.TODO(), listOptions)
 	if err != nil {
 		return err
 	}
@@ -235,7 +235,7 @@ func CheckAdminService(t *testing.T, f *framework.Framework, ctx *framework.Test
 	listOptions := metav1.ListOptions{
 		LabelSelector: labels.SelectorFromSet(map[string]string{"app": z.GetName()}).String(),
 	}
-	serviceList, err := f.KubeClient.CoreV1().Services(z.Namespace).List(listOptions)
+	serviceList, err := f.KubeClient.CoreV1().Services(z.Namespace).List(goctx.TODO(), listOptions)
 	if err != nil {
 		return err
 	}

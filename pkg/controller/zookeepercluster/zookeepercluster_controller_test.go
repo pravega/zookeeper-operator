@@ -462,6 +462,11 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				cl = fake.NewFakeClient(z)
 				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
 				res, err = r.Reconcile(req)
+				// Fake client checks resourcesVersion, refresh z to get it properly updated
+				err = cl.Get(context.TODO(), types.NamespacedName{
+					Name:      z.Name,
+					Namespace: z.Namespace,
+				}, z)
 			})
 
 			It("should not raise an error", func() {
@@ -552,6 +557,11 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				cl = fake.NewFakeClient(z)
 				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
 				res, err = r.Reconcile(req)
+				// Fake client checks resourcesVersion, refresh z to get it properly updated
+				err = cl.Get(context.TODO(), types.NamespacedName{
+					Name:      z.Name,
+					Namespace: z.Namespace,
+				}, z)
 				cl.Update(context.TODO(), z)
 				err = r.reconcileFinalizers(z)
 				now := metav1.Now()
