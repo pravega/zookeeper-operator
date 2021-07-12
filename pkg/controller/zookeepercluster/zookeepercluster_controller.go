@@ -341,7 +341,7 @@ func (r *ReconcileZookeeperCluster) clearUpgradeStatus(z *zookeeperv1beta1.Zooke
 	// when updating the CR below
 	status := z.Status.DeepCopy()
 
-	err = r.client.Status().Update(context.TODO(), z)
+	err = r.client.Update(context.TODO(), z)
 	if err != nil {
 		return err
 	}
