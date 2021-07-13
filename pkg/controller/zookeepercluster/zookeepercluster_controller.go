@@ -164,26 +164,39 @@ func (r *ReconcileZookeeperCluster) Reconcile(request reconcile.Request) (reconc
 	return reconcile.Result{RequeueAfter: ReconcileTime}, nil
 }
 
-func zookeeperClusterFresherThanSts(instance *zookeeperv1beta1.ZookeeperCluster, sts *appsv1.StatefulSet) bool {
-	labeledRV, ok := sts.Labels["owner-rv"]
-	if !ok {
-		log.Info("Fail to find owner-rv in statefulset's labels; skip checking resource version")
-		return true
+// compareResourceVersion compare resoure versions for the supplied ZookeeperCluster and StatefulSet
+// resources
+// Returns:
+//  0 if versions are equal
+// -1 if ZookeeperCluster version is less than StatefulSet version
+//  1 if ZookeeperCluster version is greater than StatefulSet version
+func compareResourceVersion(zk *zookeeperv1beta1.ZookeeperCluster, sts *appsv1.StatefulSet) int {
+
+	zkResourceVersion, zkErr := strconv.Atoi(zk.ResourceVersion)
+	stsVersion, stsVersionFound := sts.Labels["owner-rv"]
+
+	if !stsVersionFound {
+		if zkErr != nil {
+			log.Info("Fail to parse ZookeeperCluster version. Cannot decide zookeeper StatefulSet version")
+			return 0
+		}
+		return 1
 	}
-	largerRV, err := strconv.Atoi(instance.ResourceVersion)
+	stsResourceVersion, err := strconv.Atoi(stsVersion)
 	if err != nil {
-		log.Info("Fail to convert %s to integer; skip checking resource version", instance.ResourceVersion)
-		return true
+		if zkErr != nil {
+			log.Info("Fail to parse ZookeeperCluster version. Cannot decide zookeeper StatefulSet version")
+			return 0
+		}
+		log.Info("Fail to convert StatefulSet version %s to integer; setting it to ZookeeperCluster version", stsVersion)
+		return 1
 	}
-	smallerRV, err := strconv.Atoi(labeledRV)
-	if err != nil {
-		log.Info("Fail to convert %s to integer; skip checking resource version", labeledRV)
-		return true
+	if zkResourceVersion < stsResourceVersion {
+		return -1
+	} else if zkResourceVersion > stsResourceVersion {
+		return 1
 	}
-	if largerRV < smallerRV {
-		return false
-	}
-	return true
+	return 0
 }
 
 func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
@@ -234,8 +247,12 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 		return err
 	} else {
 		// check whether zookeeperCluster is updated before updating the sts
-		if !zookeeperClusterFresherThanSts(instance, foundSts) {
+		cmp := compareResourceVersion(instance, foundSts)
+		if cmp < 0 {
 			return fmt.Errorf("Staleness: cr.ResourceVersion %s is smaller than labeledRV %s", instance.ResourceVersion, foundSts.Labels["owner-rv"])
+		} else if cmp > 0 {
+			// Zookeeper StatefulSet version inherits ZookeeperCluster resource version
+			foundSts.Labels["owner-rv"] = instance.ResourceVersion
 		}
 		foundSTSSize := *foundSts.Spec.Replicas
 		newSTSSize := *sts.Spec.Replicas
