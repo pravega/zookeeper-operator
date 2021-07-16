@@ -11,6 +11,8 @@ SHELL=/bin/bash -o pipefail
 PROJECT_NAME=zookeeper-operator
 EXPORTER_NAME=zookeeper-exporter
 APP_NAME=zookeeper
+# also update ZOOKEEPER_VERSION in docker/Dockerfile
+ZOOKEEPER_VERSION ?= 3.6.1
 KUBE_VERSION=1.17.5
 REPO=pravega/$(PROJECT_NAME)
 TEST_REPO=testzkop/$(PROJECT_NAME)
@@ -18,6 +20,7 @@ APP_REPO=pravega/$(APP_NAME)
 ALTREPO=emccorp/$(PROJECT_NAME)
 APP_ALTREPO=emccorp/$(APP_NAME)
 VERSION=$(shell git describe --always --tags --dirty | tr -d "v" | sed "s/\(.*\)-g`git rev-parse --short HEAD`/\1/")
+APP_TAG=$(ZOOKEEPER_VERSION)-$(VERSION)
 GIT_SHA=$(shell git rev-parse --short HEAD)
 TEST_IMAGE=$(TEST_REPO)-testimages:$(VERSION)
 DOCKER_TEST_PASS=testzkop@123
@@ -53,12 +56,12 @@ build-image:
 	docker tag $(REPO):$(VERSION) $(REPO):latest
 
 build-zk-image:
-	docker build --build-arg VERSION=$(VERSION)  --build-arg DOCKER_REGISTRY=$(DOCKER_REGISTRY) --build-arg GIT_SHA=$(GIT_SHA) -t $(APP_REPO):$(VERSION) ./docker
-	docker tag $(APP_REPO):$(VERSION) $(APP_REPO):latest
+	docker build --build-arg VERSION=$(VERSION) --build-arg ZOOKEEPER_VERSION=$(ZOOKEEPER_VERSION) --build-arg DOCKER_REGISTRY=$(DOCKER_REGISTRY) --build-arg GIT_SHA=$(GIT_SHA) -t $(APP_REPO):$(APP_TAG) ./docker
+	docker tag $(APP_REPO):$(APP_TAG) $(APP_REPO):latest
 
 build-zk-image-swarm:
-	docker build --build-arg VERSION=$(VERSION)-swarm  --build-arg DOCKER_REGISTRY=$(DOCKER_REGISTRY) --build-arg GIT_SHA=$(GIT_SHA) \
-		-f ./docker/Dockerfile-swarm -t $(APP_REPO):$(VERSION)-swarm ./docker
+	docker build --build-arg VERSION=$(VERSION)-swarm --build-arg ZOOKEEPER_VERSION=$(ZOOKEEPER_VERSION) --build-arg DOCKER_REGISTRY=$(DOCKER_REGISTRY) --build-arg GIT_SHA=$(GIT_SHA) \
+		-f ./docker/Dockerfile-swarm -t $(APP_REPO):$(APP_TAG)-swarm ./docker
 
 test:
 	go test $$(go list ./... | grep -v /vendor/ | grep -v /test/e2e) -race -coverprofile=coverage.txt -covermode=atomic
@@ -88,16 +91,16 @@ test-login:
 push: build-image build-zk-image build-zk-image-swarm login
 	docker push $(REPO):$(VERSION)
 	docker push $(REPO):latest
-	docker push $(APP_REPO):$(VERSION)
+	docker push $(APP_REPO):$(APP_TAG)
 	docker push $(APP_REPO):latest
-	docker push $(APP_REPO):$(VERSION)-swarm
+	docker push $(APP_REPO):$(APP_TAG)-swarm
 	docker tag $(REPO):$(VERSION) $(ALTREPO):$(VERSION)
 	docker tag $(REPO):$(VERSION) $(ALTREPO):latest
-	docker tag $(APP_REPO):$(VERSION) $(APP_ALTREPO):$(VERSION)
-	docker tag $(APP_REPO):$(VERSION) $(APP_ALTREPO):latest
+	docker tag $(APP_REPO):$(APP_TAG) $(APP_ALTREPO):$(APP_TAG)
+	docker tag $(APP_REPO):$(APP_TAG) $(APP_ALTREPO):latest
 	docker push $(ALTREPO):$(VERSION)
 	docker push $(ALTREPO):latest
-	docker push $(APP_ALTREPO):$(VERSION)
+	docker push $(APP_ALTREPO):$(APP_TAG)
 	docker push $(APP_ALTREPO):latest
 
 clean:

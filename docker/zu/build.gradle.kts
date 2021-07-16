@@ -10,9 +10,11 @@ repositories {
     mavenCentral()
 }
 
+val zookeeperVersion: String by project
+
 dependencies {
     implementation(kotlin("stdlib"))
-    implementation("org.apache.zookeeper:zookeeper:3.6.1")
+    implementation("org.apache.zookeeper:zookeeper:$zookeeperVersion")
 }
 
 tasks.withType<ShadowJar>() {
