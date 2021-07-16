@@ -11,8 +11,6 @@
 package zk_test
 
 import (
-	"testing"
-
 	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	"github.com/pravega/zookeeper-operator/pkg/zk"
 	appsv1 "k8s.io/api/apps/v1"
@@ -23,11 +21,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
-
-func TestSynchronizers(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Synchronizers Spec")
-}
 
 var _ = Describe("Synchronizers", func() {
 

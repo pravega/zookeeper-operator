@@ -12,7 +12,6 @@ package v1beta1_test
 
 import (
 	"fmt"
-	"testing"
 
 	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	corev1 "k8s.io/api/core/v1"
@@ -23,11 +22,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
-
-func TestV1beta1(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "ZookeeperCluster Types Spec")
-}
 
 var _ = Describe("ZookeeperCluster Types", func() {
 	var z v1beta1.ZookeeperCluster
