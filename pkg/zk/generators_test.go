@@ -16,7 +16,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"strings"
-	"testing"
 
 	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	"github.com/pravega/zookeeper-operator/pkg/utils"
@@ -29,11 +28,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
-
-func TestGenerators(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Generators Spec")
-}
 
 var _ = Describe("Generators Spec", func() {
 

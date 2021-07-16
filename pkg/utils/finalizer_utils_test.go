@@ -10,16 +10,9 @@
 package utils
 
 import (
-	"testing"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
-
-func TestFinalizer(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Zookeeper Finalizers")
-}
 
 var _ = Describe("Zookeeper Finalizers", func() {
 

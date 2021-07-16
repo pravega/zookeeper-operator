@@ -12,7 +12,6 @@ package v1beta1_test
 
 import (
 	"fmt"
-	"testing"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -20,11 +19,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
-
-func TestDeepcopy(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "ZookeeperCluster DeepCopy")
-}
 
 var _ = Describe("ZookeeperCluster DeepCopy", func() {
 	Context("with defaults", func() {

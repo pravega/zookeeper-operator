@@ -479,7 +479,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 			It("should not raise an error", func() {
 				z.Status.ReadyReplicas = -1
 				z.Spec.Replicas = -1
-				cl.Update(context.TODO(), z)
+				err = cl.Update(context.TODO(), z)
 				err = r.cleanupOrphanPVCs(z)
 				Ω(err).To(BeNil())
 			})
@@ -490,6 +490,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				Ω(count).To(Equal(0))
 			})
 			It("should not raise an error", func() {
+				_ = cl.Get(context.TODO(), req.NamespacedName, z)
 				z.Spec.Persistence.VolumeReclaimPolicy = v1beta1.VolumeReclaimPolicyDelete
 				cl.Update(context.TODO(), z)
 				err = r.reconcileFinalizers(z)
@@ -552,8 +553,9 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				cl = fake.NewFakeClient(z)
 				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
 				res, err = r.Reconcile(req)
-				cl.Update(context.TODO(), z)
 				err = r.reconcileFinalizers(z)
+				// update deletion timestamp
+				_ = cl.Get(context.TODO(), req.NamespacedName, z)
 				now := metav1.Now()
 				z.SetDeletionTimestamp(&now)
 				cl.Update(context.TODO(), z)
