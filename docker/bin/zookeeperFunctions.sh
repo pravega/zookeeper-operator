@@ -19,8 +19,8 @@ function zkConfig() {
 function zkConnectionString() {
   # If the client service address is not yet available, then return localhost
   set +e
-  nslookup "${CLIENT_HOST}" 2>/dev/null 1>/dev/null
-  if [[ $? -eq 1 ]]; then
+  getent hosts "${CLIENT_HOST}" 2>/dev/null 1>/dev/null
+  if [[ $? -ne 0 ]]; then
     set -e
     echo "localhost:${CLIENT_PORT}"
   else
