@@ -679,9 +679,11 @@ openAPIV3Schema:
                             description: Protocol for port. Must be UDP, TCP, or SCTP.
                               Defaults to "TCP".
                             type: string
-                            default: TCP
                         required:
                         - containerPort
+                        {{- if semverCompare "< 1.18-0" .Capabilities.KubeVersion.GitVersion }}
+                        - protocol
+                        {{- end }}
                         type: object
                       type: array
                       x-kubernetes-list-map-keys:
@@ -1828,9 +1830,11 @@ openAPIV3Schema:
                             description: Protocol for port. Must be UDP, TCP, or SCTP.
                               Defaults to "TCP".
                             type: string
-                            default: TCP
                         required:
                         - containerPort
+                        {{- if semverCompare "< 1.18-0" .Capabilities.KubeVersion.GitVersion }}
+                        - protocol
+                        {{- end }}
                         type: object
                       type: array
                       x-kubernetes-list-map-keys:
@@ -3545,9 +3549,11 @@ openAPIV3Schema:
                       description: Protocol for port. Must be UDP, TCP, or SCTP. Defaults
                         to "TCP".
                       type: string
-                      default: TCP
                   required:
                   - containerPort
+                  {{- if semverCompare "< 1.18-0" .Capabilities.KubeVersion.GitVersion }}
+                  - protocol
+                  {{- end }}
                   type: object
                 type: array
               probes:
