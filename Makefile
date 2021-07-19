@@ -11,12 +11,13 @@ SHELL=/bin/bash -o pipefail
 PROJECT_NAME=zookeeper-operator
 EXPORTER_NAME=zookeeper-exporter
 APP_NAME=zookeeper
-KUBE_VERSION=1.17.5
+KUBE_VERSION=1.19.13
 REPO=pravega/$(PROJECT_NAME)
 TEST_REPO=testzkop/$(PROJECT_NAME)
 APP_REPO=pravega/$(APP_NAME)
 ALTREPO=emccorp/$(PROJECT_NAME)
 APP_ALTREPO=emccorp/$(APP_NAME)
+OSDK_VERSION=$(shell operator-sdk version | cut -f2 -d'"')
 VERSION=$(shell git describe --always --tags --dirty | tr -d "v" | sed "s/\(.*\)-g`git rev-parse --short HEAD`/\1/")
 GIT_SHA=$(shell git rev-parse --short HEAD)
 TEST_IMAGE=$(TEST_REPO)-testimages:$(VERSION)
@@ -24,7 +25,18 @@ DOCKER_TEST_PASS=testzkop@123
 DOCKER_TEST_USER=testzkop
 .PHONY: all build check clean test
 
-all: check build
+all: generate check build
+
+generate:
+	[[ ${OSDK_VERSION} == v0.19* ]] || ( echo "operator-sdk version 0.19 required" ; exit 1 )
+	operator-sdk generate crds --crd-version v1
+	env GOROOT=$(shell go env GOROOT) operator-sdk generate k8s
+	# sync crd generated to helm-chart
+	echo '{{- define "crd.openAPIV3Schema" }}' > charts/zookeeper-operator/templates/_crd_openapiv3schema.tpl
+	echo 'openAPIV3Schema:' >> charts/zookeeper-operator/templates/_crd_openapiv3schema.tpl
+	sed -e '1,/openAPIV3Schema/d' deploy/crds/zookeeper.pravega.io_zookeeperclusters_crd.yaml | sed -n '/served: true/!p;//q' >> charts/zookeeper-operator/templates/_crd_openapiv3schema.tpl
+	echo '{{- end }}' >> charts/zookeeper-operator/templates/_crd_openapiv3schema.tpl
+
 
 build: test build-go build-image
 
@@ -77,7 +89,7 @@ test-e2e-local:
 	operator-sdk test local ./test/e2e --operator-namespace default --up-local --go-test-flags "-v -timeout 0"
 
 run-local:
-	operator-sdk up local
+	operator-sdk run local
 
 login:
 	@docker login -u "$(DOCKER_USER)" -p "$(DOCKER_PASS)"
