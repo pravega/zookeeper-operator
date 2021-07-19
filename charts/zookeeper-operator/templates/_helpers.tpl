@@ -34,6 +34,9 @@ app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+{{- range $k, $v := $.Values.labels }}
+{{ $k }}: {{ $v | quote }}
+{{- end }}
 {{- end -}}
 
 {{/*
