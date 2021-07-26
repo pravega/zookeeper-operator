@@ -3659,6 +3659,9 @@ spec:
                   will be using It can take either Ephemeral or persistence Default
                   StorageType is Persistence storage
                 type: string
+              triggerRollingRestart:
+                description: if set to true, triggers a cluster restart. this value should be set to false by the operator once the restart completes for all pods.
+                type: boolean
               volumeMounts:
                 description: VolumeMounts defines to support customized volumeMounts
                 items:
