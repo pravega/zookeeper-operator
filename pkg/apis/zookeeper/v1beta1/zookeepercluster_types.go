@@ -109,7 +109,7 @@ type ZookeeperClusterSpec struct {
 	ClientService ClientServicePolicy `json:"clientService,omitempty"`
 
 	// TriggerRollingRestart if set to true will instruct operator to restart all
-	// the pods in the zookeeper cluster, and then this value will be set to false
+	// the pods in the zookeeper cluster, after which this value will be set to false
 	TriggerRollingRestart bool `json:"triggerRollingRestart,omitempty"`
 
 	// HeadlessService defines the policy to create headless Service
@@ -373,7 +373,6 @@ func (z *ZookeeperCluster) GetAdminServerServiceName() string {
 	return fmt.Sprintf("%s-admin-server", z.GetName())
 }
 
-//
 func (z *ZookeeperCluster) GetTriggerRollingRestart() bool {
 	return z.Spec.TriggerRollingRestart
 }
