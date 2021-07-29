@@ -612,11 +612,11 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 
 		Context("trigger rolling restart", func() {
 			var (
-				cl  client.Client
-				err error
+				cl      client.Client
+				err     error
 				foundZk = &v1beta1.ZookeeperCluster{}
-				next *v1beta1.ZookeeperCluster
-				svc *corev1.Service
+				next    *v1beta1.ZookeeperCluster
+				svc     *corev1.Service
 			)
 			BeforeEach(func() {
 				z.WithDefaults()

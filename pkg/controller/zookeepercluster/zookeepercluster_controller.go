@@ -141,7 +141,7 @@ func (r *ReconcileZookeeperCluster) Reconcile(request reconcile.Request) (reconc
 	changed := instance.WithDefaults()
 	if instance.GetTriggerRollingRestart() {
 		annotationkey, annotationvalue := getRollingRestartAnnotation()
-		if instance.Spec.Pod.Annotations == nil{
+		if instance.Spec.Pod.Annotations == nil {
 			instance.Spec.Pod.Annotations = make(map[string]string)
 		}
 		instance.Spec.Pod.Annotations[annotationkey] = annotationvalue
