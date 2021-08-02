@@ -7,7 +7,7 @@ require (
 	github.com/Azure/go-autorest/autorest/adal v0.9.14 // indirect
 	github.com/Microsoft/go-winio v0.4.15 // indirect
 	github.com/Microsoft/hcsshim v0.8.10-0.20200715222032-5eafd1556990 // indirect
-	github.com/containerd/containerd v1.4.4 // indirect
+	github.com/containerd/containerd v1.4.8 // indirect
 	github.com/containerd/ttrpc v1.0.2 // indirect
 	github.com/docker/docker v20.10.2+incompatible // indirect
 	github.com/form3tech-oss/jwt-go v3.2.3+incompatible // indirect
