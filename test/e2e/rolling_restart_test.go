@@ -57,7 +57,7 @@ func testRollingRestart(t *testing.T) {
 	zk, err = zk_e2eutil.GetCluster(t, f, ctx, zk)
 	g.Expect(err).NotTo(HaveOccurred())
 	podList, err := zk_e2eutil.GetPods(t, f, zk)
-	g.Expect(err).NotTo(BeEmpty())
+	g.Expect(err).NotTo(HaveOccurred())
 	for i := 0; i < len(podList.Items); i++ {
 		g.Expect(podList.Items[i].Annotations).NotTo(HaveKey("restartTime"))
 	}
