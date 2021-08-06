@@ -70,7 +70,7 @@ func testRollingRestart(t *testing.T) {
 	g.Expect(err).NotTo(HaveOccurred())
 
 	newPodList, err := zk_e2eutil.GetPods(t, f, zk)
-	g.Expect(err).NotTo(BeEmpty())
+	g.Expect(err).NotTo(HaveOccurred())
 	var firstRestartTime []string
 	for i := 0; i < len(newPodList.Items); i++ {
 		g.Expect(newPodList.Items[i].Annotations).To(HaveKey("restartTime"))
