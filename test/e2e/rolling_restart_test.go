@@ -63,6 +63,7 @@ func testRollingRestart(t *testing.T) {
 	}
 	g.Expect(zk.GetTriggerRollingRestart()).To(Equal(false))
 
+	// Trigger a rolling restart
 	zk.Spec.TriggerRollingRestart = true
 	err = zk_e2eutil.UpdateCluster(t, f, ctx, zk)
 	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
@@ -78,6 +79,7 @@ func testRollingRestart(t *testing.T) {
 	}
 	g.Expect(zk.GetTriggerRollingRestart()).To(Equal(false))
 
+	// Trigger a rolling restart again
 	zk.Spec.TriggerRollingRestart = true
 	err = zk_e2eutil.UpdateCluster(t, f, ctx, zk)
 	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
