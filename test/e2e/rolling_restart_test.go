@@ -17,6 +17,7 @@ import (
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	api "github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	zk_e2eutil "github.com/pravega/zookeeper-operator/pkg/test/e2e/e2eutil"
+	"time"
 )
 
 func testRollingRestart(t *testing.T) {
@@ -50,7 +51,9 @@ func testRollingRestart(t *testing.T) {
 
 	// A default Zookeepercluster should have 3 replicas
 	podSize := 3
+	start := time.Now().Minute()*60 + time.Now().Second()
 	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
+	clusterCreateDuration := time.Now().Minute()*60 + time.Now().Second() - start
 	g.Expect(err).NotTo(HaveOccurred())
 
 	// This is to get the latest Zookeeper cluster object
@@ -66,13 +69,17 @@ func testRollingRestart(t *testing.T) {
 	// Trigger a rolling restart
 	zk.Spec.TriggerRollingRestart = true
 	err = zk_e2eutil.UpdateCluster(t, f, ctx, zk)
-	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
+	// zk_e2eutil.WaitForClusterToBecomeReady(...) will return as soon as any pod is restarted as the cluster is briefly reported to be healthy even though the restart is not completed. this method is hence called once for each node in the cluster to ensure that the restart has completed before asserting the test cases.
+	time.Sleep(time.Duration(clusterCreateDuration) * time.Second)
+		err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
+		g.Expect(err).NotTo(HaveOccurred())
 
+	zk, err = zk_e2eutil.GetCluster(t, f, ctx, zk)
 	g.Expect(err).NotTo(HaveOccurred())
-
 	newPodList, err := zk_e2eutil.GetPods(t, f, zk)
 	g.Expect(err).NotTo(HaveOccurred())
 	var firstRestartTime []string
+	println("triggerRollingRestart: %v", zk.Spec.TriggerRollingRestart)
 	for i := 0; i < len(newPodList.Items); i++ {
 		g.Expect(newPodList.Items[i].Annotations).To(HaveKey("restartTime"))
 		firstRestartTime = append(firstRestartTime, newPodList.Items[i].Annotations["restartTime"])
@@ -82,14 +89,18 @@ func testRollingRestart(t *testing.T) {
 	// Trigger a rolling restart again
 	zk.Spec.TriggerRollingRestart = true
 	err = zk_e2eutil.UpdateCluster(t, f, ctx, zk)
-	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
-	g.Expect(err).NotTo(HaveOccurred())
+	// zk_e2eutil.WaitForClusterToBecomeReady(...) will return as soon as any pod is restarted as the cluster is briefly reported to be healthy even though the complete restart is not completed. this method is hence called once for each node in the cluster to ensure that the restart has completed before asserting the test cases.
+	time.Sleep(time.Duration(clusterCreateDuration) * time.Second)
+		err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
+		g.Expect(err).NotTo(HaveOccurred())
 
+	zk, err = zk_e2eutil.GetCluster(t, f, ctx, zk)
+	g.Expect(err).NotTo(HaveOccurred())
 	newPodList2, err := zk_e2eutil.GetPods(t, f, zk)
-	g.Expect(err).NotTo(BeEmpty())
+	g.Expect(err).NotTo(HaveOccurred())
 	for i := 0; i < len(newPodList2.Items); i++ {
 		g.Expect(newPodList2.Items[i].Annotations).To(HaveKey("restartTime"))
-		g.Expect(newPodList.Items[i].Annotations["restartTime"]).NotTo(Equal(firstRestartTime[i]))
+		g.Expect(newPodList2.Items[i].Annotations["restartTime"]).NotTo(Equal(firstRestartTime[i]))
 	}
 	g.Expect(zk.GetTriggerRollingRestart()).To(Equal(false))
 
