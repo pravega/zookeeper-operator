@@ -73,7 +73,6 @@ func testRollingRestart(t *testing.T) {
 	newPodList, err := zk_e2eutil.GetPods(t, f, zk)
 	g.Expect(err).NotTo(HaveOccurred())
 	var firstRestartTime []string
-	println("triggerRollingRestart: %v", zk.Spec.TriggerRollingRestart)
 	for i := 0; i < len(newPodList.Items); i++ {
 		g.Expect(newPodList.Items[i].Annotations).To(HaveKey("restartTime"))
 		firstRestartTime = append(firstRestartTime, newPodList.Items[i].Annotations["restartTime"])
