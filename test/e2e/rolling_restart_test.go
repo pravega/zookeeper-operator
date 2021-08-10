@@ -15,7 +15,6 @@ import (
 
 	. "github.com/onsi/gomega"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
-	api "github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
 	zk_e2eutil "github.com/pravega/zookeeper-operator/pkg/test/e2e/e2eutil"
 	"time"
 )
@@ -40,11 +39,6 @@ func testRollingRestart(t *testing.T) {
 	cluster.WithDefaults()
 	cluster.Status.Init()
 	cluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
-	clusterVersion := "0.2.9"
-	cluster.Spec.Image = api.ContainerImage{
-		Repository: "pravega/zookeeper",
-		Tag:        clusterVersion,
-	}
 
 	zk, err := zk_e2eutil.CreateCluster(t, f, ctx, cluster)
 	g.Expect(err).NotTo(HaveOccurred())
