@@ -70,7 +70,7 @@ func testRollingRestart(t *testing.T) {
 	zk.Spec.TriggerRollingRestart = true
 	err = zk_e2eutil.UpdateCluster(t, f, ctx, zk)
 	// zk_e2eutil.WaitForClusterToBecomeReady(...) will return as soon as any pod is restarted as the cluster is briefly reported to be healthy even though the restart is not completed. this method is hence called once for each node in the cluster to ensure that the restart has completed before asserting the test cases.
-	time.Sleep(time.Duration(clusterCreateDuration)*2 * time.Second)
+	time.Sleep(time.Duration(clusterCreateDuration) * 2 * time.Second)
 	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
 	g.Expect(err).NotTo(HaveOccurred())
 
@@ -90,7 +90,7 @@ func testRollingRestart(t *testing.T) {
 	zk.Spec.TriggerRollingRestart = true
 	err = zk_e2eutil.UpdateCluster(t, f, ctx, zk)
 	// zk_e2eutil.WaitForClusterToBecomeReady(...) will return as soon as any pod is restarted as the cluster is briefly reported to be healthy even though the complete restart is not completed. this method is hence called once for each node in the cluster to ensure that the restart has completed before asserting the test cases.
-	time.Sleep(time.Duration(clusterCreateDuration)*2 * time.Second)
+	time.Sleep(time.Duration(clusterCreateDuration) * 2 * time.Second)
 	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
 	g.Expect(err).NotTo(HaveOccurred())
 
