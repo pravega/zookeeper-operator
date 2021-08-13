@@ -64,6 +64,7 @@ func testZookeeperCluster(t *testing.T) {
 		"testImagePullSecret":       testImagePullSecret,
 		"testScaleCluster":          testScaleCluster,
 		"testEphemeralStorage":      testEphemeralStorage,
+		"testRollingRestart":        testRollingRestart,
 	}
 
 	for name, f := range testFuncs {
