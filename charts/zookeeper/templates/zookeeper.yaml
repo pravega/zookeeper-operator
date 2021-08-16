@@ -57,6 +57,9 @@ spec:
   ports:
 {{ toYaml .Values.ports | indent 4 }}
   {{- end }}
+  {{- if .Values.triggerRollingRestart }}
+  triggerRollingRestart: {{ .Values.triggerRollingRestart }}
+  {{- end }}
   pod:
     {{- if .Values.pod.labels }}
     labels:

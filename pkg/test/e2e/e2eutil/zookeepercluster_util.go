@@ -231,6 +231,12 @@ func DeletePods(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z 
 	}
 	return nil
 }
+func GetPods(t *testing.T, f *framework.Framework, z *api.ZookeeperCluster) (*corev1.PodList, error) {
+	listOptions := metav1.ListOptions{
+		LabelSelector: labels.SelectorFromSet(map[string]string{"app": z.GetName()}).String(),
+	}
+	return f.KubeClient.CoreV1().Pods(z.Namespace).List(goctx.TODO(), listOptions)
+}
 func CheckAdminService(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z *api.ZookeeperCluster) error {
 	listOptions := metav1.ListOptions{
 		LabelSelector: labels.SelectorFromSet(map[string]string{"app": z.GetName()}).String(),

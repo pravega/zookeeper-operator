@@ -609,5 +609,92 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				Ω(updated).To(Equal(0))
 			})
 		})
+
+		Context("trigger rolling restart", func() {
+			var (
+				cl      client.Client
+				err     error
+				foundZk = &v1beta1.ZookeeperCluster{}
+				next    *v1beta1.ZookeeperCluster
+				svc     *corev1.Service
+			)
+			BeforeEach(func() {
+				z.WithDefaults()
+				next = z.DeepCopy()
+				next.Spec.TriggerRollingRestart = true
+				svc = zk.MakeClientService(z)
+				cl = fake.NewFakeClient([]runtime.Object{next, svc}...)
+				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				res, err = r.Reconcile(req)
+				err = cl.Get(context.TODO(), req.NamespacedName, foundZk)
+			})
+
+			It("should update restartTime annotation and reset triggerRollingRestart to false when triggerRollingRestart is set to true", func() {
+				Ω(res.Requeue).To(Equal(true))
+				Ω(err).To(BeNil())
+				Ω(foundZk.Spec.TriggerRollingRestart).To(Equal(false))
+				_, restartTimeExists := foundZk.Spec.Pod.Annotations["restartTime"]
+				Ω(restartTimeExists).To(Equal(true))
+			})
+
+			It("should not update restartTime annotation when set triggerRollingRestart to false", func() {
+				_, restartTimeExists := foundZk.Spec.Pod.Annotations["restartTime"]
+				Ω(restartTimeExists).To(Equal(true))
+
+				next.Spec.TriggerRollingRestart = false
+				svc = zk.MakeClientService(z)
+				cl = fake.NewFakeClient([]runtime.Object{next, svc}...)
+				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				res, err = r.Reconcile(req)
+
+				Ω(res.Requeue).To(Equal(false))
+				Ω(err).To(BeNil())
+				Ω(foundZk.Spec.TriggerRollingRestart).To(Equal(false))
+				_, restartTimeExists = foundZk.Spec.Pod.Annotations["restartTime"]
+				Ω(restartTimeExists).To(Equal(true))
+			})
+
+			It("should update restartTime annotation to new value when rolling restart is triggered multiple times", func() {
+				oldRestartValue, restartTimeExists := foundZk.Spec.Pod.Annotations["restartTime"]
+				Ω(restartTimeExists).To(Equal(true))
+
+				// wait 1 second to ensure that restartTime, if set, will have a different value
+				time.Sleep(1 * time.Second)
+
+				// update the crd instance
+				next.Spec.TriggerRollingRestart = false
+				svc = zk.MakeClientService(z)
+				cl = fake.NewFakeClient([]runtime.Object{next, svc}...)
+				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				res, err = r.Reconcile(req)
+				err = cl.Get(context.TODO(), req.NamespacedName, foundZk)
+
+				// check that restartTime was not updated
+				Ω(res.Requeue).To(Equal(false))
+				Ω(err).To(BeNil())
+				Ω(foundZk.Spec.TriggerRollingRestart).To(Equal(false))
+				_, restartTimeExists = foundZk.Spec.Pod.Annotations["restartTime"]
+				Ω(restartTimeExists).To(Equal(true))
+
+				// wait 1 second to ensure that restartTime, if set, will have a different value
+				time.Sleep(1 * time.Second)
+
+				// update the crd instance to trigger rolling restart
+				next.Spec.TriggerRollingRestart = true
+				svc = zk.MakeClientService(z)
+				cl = fake.NewFakeClient([]runtime.Object{next, svc}...)
+				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				res, err = r.Reconcile(req)
+				err = cl.Get(context.TODO(), req.NamespacedName, foundZk)
+
+				// check that restartTime was updated
+				Ω(res.Requeue).To(Equal(true))
+				Ω(err).To(BeNil())
+				Ω(foundZk.Spec.TriggerRollingRestart).To(Equal(false))
+				newRestartValue, restartTimeExists := foundZk.Spec.Pod.Annotations["restartTime"]
+				Ω(restartTimeExists).To(Equal(true))
+				Ω(oldRestartValue).NotTo(Equal(newRestartValue))
+			})
+		})
 	})
 })

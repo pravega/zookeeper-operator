@@ -3615,6 +3615,9 @@ openAPIV3Schema:
                   will be using It can take either Ephemeral or persistence Default
                   StorageType is Persistence storage
                 type: string
+              triggerRollingRestart:
+                description: if set to true, triggers a cluster restart. this value will be auto-reverted to false by the operator once the restart is triggered.
+                type: boolean
               volumeMounts:
                 description: VolumeMounts defines to support customized volumeMounts
                 items:

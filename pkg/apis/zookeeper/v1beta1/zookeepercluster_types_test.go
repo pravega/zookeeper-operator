@@ -55,6 +55,10 @@ var _ = Describe("ZookeeperCluster Types", func() {
 			Ω(z.Spec.Labels["release"]).To(Equal("example"))
 		})
 
+		It("should have a triggerRollingRestart set to false", func() {
+			Ω(z.GetTriggerRollingRestart()).To(Equal(false))
+		})
+
 		Context("Image", func() {
 			var i v1beta1.ContainerImage
 
@@ -332,6 +336,19 @@ var _ = Describe("ZookeeperCluster Types", func() {
 
 		It("should have an admin-server port", func() {
 			Ω(p.AdminServer).To(BeEquivalentTo(8080))
+		})
+	})
+
+	Context("#TriggerRollingRestart is set", func() {
+		var t bool
+
+		BeforeEach(func() {
+			z.WithDefaults()
+			z.SetTriggerRollingRestart(true)
+			t = z.GetTriggerRollingRestart()
+		})
+		It("should return the value of triggerRollingRestart", func() {
+			Ω(t).To(BeEquivalentTo(true))
 		})
 	})
 })

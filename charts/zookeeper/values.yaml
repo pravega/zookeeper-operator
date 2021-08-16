@@ -5,6 +5,8 @@ image:
   tag: 0.2.12
   pullPolicy: IfNotPresent
 
+triggerRollingRestart: false
+
 domainName:
 labels: {}
 ports: []

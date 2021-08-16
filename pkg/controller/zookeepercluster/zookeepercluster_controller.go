@@ -139,6 +139,16 @@ func (r *ReconcileZookeeperCluster) Reconcile(request reconcile.Request) (reconc
 		return reconcile.Result{}, err
 	}
 	changed := instance.WithDefaults()
+	if instance.GetTriggerRollingRestart() {
+		r.log.Info("Restarting zookeeper cluster")
+		annotationkey, annotationvalue := getRollingRestartAnnotation()
+		if instance.Spec.Pod.Annotations == nil {
+			instance.Spec.Pod.Annotations = make(map[string]string)
+		}
+		instance.Spec.Pod.Annotations[annotationkey] = annotationvalue
+		instance.SetTriggerRollingRestart(false)
+		changed = true
+	}
 	if changed {
 		r.log.Info("Setting default settings for zookeeper-cluster")
 		if err := r.client.Update(context.TODO(), instance); err != nil {
@@ -162,6 +172,10 @@ func (r *ReconcileZookeeperCluster) Reconcile(request reconcile.Request) (reconc
 	}
 	// Recreate any missing resources every 'ReconcileTime'
 	return reconcile.Result{RequeueAfter: ReconcileTime}, nil
+}
+
+func getRollingRestartAnnotation() (string, string) {
+	return "restartTime", time.Now().Format(time.RFC850)
 }
 
 // compareResourceVersion compare resoure versions for the supplied ZookeeperCluster and StatefulSet
