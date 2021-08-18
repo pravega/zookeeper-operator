@@ -97,12 +97,11 @@ login:
 test-login:
 	echo "$(DOCKER_TEST_PASS)" | docker login -u "$(DOCKER_TEST_USER)" --password-stdin
 
-push: build-image build-zk-image build-zk-image-swarm login
+push: build-image build-zk-image login
 	docker push $(REPO):$(VERSION)
 	docker push $(REPO):latest
 	docker push $(APP_REPO):$(VERSION)
 	docker push $(APP_REPO):latest
-	docker push $(APP_REPO):$(VERSION)-swarm
 	docker tag $(REPO):$(VERSION) $(ALTREPO):$(VERSION)
 	docker tag $(REPO):$(VERSION) $(ALTREPO):latest
 	docker tag $(APP_REPO):$(VERSION) $(APP_ALTREPO):$(VERSION)
