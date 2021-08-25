@@ -235,6 +235,11 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 			}
 		} else if err != nil {
 			return err
+		} else {
+			foundServiceAccount.ImagePullSecrets = serviceAccount.ImagePullSecrets
+			if err = r.client.Update(context.TODO(), foundServiceAccount); err != nil {
+				return err
+			}
 		}
 	}
 	sts := zk.MakeStatefulSet(instance)
