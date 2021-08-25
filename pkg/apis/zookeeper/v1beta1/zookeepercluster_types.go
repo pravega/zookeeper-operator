@@ -155,14 +155,14 @@ type ZookeeperClusterSpec struct {
 	// Probes specifies the timeout values for the Readiness and Liveness Probes
 	// for the zookeeper pods.
 	// +optional
-	Probes *Probes `json:"probes"`
+	Probes *Probes `json:"probes,omitempty"`
 }
 
 type Probes struct {
 	// +optional
-	ReadinessProbe *Probe `json:"readinessProbe"`
+	ReadinessProbe *Probe `json:"readinessProbe,omitempty"`
 	// +optional
-	LivenessProbe *Probe `json:"livenessProbe"`
+	LivenessProbe *Probe `json:"livenessProbe,omitempty"`
 }
 
 func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) {
