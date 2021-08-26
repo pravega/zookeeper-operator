@@ -252,17 +252,18 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 
 		Context("With update to ImagePullSecrets", func() {
 			var (
-				cl  client.Client
-				err error
+				cl   client.Client
+				err  error
+				next *v1beta1.ZookeeperCluster
+				sa   *corev1.ServiceAccount
 			)
 
 			BeforeEach(func() {
 				z.WithDefaults()
 				z.Spec.Pod.ServiceAccountName = "zookeeper"
 				z.Status.Init()
-				next := z.DeepCopy()
-				sa := zk.MakeServiceAccount(z)
-				next.Spec.Pod.ImagePullSecrets = []corev1.LocalObjectReference{{Name: "local-key"}}
+				next = z.DeepCopy()
+				sa = zk.MakeServiceAccount(z)
 				cl = fake.NewFakeClientWithScheme(s, []runtime.Object{next, sa}...)
 				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
 				res, err = r.Reconcile(req)
@@ -272,7 +273,19 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				Ω(err).To(BeNil())
 			})
 
+			It("should create the service account", func() {
+				foundSA := &corev1.ServiceAccount{}
+				err = cl.Get(context.TODO(), types.NamespacedName{Name: "zookeeper", Namespace: Namespace}, foundSA)
+				Ω(err).To(BeNil())
+				Ω(foundSA.ImagePullSecrets).To(HaveLen(0))
+			})
 			It("should update the service account", func() {
+				next.Spec.Pod.ImagePullSecrets = []corev1.LocalObjectReference{{Name: "test-pull-secret"}}
+				cl = fake.NewFakeClientWithScheme(s, []runtime.Object{next, sa}...)
+				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				_, err := r.Reconcile(req)
+				Ω(err).To(BeNil())
+
 				foundSA := &corev1.ServiceAccount{}
 				err = cl.Get(context.TODO(), types.NamespacedName{Name: "zookeeper", Namespace: Namespace}, foundSA)
 				Ω(err).To(BeNil())
