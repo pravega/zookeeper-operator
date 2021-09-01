@@ -16,6 +16,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/operator-framework/operator-sdk/pkg/predicate"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -71,7 +72,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	// Watch for changes to primary resource ZookeeperCluster
 	err = c.Watch(&source.Kind{Type: &zookeeperv1beta1.ZookeeperCluster{}},
-		&handler.EnqueueRequestForObject{})
+		&handler.EnqueueRequestForObject{}, predicate.GenerationChangedPredicate{})
 	if err != nil {
 		return err
 	}
@@ -79,7 +80,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	err = c.Watch(&source.Kind{Type: &appsv1.StatefulSet{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &zookeeperv1beta1.ZookeeperCluster{},
-	})
+	}, predicate.GenerationChangedPredicate{})
 	if err != nil {
 		return err
 	}
@@ -87,7 +88,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &zookeeperv1beta1.ZookeeperCluster{},
-	})
+	}, predicate.GenerationChangedPredicate{})
 	if err != nil {
 		return err
 	}
@@ -95,7 +96,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &zookeeperv1beta1.ZookeeperCluster{},
-	})
+	}, predicate.GenerationChangedPredicate{})
 	if err != nil {
 		return err
 	}
