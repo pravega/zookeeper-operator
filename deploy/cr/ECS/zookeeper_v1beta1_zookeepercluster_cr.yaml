@@ -6,7 +6,7 @@ spec:
   replicas: 3
   image:
     repository: pravega/zookeeper
-    tag: 0.2.12
+    tag: 0.2.13
   storageType: persistence
   persistence:
     reclaimPolicy: Retain
