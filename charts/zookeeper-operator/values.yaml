@@ -9,7 +9,7 @@ global:
 
 image:
   repository: pravega/zookeeper-operator
-  tag: 0.2.12
+  tag: 0.2.13
   pullPolicy: IfNotPresent
 
 ## Install RBAC roles and bindings.
