@@ -96,6 +96,10 @@ spec:
   template:
     metadata:
       name: {{ template "zookeeper.fullname" . }}-post-install-upgrade
+      {{- if .Values.hooks.pod.annotations }}
+      annotations:
+{{ toYaml .Values.hooks.pod.annotations | indent 8 }}
+      {{- end }}
     spec:
       serviceAccountName: {{ template "zookeeper.fullname" . }}-post-install-upgrade
       restartPolicy: Never
