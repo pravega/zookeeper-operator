@@ -20,6 +20,7 @@ FROM ${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}zookeeper:${ZK_VERSION}
 ARG ZK_VERSION=3.6.3
 COPY bin /usr/local/bin
 RUN chmod +x /usr/local/bin/*
+RUN chmod a+rwx /zk-sp.sh
 COPY --from=0 /zu/build/libs/zu.jar /opt/libs/
 COPY log4j.properties /apache-zookeeper-${ZK_VERSION}-bin/conf/log4j.properties
 COPY zk-sp.sh /zk-sp.sh
