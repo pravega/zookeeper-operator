@@ -14,15 +14,11 @@ require (
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
 	github.com/go-logr/logr v0.4.0
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/google/uuid v1.1.5 // indirect
-	github.com/googleapis/gnostic v0.5.5 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
-	github.com/imdario/mergo v0.3.12 // indirect
-	github.com/json-iterator/go v1.1.11 // indirect
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.14.0
-	github.com/operator-framework/api v0.3.25 // indirect
+	github.com/operator-framework/operator-lib v0.7.0
 	github.com/operator-framework/operator-registry v1.13.9 // indirect
 	github.com/operator-framework/operator-sdk v0.19.4
 	github.com/pborman/uuid v1.2.1 // indirect
@@ -30,7 +26,6 @@ require (
 	github.com/rogpeppe/go-internal v1.5.2 // indirect
 	github.com/samuel/go-zookeeper v0.0.0-20201211165307-7117e9ea2414
 	github.com/sirupsen/logrus v1.7.1
-	github.com/spf13/cobra v1.1.3 // indirect
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97 // indirect
 	golang.org/x/net v0.0.0-20210716203947-853a461950ff // indirect
 	golang.org/x/oauth2 v0.0.0-20210628180205-a41e5a781914 // indirect
@@ -38,16 +33,13 @@ require (
 	golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b // indirect
 	golang.org/x/time v0.0.0-20210611083556-38a9dc6acbc6 // indirect
 	golang.org/x/tools v0.1.5 // indirect
-	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20210716133855-ce7ef5c701ea // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
-	k8s.io/api v0.19.13
-	k8s.io/apiextensions-apiserver v0.19.13 // indirect
-	k8s.io/apimachinery v0.19.13
+	k8s.io/api v0.21.1
+	k8s.io/apimachinery v0.21.1
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/kube-openapi v0.0.0-20210527164424-3c818078ee3d // indirect
 	k8s.io/utils v0.0.0-20210709001253-0e1f9d693477 // indirect
-	sigs.k8s.io/controller-runtime v0.6.5
+	sigs.k8s.io/controller-runtime v0.9.0
 )
 
 replace (

@@ -21,10 +21,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
 
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
-	"github.com/operator-framework/operator-sdk/pkg/leader"
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
 	"github.com/pravega/zookeeper-operator/pkg/apis"
 	"github.com/pravega/zookeeper-operator/pkg/controller"
+	"github.com/pravega/zookeeper-operator/pkg/leader"
 	"github.com/pravega/zookeeper-operator/pkg/version"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
@@ -94,7 +94,11 @@ func main() {
 	}
 
 	// Become the leader before proceeding
-	leader.Become(context.TODO(), "zookeeper-operator-lock")
+	err = utils.BecomeLeader(context.TODO(), cfg, "zookeeper-operator-lock", os.Getenv("POD_NAMESPACE"))
+	if err != nil {
+		log.Error(err, "")
+		os.Exit(1)
+	}
 
 	// Create a new Cmd to provide shared dependencies and start components
 	mgr, err := manager.New(cfg, manager.Options{NewCache: managerWatchCache})
