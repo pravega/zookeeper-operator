@@ -23,14 +23,9 @@ RUN chmod +x /usr/local/bin/*
 COPY --from=0 /zu/build/libs/zu.jar /opt/libs/
 COPY log4j.properties /apache-zookeeper-${ZK_VERSION}-bin/conf/log4j.properties
 COPY zk-sp.sh /zk-sp.sh
-RUN chmod +x /zk-sp.sh
-RUN chmod +x -R /docker-entrypoint.sh
-RUN chgrp -R 0 /apache-zookeeper-${ZK_VERSION}-bin && \
-    chmod -R g=u /apache-zookeeper-${ZK_VERSION}-bin
-RUN chgrp -R 0 /root && \
-    chmod -R g=u /root
 ENV ZOO_LOG_DIR=/opt/zookeeper/logs
 ENV ZOO_LOG4J_PROP=DEBUG,ROLLINGFILE
 RUN sed -i 's/ZOO_LOG_FILE=.*/ZOO_LOG_FILE=zookeeper.log/' /apache-zookeeper-${ZK_VERSION}-bin/bin/zkServer.sh
 RUN apt-get -q update && \
     apt-get install -y dnsutils curl procps
+USER 1001
