@@ -17,7 +17,9 @@ WORKDIR /zu
 RUN ./gradlew --console=verbose --info shadowJar
 
 FROM ${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}zookeeper:${ZK_VERSION}
+ENV ZK_USER=container
 ARG ZK_VERSION=3.6.3
+RUN useradd -g 1000 ${ZK_USER}
 COPY bin /usr/local/bin
 RUN chmod +x /usr/local/bin/*
 COPY --from=0 /zu/build/libs/zu.jar /opt/libs/
@@ -29,4 +31,4 @@ ENV ZOO_LOG4J_PROP=DEBUG,ROLLINGFILE
 RUN sed -i 's/ZOO_LOG_FILE=.*/ZOO_LOG_FILE=zookeeper.log/' /apache-zookeeper-${ZK_VERSION}-bin/bin/zkServer.sh
 RUN apt-get -q update && \
     apt-get install -y dnsutils curl procps
-USER 1001
+USER ${ZK_USER}
