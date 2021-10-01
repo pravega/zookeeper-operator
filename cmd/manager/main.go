@@ -24,7 +24,7 @@ import (
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
 	"github.com/pravega/zookeeper-operator/pkg/apis"
 	"github.com/pravega/zookeeper-operator/pkg/controller"
-	"github.com/pravega/zookeeper-operator/pkg/leader"
+	"github.com/pravega/zookeeper-operator/pkg/utils"
 	"github.com/pravega/zookeeper-operator/pkg/version"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
