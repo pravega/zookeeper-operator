@@ -93,14 +93,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	operatorns, err := k8sutil.GetOperatorNamespace()
+	operatorNs, err := k8sutil.GetOperatorNamespace()
 	if err != nil {
 		log.Error(err, "failed to get operator namespace")
 		os.Exit(1)
 	}
 
 	// Become the leader before proceeding
-	err = utils.BecomeLeader(context.TODO(), cfg, "zookeeper-operator-lock", operatorns)
+	err = utils.BecomeLeader(context.TODO(), cfg, "zookeeper-operator-lock", operatorNs)
 	if err != nil {
 		log.Error(err, "")
 		os.Exit(1)
