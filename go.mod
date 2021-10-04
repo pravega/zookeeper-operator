@@ -3,7 +3,6 @@ module github.com/pravega/zookeeper-operator
 go 1.16
 
 require (
-	4d63.com/gochecknoglobals v0.0.0-20210416044342-fb0abda3d9aa // indirect
 	github.com/Azure/go-autorest/autorest v0.11.19 // indirect
 	github.com/Azure/go-autorest/autorest/adal v0.9.14 // indirect
 	github.com/Microsoft/go-winio v0.4.15 // indirect
