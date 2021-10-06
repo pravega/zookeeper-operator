@@ -16,6 +16,7 @@ rules:
 - apiGroups:
   - ""
   resources:
+  - nodes
   - pods
   - services
   - endpoints
