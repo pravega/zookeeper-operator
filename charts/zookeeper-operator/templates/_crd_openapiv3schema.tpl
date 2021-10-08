@@ -3616,7 +3616,9 @@ openAPIV3Schema:
                   StorageType is Persistence storage
                 type: string
               triggerRollingRestart:
-                description: if set to true, triggers a cluster restart. this value will be auto-reverted to false by the operator once the restart is triggered.
+                description: TriggerRollingRestart if set to true will instruct operator
+                  to restart all the pods in the zookeeper cluster, after which this
+                  value will be set to false
                 type: boolean
               volumeMounts:
                 description: VolumeMounts defines to support customized volumeMounts
