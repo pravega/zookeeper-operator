@@ -24,6 +24,7 @@ type ZookeeperClient interface {
 	CreateNode(*v1beta1.ZookeeperCluster, string) error
 	NodeExists(string) (int32, error)
 	UpdateNode(string, string, int32) error
+	ReconfigToRemove([]string) error
 	Close()
 }
 
@@ -72,6 +73,13 @@ func (client *DefaultZookeeperClient) NodeExists(zNodePath string) (version int3
 		return -1, fmt.Errorf("Znode exists check failed for path %s: %v", zNodePath, err)
 	}
 	return zNodeStat.Version, err
+}
+
+func (client *DefaultZookeeperClient) ReconfigToRemove(leaving []string) (err error) {
+	if _, err := client.conn.IncrementalReconfig(nil, leaving, -1); err != nil {
+		return fmt.Errorf("Failed to remove node:%s, err:%v", strings.Join(leaving, ","), err)
+	}
+	return nil
 }
 
 func (client *DefaultZookeeperClient) Close() {

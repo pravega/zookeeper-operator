@@ -14,6 +14,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/operator-framework/operator-sdk/pkg/predicate"
@@ -295,7 +296,22 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 
 			data := "CLUSTER_SIZE=" + strconv.Itoa(int(newSTSSize))
 			r.log.Info("Updating Cluster Size.", "New Data:", data, "Version", version)
-			r.zkClient.UpdateNode(path, data, version)
+			err = r.zkClient.UpdateNode(path, data, version)
+			if err != nil {
+				return fmt.Errorf("Error updating cluster size %s: %v", path, err)
+			}
+			// #398 if decrease node, remove node immediately after update node successfully.
+			if newSTSSize < foundSTSSize {
+				var removes []string
+				for myid := newSTSSize + 1; myid <= foundSTSSize; myid++ {
+					removes = append(removes, strconv.Itoa(int(myid)))
+				}
+				r.log.Info("It will do reconfig to remove id:%s", strings.Join(removes, ","))
+				err := r.zkClient.ReconfigToRemove(removes)
+				if err != nil {
+					return fmt.Errorf("Error reconfig remove id:%s", strings.Join(removes, ","))
+				}
+			}
 		}
 		err = r.updateStatefulSet(instance, foundSts, sts)
 		if err != nil {
