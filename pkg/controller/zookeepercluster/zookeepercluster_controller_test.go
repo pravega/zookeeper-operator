@@ -60,8 +60,12 @@ func (client *MockZookeeperClient) NodeExists(zNodePath string) (version int32, 
 	return 0, nil
 }
 
-func (client *MockZookeeperClient) ReconfigToRemove(leaving []string) (err error) {
+func (client *MockZookeeperClient) IncReconfig(joining []string, leaving []string, version int64) (err error) {
 	return nil
+}
+
+func (client *MockZookeeperClient) GetConfig() (config string, version int32, err error) {
+	return "", 0, nil
 }
 
 func (client *MockZookeeperClient) Close() {

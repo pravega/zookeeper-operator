@@ -280,6 +280,8 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 		foundSTSSize := *foundSts.Spec.Replicas
 		newSTSSize := *sts.Spec.Replicas
 		if newSTSSize != foundSTSSize {
+			// If zookeeper is not running, it must stop update replicas.
+			// Until zookeeper is running and the client connect it successfully, decreasing Replicas will take effect.
 			zkUri := utils.GetZkServiceUri(instance)
 			err = r.zkClient.Connect(zkUri)
 			if err != nil {
@@ -300,16 +302,25 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 			if err != nil {
 				return fmt.Errorf("Error updating cluster size %s: %v", path, err)
 			}
-			// #398 if decrease node, remove node immediately after update node successfully.
+			// #398 if decrease node, remove node immediately after updating node successfully.
 			if newSTSSize < foundSTSSize {
 				var removes []string
-				for myid := newSTSSize + 1; myid <= foundSTSSize; myid++ {
-					removes = append(removes, strconv.Itoa(int(myid)))
-				}
-				r.log.Info("It will do reconfig to remove id:%s", strings.Join(removes, ","))
-				err := r.zkClient.ReconfigToRemove(removes)
+				config, _, err := r.zkClient.GetConfig()
 				if err != nil {
-					return fmt.Errorf("Error reconfig remove id:%s", strings.Join(removes, ","))
+					return fmt.Errorf("Error GetConfig %v", err)
+				}
+				r.log.Info("Get zookeeper config.", "Config: ", config)
+				for myid := newSTSSize + 1; myid <= foundSTSSize; myid++ {
+					if strings.Contains(config, "server."+strconv.Itoa(int(myid))+"=") {
+						removes = append(removes, strconv.Itoa(int(myid)))
+					}
+				}
+				// The node that have been removed witch reconfig alse can still provide services for all online clients.
+				// So We can remove it firstly, it will avoid to error that client maybe can't connect to server on preStop.
+				r.log.Info("Do reconfig to remove node.", "Remove ids", strings.Join(removes, ","))
+				err = r.zkClient.IncReconfig(nil, removes, -1)
+				if err != nil {
+					return fmt.Errorf("Error reconfig remove id:%s, %v", strings.Join(removes, ","), err)
 				}
 			}
 		}
@@ -632,7 +643,9 @@ func (r *ReconcileZookeeperCluster) reconcileClusterStatus(instance *zookeeperv1
 	instance.Status.Members.Unready = unreadyMembers
 
 	//If Cluster is in a ready state...
-	if instance.Spec.Replicas == instance.Status.ReadyReplicas && (!instance.Status.MetaRootCreated) {
+	// instance.Spec.Replicas is just an expected value that we set it, but it maybe not take effect by k8s.
+	// So we should check that instance.Status.Replicas is equal to ReadyReplicas, which means true true status of pods.
+	if instance.Status.Replicas == instance.Status.ReadyReplicas && (!instance.Status.MetaRootCreated) {
 		r.log.Info("Cluster is Ready, Creating ZK Metadata...")
 		zkUri := utils.GetZkServiceUri(instance)
 		err := r.zkClient.Connect(zkUri)
@@ -651,7 +664,7 @@ func (r *ReconcileZookeeperCluster) reconcileClusterStatus(instance *zookeeperv1
 	r.log.Info("Updating zookeeper status",
 		"StatefulSet.Namespace", instance.Namespace,
 		"StatefulSet.Name", instance.Name)
-	if instance.Status.ReadyReplicas == instance.Spec.Replicas {
+	if instance.Status.ReadyReplicas == instance.Status.Replicas {
 		instance.Status.SetPodsReadyConditionTrue()
 	} else {
 		instance.Status.SetPodsReadyConditionFalse()
@@ -781,7 +794,9 @@ func (r *ReconcileZookeeperCluster) getPVCCount(instance *zookeeperv1beta1.Zooke
 
 func (r *ReconcileZookeeperCluster) cleanupOrphanPVCs(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
 	// this check should make sure we do not delete the PVCs before the STS has scaled down
-	if instance.Status.ReadyReplicas == instance.Spec.Replicas {
+	// instance.Spec.Replicas is just an expected value that we set it, but it maybe not take effect by k8s.
+	// So we should check that instance.Status.Replicas is equal to ReadyReplicas, which means true true status of pods.
+	if instance.Status.ReadyReplicas == instance.Status.Replicas {
 		pvcCount, err := r.getPVCCount(instance)
 		if err != nil {
 			return err
