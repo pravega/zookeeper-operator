@@ -24,6 +24,7 @@ import (
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
 	"github.com/pravega/zookeeper-operator/pkg/apis"
 	"github.com/pravega/zookeeper-operator/pkg/controller"
+	zkConfig "github.com/pravega/zookeeper-operator/pkg/controller/config"
 	"github.com/pravega/zookeeper-operator/pkg/utils"
 	"github.com/pravega/zookeeper-operator/pkg/version"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -36,14 +37,13 @@ import (
 )
 
 var (
-	log              = logf.Log.WithName("cmd")
-	versionFlag      bool
-	disableFinalizer bool
+	log         = logf.Log.WithName("cmd")
+	versionFlag bool
 )
 
 func init() {
 	flag.BoolVar(&versionFlag, "version", false, "Show version and quit")
-	flag.BoolVar(&disableFinalizer, "disableFinalizer", false,
+	flag.BoolVar(&zkConfig.DisableFinalizer, "disableFinalizer", false,
 		"Disable finalizers for zookeeperclusters. Use this flag with awareness of the consequences")
 }
 
