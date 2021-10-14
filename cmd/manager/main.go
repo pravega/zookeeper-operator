@@ -36,12 +36,15 @@ import (
 )
 
 var (
-	log         = logf.Log.WithName("cmd")
-	versionFlag bool
+	log              = logf.Log.WithName("cmd")
+	versionFlag      bool
+	disableFinalizer bool
 )
 
 func init() {
 	flag.BoolVar(&versionFlag, "version", false, "Show version and quit")
+	flag.BoolVar(&disableFinalizer, "disableFinalizer", false,
+		"Disable finalizers for zookeeperclusters. Use this flag with awareness of the consequences")
 }
 
 func printVersion() {
