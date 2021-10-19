@@ -73,3 +73,5 @@ additionalVolumes: {}
 #   emptyDir: {}
 # - name: volume2
 #   emptyDir: {}
+
+disableFinalizer: false

@@ -56,3 +56,5 @@ The following table lists the configurable parameters of the zookeeper-operator 
 | `additionalEnv` | Additional Environment Variables | `[]` |
 | `additionalSidecars` | Additional Sidecars Configuration | `[]` |
 | `additionalVolumes` | Additional volumes required for sidecars | `[]` |
+| `disableFinalizer` | Disable finalizer for zookeeper clusters, PVCs clean-up will be skipped.| `false` |
+
