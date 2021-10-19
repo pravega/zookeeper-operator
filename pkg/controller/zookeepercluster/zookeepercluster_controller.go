@@ -17,11 +17,11 @@ import (
 	"time"
 
 	"github.com/operator-framework/operator-sdk/pkg/predicate"
-	"k8s.io/client-go/kubernetes/scheme"
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-
+	"github.com/pravega/zookeeper-operator/pkg/controller/config"
 	"github.com/pravega/zookeeper-operator/pkg/utils"
 	"github.com/pravega/zookeeper-operator/pkg/yamlexporter"
+	"k8s.io/client-go/kubernetes/scheme"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	"github.com/go-logr/logr"
 	zookeeperv1beta1 "github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
@@ -733,7 +733,7 @@ func (r *ReconcileZookeeperCluster) reconcileFinalizers(instance *zookeeperv1bet
 		return nil
 	}
 	if instance.DeletionTimestamp.IsZero() {
-		if !utils.ContainsString(instance.ObjectMeta.Finalizers, utils.ZkFinalizer) {
+		if !utils.ContainsString(instance.ObjectMeta.Finalizers, utils.ZkFinalizer) && !config.DisableFinalizer {
 			instance.ObjectMeta.Finalizers = append(instance.ObjectMeta.Finalizers, utils.ZkFinalizer)
 			if err = r.client.Update(context.TODO(), instance); err != nil {
 				return err
