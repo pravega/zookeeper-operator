@@ -5,6 +5,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
 {{ include "zookeeper-operator.commonLabels" . | indent 4 }}
+{{ toYaml .Values.labels | indent 4 }}
 spec:
   replicas: 1
   selector:

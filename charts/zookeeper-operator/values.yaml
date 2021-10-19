@@ -13,7 +13,8 @@ image:
   pullPolicy: IfNotPresent
 
 ## Additional labels to be added to resources
-labels: {}
+labels:
+  key: value
 
 ## Install RBAC roles and bindings.
 rbac:
