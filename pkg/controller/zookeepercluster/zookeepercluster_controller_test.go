@@ -65,7 +65,7 @@ func (client *MockZookeeperClient) IncReconfig(joining []string, leaving []strin
 }
 
 func (client *MockZookeeperClient) GetConfig() (config string, version int32, err error) {
-	return "", 0, nil
+	return "server.1=xxx,server.2=xxxx,server.3=xxxx", 0, nil
 }
 
 func (client *MockZookeeperClient) Close() {
@@ -228,6 +228,36 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				err = cl.Get(context.TODO(), req.NamespacedName, foundSts)
 				Ω(err).To(BeNil())
 				Ω(*foundSts.Spec.Replicas).To(BeEquivalentTo(6))
+			})
+		})
+
+		Context("With scale down Replicas", func() {
+			var (
+				cl  client.Client
+				err error
+			)
+
+			BeforeEach(func() {
+				z.WithDefaults()
+				z.Spec.Pod.ServiceAccountName = "zookeeper"
+				z.Status.Init()
+				next := z.DeepCopy()
+				st := zk.MakeStatefulSet(z)
+				next.Spec.Replicas = 1
+				cl = fake.NewFakeClient([]runtime.Object{next, st}...)
+				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				res, err = r.Reconcile(req)
+			})
+
+			It("should not raise an error", func() {
+				Ω(err).To(BeNil())
+			})
+
+			It("should update the sts", func() {
+				foundSts := &appsv1.StatefulSet{}
+				err = cl.Get(context.TODO(), req.NamespacedName, foundSts)
+				Ω(err).To(BeNil())
+				Ω(*foundSts.Spec.Replicas).To(BeEquivalentTo(1))
 			})
 		})
 
