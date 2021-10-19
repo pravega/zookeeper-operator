@@ -642,10 +642,9 @@ func (r *ReconcileZookeeperCluster) reconcileClusterStatus(instance *zookeeperv1
 	instance.Status.Members.Ready = readyMembers
 	instance.Status.Members.Unready = unreadyMembers
 
-	//If Cluster is in a ready state...
+	// If Cluster is in a ready state...
 	// instance.Spec.Replicas is just an expected value that we set it, but it maybe not take effect by k8s.
-	// So we should check that instance.Status.Replicas is equal to ReadyReplicas, which means true true status of pods.
-	if instance.Status.Replicas == instance.Status.ReadyReplicas && (!instance.Status.MetaRootCreated) {
+	if instance.Spec.Replicas == instance.Status.ReadyReplicas && (!instance.Status.MetaRootCreated) {
 		r.log.Info("Cluster is Ready, Creating ZK Metadata...")
 		zkUri := utils.GetZkServiceUri(instance)
 		err := r.zkClient.Connect(zkUri)
@@ -664,7 +663,7 @@ func (r *ReconcileZookeeperCluster) reconcileClusterStatus(instance *zookeeperv1
 	r.log.Info("Updating zookeeper status",
 		"StatefulSet.Namespace", instance.Namespace,
 		"StatefulSet.Name", instance.Name)
-	if instance.Status.ReadyReplicas == instance.Status.Replicas {
+	if instance.Status.ReadyReplicas == instance.Spec.Replicas && instance.Status.Replicas == instance.Spec.Replicas {
 		instance.Status.SetPodsReadyConditionTrue()
 	} else {
 		instance.Status.SetPodsReadyConditionFalse()
@@ -794,9 +793,9 @@ func (r *ReconcileZookeeperCluster) getPVCCount(instance *zookeeperv1beta1.Zooke
 
 func (r *ReconcileZookeeperCluster) cleanupOrphanPVCs(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
 	// this check should make sure we do not delete the PVCs before the STS has scaled down
-	// instance.Spec.Replicas is just an expected value that we set it, but it maybe not take effect by k8s.
-	// So we should check that instance.Status.Replicas is equal to ReadyReplicas, which means true true status of pods.
-	if instance.Status.ReadyReplicas == instance.Status.Replicas {
+	// instance.Spec.Replicas is just an expected value that we set it, but it maybe not take effect by k8s if update state failly.
+	// So we should check that instance.Status.Replicas is equal to ReadyReplicas and Spec.Replicas, which means cluster already.
+	if instance.Status.ReadyReplicas == instance.Spec.Replicas && instance.Status.Replicas == instance.Spec.Replicas {
 		pvcCount, err := r.getPVCCount(instance)
 		if err != nil {
 			return err
