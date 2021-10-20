@@ -12,6 +12,7 @@ package zookeepercluster
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -72,6 +73,105 @@ func (client *MockZookeeperClient) Close() {
 	return
 }
 
+type TestZookeeperClient struct {
+	// dummy struct
+}
+
+func (client *TestZookeeperClient) Connect(zkUri string) (err error) {
+	// do nothing
+	return nil
+}
+
+func (client *TestZookeeperClient) CreateNode(zoo *v1beta1.ZookeeperCluster, zNodePath string) (err error) {
+	return nil
+}
+
+func (client *TestZookeeperClient) UpdateNode(path string, data string, version int32) (err error) {
+	return fmt.Errorf("Error")
+}
+
+func (client *TestZookeeperClient) NodeExists(zNodePath string) (version int32, err error) {
+	return 0, nil
+}
+
+func (client *TestZookeeperClient) IncReconfig(joining []string, leaving []string, version int64) (err error) {
+	return fmt.Errorf("Error")
+}
+
+func (client *TestZookeeperClient) GetConfig() (config string, version int32, err error) {
+	return "server.1=xxx,server.2=xxxx,server.3=xxxx", 0, fmt.Errorf("Error")
+}
+
+func (client *TestZookeeperClient) Close() {
+	return
+}
+
+type GetConfigFailZookeeperClient struct {
+	// dummy struct
+}
+
+func (client *GetConfigFailZookeeperClient) Connect(zkUri string) (err error) {
+	// do nothing
+	return nil
+}
+
+func (client *GetConfigFailZookeeperClient) CreateNode(zoo *v1beta1.ZookeeperCluster, zNodePath string) (err error) {
+	return nil
+}
+
+func (client *GetConfigFailZookeeperClient) UpdateNode(path string, data string, version int32) (err error) {
+	return nil
+}
+
+func (client *GetConfigFailZookeeperClient) NodeExists(zNodePath string) (version int32, err error) {
+	return 0, nil
+}
+
+func (client *GetConfigFailZookeeperClient) IncReconfig(joining []string, leaving []string, version int64) (err error) {
+	return nil
+}
+
+func (client *GetConfigFailZookeeperClient) GetConfig() (config string, version int32, err error) {
+	return "server.1=xxx,server.2=xxxx,server.3=xxxx", 0, fmt.Errorf("Error")
+}
+
+func (client *GetConfigFailZookeeperClient) Close() {
+	return
+}
+
+type IncReconfigFailZookeeperClient struct {
+	// dummy struct
+}
+
+func (client *IncReconfigFailZookeeperClient) Connect(zkUri string) (err error) {
+	// do nothing
+	return nil
+}
+
+func (client *IncReconfigFailZookeeperClient) CreateNode(zoo *v1beta1.ZookeeperCluster, zNodePath string) (err error) {
+	return nil
+}
+
+func (client *IncReconfigFailZookeeperClient) UpdateNode(path string, data string, version int32) (err error) {
+	return nil
+}
+
+func (client *IncReconfigFailZookeeperClient) NodeExists(zNodePath string) (version int32, err error) {
+	return 0, nil
+}
+
+func (client *IncReconfigFailZookeeperClient) IncReconfig(joining []string, leaving []string, version int64) (err error) {
+	return fmt.Errorf("Error")
+}
+
+func (client *IncReconfigFailZookeeperClient) GetConfig() (config string, version int32, err error) {
+	return "server.1=xxx,server.2=xxxx,server.3=xxxx", 0, nil
+}
+
+func (client *IncReconfigFailZookeeperClient) Close() {
+	return
+}
+
 var _ = Describe("ZookeeperCluster Controller", func() {
 	const (
 		Name      = "example"
@@ -79,9 +179,12 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 	)
 
 	var (
-		s            = scheme.Scheme
-		mockZkClient = new(MockZookeeperClient)
-		r            *ReconcileZookeeperCluster
+		s                   = scheme.Scheme
+		mockZkClient        = new(MockZookeeperClient)
+		testZkClient        = new(TestZookeeperClient)
+		getConfigZkClient   = new(GetConfigFailZookeeperClient)
+		incReconfigZkClient = new(IncReconfigFailZookeeperClient)
+		r                   *ReconcileZookeeperCluster
 	)
 
 	Context("Reconcile", func() {
@@ -258,6 +361,50 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				err = cl.Get(context.TODO(), req.NamespacedName, foundSts)
 				Ω(err).To(BeNil())
 				Ω(*foundSts.Spec.Replicas).To(BeEquivalentTo(1))
+			})
+		})
+
+		Context("With scale down Replicas but fail", func() {
+			var (
+				cl        client.Client
+				err       error
+				count     int
+				new_count int
+			)
+
+			BeforeEach(func() {
+				z.WithDefaults()
+				z.Spec.Pod.ServiceAccountName = "zookeeper"
+				z.Status.Init()
+				next := z.DeepCopy()
+				st := zk.MakeStatefulSet(z)
+				next.Spec.Replicas = 1
+				cl = fake.NewFakeClient([]runtime.Object{next, st}...)
+				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: testZkClient}
+				count, _ = r.getPVCCount(z)
+				res, err = r.Reconcile(req)
+			})
+
+			It("should raise an error in case of zookeeper not running", func() {
+				Ω(err).NotTo(BeNil())
+				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: getConfigZkClient}
+				_, err = r.Reconcile(req)
+				Ω(err).NotTo(BeNil())
+				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: incReconfigZkClient}
+				_, err = r.Reconcile(req)
+				Ω(err).NotTo(BeNil())
+			})
+
+			It("should not update the sts in case of zookeeper not running", func() {
+				foundSts := &appsv1.StatefulSet{}
+				err = cl.Get(context.TODO(), req.NamespacedName, foundSts)
+				Ω(err).To(BeNil())
+				Ω(*foundSts.Spec.Replicas).To(BeEquivalentTo(3))
+			})
+			It("should not delete pvc in case of zookeeper not running", func() {
+				new_count, err = r.getPVCCount(z)
+				Ω(err).To(BeNil())
+				Ω(new_count).To(BeEquivalentTo(count))
 			})
 		})
 
