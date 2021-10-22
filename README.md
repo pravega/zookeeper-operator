@@ -152,7 +152,7 @@ svc/zookeeper-client     ClusterIP   10.31.243.173   <none>        2181/TCP     
 svc/zookeeper-headless   ClusterIP   None            <none>        2888/TCP,3888/TCP   2m
 ```
 
->Note: If you want to configure non default service accounts to zookeeper pods, set the service account inside pod.This support is added from zookeeper operator version `0.2.9` onwards.
+> Note: If you want to configure zookeeper pod, for example to change the service account or the CPU limits, you can set the following properties: [~/charts/zookeeper/templates/zookeeper.yaml](https://github.com/pravega/zookeeper-operator/blob/master/charts/zookeeper/templates/zookeeper.yaml). This support is added from zookeeper operator version `0.2.9` onwards.
 
 ```
 apiVersion: "zookeeper.pravega.io/v1beta1"
@@ -162,6 +162,13 @@ metadata:
 spec:
   pod:
     serviceAccountName: "zookeeper"
+    resources:
+        requests:
+          cpu: 200m
+          memory: 256Mi
+        limits:
+          cpu: 200m
+          memory: 256Mi
 ```
 
 ### Deploy a sample Zookeeper cluster with Ephemeral storage
