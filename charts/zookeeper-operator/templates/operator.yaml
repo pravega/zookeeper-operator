@@ -5,7 +5,6 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
 {{ include "zookeeper-operator.commonLabels" . | indent 4 }}
-{{ toYaml .Values.labels | indent 4 }}
 spec:
   replicas: 1
   selector:
@@ -16,6 +15,7 @@ spec:
       labels:
         name: {{ template "zookeeper-operator.fullname" . }}
         component: zookeeper-operator
+        {{ toYaml .Values.labels }}
       {{- if .Values.annotations }}
       annotations:
 {{ toYaml .Values.annotations | indent 8 }}
