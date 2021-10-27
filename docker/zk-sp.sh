@@ -17,8 +17,8 @@ precheck() {
   if grep -q "Peer state changed" ${LOG_PATH}
   then
     echo "zookeeper has ongoing sync task" >>  ${LOG_RECOVER_PATH}
-    if ( grep "Peer state changed" ${LOG_PATH} | tail -1| grep -q "following - broadcast" \
-    || grep -q "leading - broadcast" ${LOG_PATH} ) \
+    if ( grep "Peer state changed" ${LOG_PATH} | sort -k 2 | tail -1| grep -q "following - broadcast" \
+    || grep "Peer state changed" ${LOG_PATH} | sort -k 2 | tail -1| grep -q  "leading - broadcast" ) \
     && ! grep -q "digest mismatch" ${LOG_PATH}
     then
       echo "sync succeeded" >>  ${LOG_RECOVER_PATH}
@@ -45,8 +45,8 @@ postcheck() {
   if grep -q "Peer state changed" ${LOG_PATH}
   then
     echo "zookeeper has ongoing sync task" >>  ${LOG_RECOVER_PATH}
-    if ( grep "Peer state changed" ${LOG_PATH} | tail -1| grep -q "following - broadcast" \
-    || grep -q "leading - broadcast" ${LOG_PATH} ) \
+    if ( grep "Peer state changed" ${LOG_PATH} | sort -k 2 | tail -1| grep -q "following - broadcast" \
+    || grep "Peer state changed" ${LOG_PATH} | sort -k 2 | tail -1| grep -q  "leading - broadcast" ) \
     && ! grep -q "digest mismatch" ${LOG_PATH}
     then
       echo "sync succeeded" >>  ${LOG_RECOVER_PATH}
