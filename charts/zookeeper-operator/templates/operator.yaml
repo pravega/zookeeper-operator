@@ -15,6 +15,9 @@ spec:
       labels:
         name: {{ template "zookeeper-operator.fullname" . }}
         component: zookeeper-operator
+        {{- if .Values.labels }}
+{{ toYaml .Values.labels | indent 8 }}
+        {{- end }}
       {{- if .Values.annotations }}
       annotations:
 {{ toYaml .Values.annotations | indent 8 }}
@@ -34,6 +37,10 @@ spec:
           name: metrics
         command:
         - zookeeper-operator
+        {{- if .Values.disableFinalizer }}
+        args:
+        - -disableFinalizer
+        {{- end }}
         env:
         - name: WATCH_NAMESPACE
           value: "{{ .Values.watchNamespace }}"

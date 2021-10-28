@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
+	"github.com/pravega/zookeeper-operator/pkg/controller/config"
 	"github.com/pravega/zookeeper-operator/pkg/zk"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -605,6 +606,32 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				err = r.reconcileFinalizers(z)
 			})
 			It("should not raise an error", func() {
+				Ω(err).To(BeNil())
+			})
+		})
+
+		Context("reconcileFinalizers", func() {
+			var (
+				cl  client.Client
+				err error
+			)
+			BeforeEach(func() {
+				z.WithDefaults()
+				z.Spec.Persistence = nil
+				cl = fake.NewFakeClient(z)
+			})
+			It("should have 1 finalizer, should not raise an error", func() {
+				config.DisableFinalizer = false
+				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				err = r.reconcileFinalizers(z)
+				Expect(z.ObjectMeta.Finalizers).To(HaveLen(1))
+				Ω(err).To(BeNil())
+			})
+			It("should have 0 finalizer, should not raise an error", func() {
+				config.DisableFinalizer = true
+				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				err = r.reconcileFinalizers(z)
+				Expect(z.ObjectMeta.Finalizers).To(HaveLen(0))
 				Ω(err).To(BeNil())
 			})
 		})
