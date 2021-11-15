@@ -58,7 +58,7 @@ var _ = Describe("Zookeeper Client", func() {
 		It("err6 should be not nil", func() {
 			Ω(err6).ShouldNot(BeNil())
 		})
-		It("err should be not nil", func() {
+		It("err7 should be not nil", func() {
 			Ω(err7).ShouldNot(BeNil())
 		})
 	})

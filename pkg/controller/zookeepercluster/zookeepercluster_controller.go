@@ -315,8 +315,8 @@ func (r *ReconcileZookeeperCluster) reconcileStatefulSet(instance *zookeeperv1be
 						removes = append(removes, strconv.Itoa(int(myid)))
 					}
 				}
-				// The node that have been removed witch reconfig alse can still provide services for all online clients.
-				// So We can remove it firstly, it will avoid to error that client maybe can't connect to server on preStop.
+				// The node that have been removed with reconfig also can still provide services for all online clients.
+				// So We can remove it firstly, it will avoid to error that client can't connect to server on preStop.
 				r.log.Info("Do reconfig to remove node.", "Remove ids", strings.Join(removes, ","))
 				err = r.zkClient.IncReconfig(nil, removes, -1)
 				if err != nil {
