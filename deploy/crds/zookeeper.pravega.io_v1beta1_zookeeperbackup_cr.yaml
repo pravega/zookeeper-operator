@@ -1,0 +1,12 @@
+apiVersion: zookeeper.pravega.io/v1beta1
+kind: ZookeeperBackup
+metadata:
+  name: example-zookeeperbackup
+spec:
+  zookeeperCluster: "tf-zookeeper"
+  schedule: "0 0 */1 * *"
+  backupsToKeep: "7"
+  dataStorageClass: "backup-class"
+  image:
+    repository: "pravega/zkbackup"
+    tag: "0.1"

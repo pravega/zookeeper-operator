@@ -1,0 +1,80 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: zookeeperbackups.zookeeper.pravega.io
+spec:
+  group: zookeeper.pravega.io
+  names:
+    kind: ZookeeperBackup
+    listKind: ZookeeperBackupList
+    plural: zookeeperbackups
+    singular: zookeeperbackup
+  scope: Namespaced
+  versions:
+  - name: v1beta1
+    schema:
+      openAPIV3Schema:
+        description: ZookeeperBackup is the Schema for the zookeeperbackups API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: ZookeeperBackupSpec defines the desired state of ZookeeperBackup
+            properties:
+              backupsToKeep:
+                default: "7"
+                description: Number of backups to store
+                type: string
+              dataCapacity:
+                default: 1Gi
+                description: Data Storage Capacity
+                type: string
+              dataStorageClass:
+                description: Data Storage Class name
+                type: string
+              image:
+                description: ContainerImage defines the fields needed for a Docker
+                  repository image. The format here matches the predominant format
+                  used in Helm charts.
+                properties:
+                  pullPolicy:
+                    description: PullPolicy describes a policy for if/when to pull
+                      a container image
+                    enum:
+                    - Always
+                    - Never
+                    - IfNotPresent
+                    type: string
+                  repository:
+                    type: string
+                  tag:
+                    type: string
+                type: object
+              schedule:
+                default: 0 0 */1 * *
+                description: Schedule in Cron format
+                type: string
+              zookeeperCluster:
+                description: Name of the ZookeeperCluster to backup
+                type: string
+            required:
+            - zookeeperCluster
+            type: object
+          status:
+            description: ZookeeperBackupStatus defines the observed state of ZookeeperBackup
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
