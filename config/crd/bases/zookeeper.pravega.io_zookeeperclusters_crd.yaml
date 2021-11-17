@@ -1,5 +1,49 @@
-{{- define "crd.openAPIV3Schema" }}
-openAPIV3Schema:
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: zookeeperclusters.zookeeper.pravega.io
+spec:
+  group: zookeeper.pravega.io
+  names:
+    kind: ZookeeperCluster
+    listKind: ZookeeperClusterList
+    plural: zookeeperclusters
+    shortNames:
+      - zk
+    singular: zookeepercluster
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - description: The number of ZooKeeper servers in the ensemble
+          jsonPath: .spec.replicas
+          name: Replicas
+          type: integer
+        - description: The number of ZooKeeper servers in the ensemble that are in a Ready state
+          jsonPath: .status.readyReplicas
+          name: Ready Replicas
+          type: integer
+        - description: The current Zookeeper version
+          jsonPath: .status.currentVersion
+          name: Version
+          type: string
+        - description: The desired Zookeeper version
+          jsonPath: .spec.image.tag
+          name: Desired Version
+          type: string
+        - description: Client endpoint internal to cluster network
+          jsonPath: .status.internalClientEndpoint
+          name: Internal Endpoint
+          type: string
+        - description: Client endpoint external to cluster network via LoadBalancer
+          jsonPath: .status.externalClientEndpoint
+          name: External Endpoint
+          type: string
+        - jsonPath: .metadata.creationTimestamp
+          name: Age
+          type: date
+      name: v1beta1
+      schema:
+        openAPIV3Schema:
           description: ZookeeperCluster is the Schema for the zookeeperclusters API
           type: object
           properties:
@@ -3366,4 +3410,7 @@ openAPIV3Schema:
                   format: int32
                 targetVersion:
                   type: string
-{{- end }}
+      served: true
+      storage: true
+      subresources:
+        status: {}

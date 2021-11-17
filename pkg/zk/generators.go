@@ -16,7 +16,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
+	"github.com/pravega/zookeeper-operator/api/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"

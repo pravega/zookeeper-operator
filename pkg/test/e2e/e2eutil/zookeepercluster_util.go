@@ -13,18 +13,17 @@ package e2eutil
 import (
 	goctx "context"
 	"fmt"
+	"k8s.io/apimachinery/pkg/labels"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"testing"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 
-	framework "github.com/operator-framework/operator-sdk/pkg/test"
-	api "github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
+	api "github.com/pravega/zookeeper-operator/api/v1beta1"
 )
 
 var (
@@ -39,15 +38,15 @@ var (
 )
 
 // CreateCluster creates a ZookeeperCluster CR with the desired spec
-func CreateCluster(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z *api.ZookeeperCluster) (*api.ZookeeperCluster, error) {
+func CreateCluster(t *testing.T, k8client client.Client, z *api.ZookeeperCluster) (*api.ZookeeperCluster, error) {
 	t.Logf("creating zookeeper cluster: %s", z.Name)
-	err := f.Client.Create(goctx.TODO(), z, &framework.CleanupOptions{TestContext: ctx, Timeout: CleanupTimeout, RetryInterval: CleanupRetryInterval})
+	err := k8client.Create(goctx.TODO(), z)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create CR: %v", err)
 	}
 
 	zk := &api.ZookeeperCluster{}
-	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Namespace: z.Namespace, Name: z.Name}, zk)
+	err = k8client.Get(goctx.TODO(), types.NamespacedName{Namespace: z.Namespace, Name: z.Name}, zk)
 	if err != nil {
 		return nil, fmt.Errorf("failed to obtain created CR: %v", err)
 	}
@@ -56,9 +55,9 @@ func CreateCluster(t *testing.T, f *framework.Framework, ctx *framework.TestCtx,
 }
 
 // DeleteCluster deletes the ZookeeperCluster CR specified by cluster spec
-func DeleteCluster(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z *api.ZookeeperCluster) error {
+func DeleteCluster(t *testing.T, k8client client.Client, z *api.ZookeeperCluster) error {
 	t.Logf("deleting zookeeper cluster: %s", z.Name)
-	err := f.Client.Delete(goctx.TODO(), z)
+	err := k8client.Delete(goctx.TODO(), z)
 	if err != nil {
 		return fmt.Errorf("failed to delete CR: %v", err)
 	}
@@ -68,9 +67,9 @@ func DeleteCluster(t *testing.T, f *framework.Framework, ctx *framework.TestCtx,
 }
 
 // UpdateCluster updates the ZookeeperCluster CR
-func UpdateCluster(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z *api.ZookeeperCluster) error {
+func UpdateCluster(t *testing.T, k8client client.Client, z *api.ZookeeperCluster) error {
 	t.Logf("updating zookeeper cluster: %s", z.Name)
-	err := f.Client.Update(goctx.TODO(), z)
+	err := k8client.Update(goctx.TODO(), z)
 	if err != nil {
 		return fmt.Errorf("failed to update CR: %v", err)
 	}
@@ -80,9 +79,9 @@ func UpdateCluster(t *testing.T, f *framework.Framework, ctx *framework.TestCtx,
 }
 
 // GetCluster returns the latest ZookeeperCluster CR
-func GetCluster(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z *api.ZookeeperCluster) (*api.ZookeeperCluster, error) {
+func GetCluster(t *testing.T, k8client client.Client, z *api.ZookeeperCluster) (*api.ZookeeperCluster, error) {
 	zk := &api.ZookeeperCluster{}
-	err := f.Client.Get(goctx.TODO(), types.NamespacedName{Namespace: z.Namespace, Name: z.Name}, zk)
+	err := k8client.Get(goctx.TODO(), types.NamespacedName{Namespace: z.Namespace, Name: z.Name}, zk)
 	if err != nil {
 		return nil, fmt.Errorf("failed to obtain created CR: %v", err)
 	}
@@ -91,10 +90,10 @@ func GetCluster(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z 
 }
 
 // WaitForClusterToBecomeReady will wait until all cluster pods are ready
-func WaitForClusterToBecomeReady(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z *api.ZookeeperCluster, size int) error {
+func WaitForClusterToBecomeReady(t *testing.T, k8client client.Client, z *api.ZookeeperCluster, size int) error {
 	t.Logf("waiting for cluster pods to become ready: %s", z.Name)
 	err := wait.Poll(RetryInterval, ReadyTimeout, func() (done bool, err error) {
-		cluster, err := GetCluster(t, f, ctx, z)
+		cluster, err := GetCluster(t, k8client, z)
 		if err != nil {
 			return false, err
 		}
@@ -117,11 +116,11 @@ func WaitForClusterToBecomeReady(t *testing.T, f *framework.Framework, ctx *fram
 }
 
 // WaitForClusterToUpgrade will wait until all pods are upgraded
-func WaitForClusterToUpgrade(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z *api.ZookeeperCluster, targetVersion string) error {
+func WaitForClusterToUpgrade(t *testing.T, k8client client.Client, z *api.ZookeeperCluster, targetVersion string) error {
 	t.Logf("waiting for cluster to upgrade: %s", z.Name)
 
 	err := wait.Poll(RetryInterval, UpgradeTimeout, func() (done bool, err error) {
-		cluster, err := GetCluster(t, f, ctx, z)
+		cluster, err := GetCluster(t, k8client, z)
 		if err != nil {
 			return false, err
 		}
@@ -151,16 +150,18 @@ func WaitForClusterToUpgrade(t *testing.T, f *framework.Framework, ctx *framewor
 }
 
 // WaitForClusterToTerminate will wait until all cluster pods are terminated
-func WaitForClusterToTerminate(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z *api.ZookeeperCluster) error {
+func WaitForClusterToTerminate(t *testing.T, k8client client.Client, z *api.ZookeeperCluster) error {
 	t.Logf("waiting for zookeeper cluster to terminate: %s", z.Name)
 
-	listOptions := metav1.ListOptions{
-		LabelSelector: labels.SelectorFromSet(map[string]string{"app": z.GetName()}).String(),
+	listOptions := []client.ListOption{
+		client.InNamespace(z.GetNamespace()),
+		client.MatchingLabelsSelector{Selector: labels.SelectorFromSet(map[string]string{"app": z.GetName()})},
 	}
 
 	// Wait for Pods to terminate
 	err := wait.Poll(RetryInterval, TerminateTimeout, func() (done bool, err error) {
-		podList, err := f.KubeClient.CoreV1().Pods(z.Namespace).List(goctx.TODO(), listOptions)
+		podList := corev1.PodList{}
+		err = k8client.List(goctx.TODO(), &podList, listOptions...)
 		if err != nil {
 			return false, err
 		}
@@ -183,7 +184,8 @@ func WaitForClusterToTerminate(t *testing.T, f *framework.Framework, ctx *framew
 
 	// Wait for PVCs to terminate
 	err = wait.Poll(RetryInterval, TerminateTimeout, func() (done bool, err error) {
-		pvcList, err := f.KubeClient.CoreV1().PersistentVolumeClaims(z.Namespace).List(goctx.TODO(), listOptions)
+		pvcList := corev1.PersistentVolumeClaimList{}
+		err = k8client.List(goctx.TODO(), &pvcList, listOptions...)
 		if err != nil {
 			return false, err
 		}
@@ -208,11 +210,13 @@ func WaitForClusterToTerminate(t *testing.T, f *framework.Framework, ctx *framew
 	t.Logf("zookeeper cluster terminated: %s", z.Name)
 	return nil
 }
-func DeletePods(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z *api.ZookeeperCluster, size int) error {
-	listOptions := metav1.ListOptions{
-		LabelSelector: labels.SelectorFromSet(map[string]string{"app": z.GetName()}).String(),
+func DeletePods(t *testing.T, k8client client.Client, z *api.ZookeeperCluster, size int) error {
+	listOptions := []client.ListOption{
+		client.InNamespace(z.GetNamespace()),
+		client.MatchingLabelsSelector{Selector: labels.SelectorFromSet(map[string]string{"app": z.GetName()})},
 	}
-	podList, err := f.KubeClient.CoreV1().Pods(z.Namespace).List(goctx.TODO(), listOptions)
+	podList := corev1.PodList{}
+	err := k8client.List(goctx.TODO(), &podList, listOptions...)
 	if err != nil {
 		return err
 	}
@@ -221,7 +225,7 @@ func DeletePods(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z 
 	for i := 0; i < size; i++ {
 		pod = &podList.Items[i]
 		t.Logf("podnameis %v", pod.Name)
-		err := f.Client.Delete(goctx.TODO(), pod)
+		err := k8client.Delete(goctx.TODO(), pod)
 		if err != nil {
 			return fmt.Errorf("failed to delete pod: %v", err)
 		}
@@ -231,17 +235,20 @@ func DeletePods(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z 
 	}
 	return nil
 }
-func GetPods(t *testing.T, f *framework.Framework, z *api.ZookeeperCluster) (*corev1.PodList, error) {
-	listOptions := metav1.ListOptions{
-		LabelSelector: labels.SelectorFromSet(map[string]string{"app": z.GetName()}).String(),
+func GetPods(t *testing.T, k8client client.Client, z *api.ZookeeperCluster) (*corev1.PodList, error) {
+	listOptions := []client.ListOption{
+		client.InNamespace(z.GetNamespace()),
+		client.MatchingLabels(map[string]string{"app": z.GetName()}),
 	}
-	return f.KubeClient.CoreV1().Pods(z.Namespace).List(goctx.TODO(), listOptions)
+	podList := corev1.PodList{}
+	err := k8client.List(goctx.TODO(), &podList, listOptions...)
+	return &podList, err
 }
-func CheckAdminService(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, z *api.ZookeeperCluster) error {
-	listOptions := metav1.ListOptions{
-		LabelSelector: labels.SelectorFromSet(map[string]string{"app": z.GetName()}).String(),
-	}
-	serviceList, err := f.KubeClient.CoreV1().Services(z.Namespace).List(goctx.TODO(), listOptions)
+func CheckAdminService(t *testing.T, k8client client.Client, z *api.ZookeeperCluster) error {
+	serviceList := corev1.ServiceList{}
+	listOptions := []client.ListOption{client.InNamespace(z.GetNamespace()),
+		client.MatchingLabelsSelector{Selector: labels.SelectorFromSet(map[string]string{"app": z.GetName()})}}
+	err := k8client.List(goctx.TODO(), &serviceList, listOptions...)
 	if err != nil {
 		return err
 	}

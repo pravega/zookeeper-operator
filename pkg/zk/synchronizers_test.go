@@ -11,7 +11,7 @@
 package zk_test
 
 import (
-	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
+	"github.com/pravega/zookeeper-operator/api/v1beta1"
 	"github.com/pravega/zookeeper-operator/pkg/zk"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"

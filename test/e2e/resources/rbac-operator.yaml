@@ -3,8 +3,6 @@ kind: ServiceAccount
 metadata:
   name: zookeeper-operator
 
-
-
 ---
 
 kind: ClusterRole
@@ -47,10 +45,8 @@ rules:
   verbs:
   - "*"
 
-
-
-
 ---
+
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
@@ -64,10 +60,8 @@ roleRef:
   name: zookeeper-operator
   apiGroup: rbac.authorization.k8s.io
 
-
-
-
 ---
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -98,10 +92,9 @@ spec:
           value: zookeeper-operator
         image: pravega/zookeeper-operator:latest
         imagePullPolicy: Always
-        name: zookeeper-operator
-        ports:
-        - containerPort: 60000
-          name: metrics
+        name: manager
+        args:
+          - "--metrics-bind-address=127.0.0.1:60000"
         resources: {}
       serviceAccountName: zookeeper-operator
 status: {}

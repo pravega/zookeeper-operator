@@ -14,7 +14,7 @@ import (
 	"fmt"
 	"strconv"
 
-	v1beta1 "github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
+	v1beta1 "github.com/pravega/zookeeper-operator/api/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 )
 
