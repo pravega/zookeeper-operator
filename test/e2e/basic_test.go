@@ -11,70 +11,45 @@
 package e2e
 
 import (
-	"testing"
-
+	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	zk_e2eutil "github.com/pravega/zookeeper-operator/pkg/test/e2e/e2eutil"
 )
 
 // Test create and recreate a Zookeeper cluster with the same name
-func testCreateRecreateCluster(t *testing.T) {
-	g := NewGomegaWithT(t)
+var _ = Describe("Basic test controller", func() {
+	Context("Check create/delete operations", func() {
+		It("should create and recreate a Zookeeper cluster with the same name", func() {
+			By("create Zookeeper cluster")
+			defaultCluster := zk_e2eutil.NewDefaultCluster(testNamespace)
+			defaultCluster.WithDefaults()
+			defaultCluster.Status.Init()
+			defaultCluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
 
-	doCleanup := true
-	ctx := framework.NewTestCtx(t)
-	defer func() {
-		if doCleanup {
-			ctx.Cleanup()
-		}
-	}()
+			zk, err := zk_e2eutil.CreateCluster(&t, k8sClient, defaultCluster)
+			Expect(err).NotTo(HaveOccurred())
 
-	namespace, err := ctx.GetNamespace()
-	g.Expect(err).NotTo(HaveOccurred())
-	f := framework.Global
+			podSize := 3
+			Expect(zk_e2eutil.WaitForClusterToBecomeReady(&t, k8sClient, defaultCluster, podSize)).NotTo(HaveOccurred())
+			Expect(zk_e2eutil.CheckAdminService(&t, k8sClient, zk)).NotTo(HaveOccurred())
 
-	defaultCluster := zk_e2eutil.NewDefaultCluster(namespace)
+			By("delete created Zookeeper cluster")
+			Expect(k8sClient.Delete(ctx, zk)).Should(Succeed())
+			Expect(zk_e2eutil.WaitForClusterToTerminate(&t, k8sClient, zk)).NotTo(HaveOccurred())
 
-	defaultCluster.WithDefaults()
-	defaultCluster.Status.Init()
-	defaultCluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
+			By("create Zookeeper cluster with the same name")
+			defaultCluster = zk_e2eutil.NewDefaultCluster(testNamespace)
+			defaultCluster.WithDefaults()
+			defaultCluster.Status.Init()
+			defaultCluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
 
-	zk, err := zk_e2eutil.CreateCluster(t, f, ctx, defaultCluster)
-	g.Expect(err).NotTo(HaveOccurred())
+			zk, err = zk_e2eutil.CreateCluster(&t, k8sClient, defaultCluster)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(zk_e2eutil.WaitForClusterToBecomeReady(&t, k8sClient, defaultCluster, podSize)).NotTo(HaveOccurred())
 
-	// A default Zookeeper cluster should have 3 replicas
-	podSize := 3
-	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
-	g.Expect(err).NotTo(HaveOccurred())
-
-	err = zk_e2eutil.CheckAdminService(t, f, ctx, zk)
-	g.Expect(err).NotTo(HaveOccurred())
-
-	err = zk_e2eutil.DeleteCluster(t, f, ctx, zk)
-	g.Expect(err).NotTo(HaveOccurred())
-
-	err = zk_e2eutil.WaitForClusterToTerminate(t, f, ctx, zk)
-	g.Expect(err).NotTo(HaveOccurred())
-
-	defaultCluster = zk_e2eutil.NewDefaultCluster(namespace)
-	defaultCluster.WithDefaults()
-	defaultCluster.Status.Init()
-	defaultCluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
-
-	zk, err = zk_e2eutil.CreateCluster(t, f, ctx, defaultCluster)
-	g.Expect(err).NotTo(HaveOccurred())
-
-	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
-	g.Expect(err).NotTo(HaveOccurred())
-
-	err = zk_e2eutil.DeleteCluster(t, f, ctx, zk)
-	g.Expect(err).NotTo(HaveOccurred())
-
-	// No need to do cleanup since the cluster CR has already been deleted
-	doCleanup = false
-
-	err = zk_e2eutil.WaitForClusterToTerminate(t, f, ctx, zk)
-	g.Expect(err).NotTo(HaveOccurred())
-
-}
+			By("delete created Zookeeper cluster")
+			Expect(k8sClient.Delete(ctx, zk)).Should(Succeed())
+			Expect(zk_e2eutil.WaitForClusterToTerminate(&t, k8sClient, zk)).NotTo(HaveOccurred())
+		})
+	})
+})

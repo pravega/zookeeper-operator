@@ -13,7 +13,7 @@ package zk_test
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
+	"github.com/pravega/zookeeper-operator/api/v1beta1"
 	"github.com/pravega/zookeeper-operator/pkg/zk"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

@@ -1,0 +1,4 @@
+resources:
+  - default_ns_rbac.yaml
+  - role.yaml
+  - role_binding.yaml

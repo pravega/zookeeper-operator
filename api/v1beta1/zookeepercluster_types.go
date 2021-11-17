@@ -314,7 +314,6 @@ type Probe struct {
 // +kubebuilder:printcolumn:name="Internal Endpoint",type=string,JSONPath=`.status.internalClientEndpoint`,description="Client endpoint internal to cluster network"
 // +kubebuilder:printcolumn:name="External Endpoint",type=string,JSONPath=`.status.externalClientEndpoint`,description="Client endpoint external to cluster network via LoadBalancer"
 // +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +k8s:openapi-gen=true
 
 // ZookeeperCluster is the Schema for the zookeeperclusters API
@@ -775,7 +774,7 @@ const (
 	VolumeReclaimPolicyDelete VolumeReclaimPolicy = "Delete"
 )
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
 // ZookeeperClusterList contains a list of ZookeeperCluster
 type ZookeeperClusterList struct {

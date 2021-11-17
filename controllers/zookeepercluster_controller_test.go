@@ -8,7 +8,7 @@
  *     http://www.apache.org/licenses/LICENSE-2.0
  */
 
-package zookeepercluster
+package controllers
 
 import (
 	"context"
@@ -16,7 +16,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
+	"github.com/pravega/zookeeper-operator/api/v1beta1"
 	"github.com/pravega/zookeeper-operator/pkg/controller/config"
 	"github.com/pravega/zookeeper-operator/pkg/zk"
 	appsv1 "k8s.io/api/apps/v1"
@@ -73,7 +73,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 	var (
 		s            = scheme.Scheme
 		mockZkClient = new(MockZookeeperClient)
-		r            *ReconcileZookeeperCluster
+		r            *ZookeeperClusterReconciler
 	)
 
 	Context("Reconcile", func() {
@@ -96,7 +96,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 					Namespace: Namespace,
 				},
 			}
-			s.AddKnownTypes(v1beta1.SchemeGroupVersion, z)
+			s.AddKnownTypes(v1beta1.GroupVersion, z)
 		})
 
 		Context("Before defaults are applied", func() {
@@ -107,7 +107,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 
 			BeforeEach(func() {
 				cl = fake.NewFakeClient(z)
-				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				r = &ZookeeperClusterReconciler{Client: cl, Scheme: s, ZkClient: mockZkClient}
 				res, err = r.Reconcile(req)
 			})
 
@@ -136,7 +136,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 			BeforeEach(func() {
 				z.WithDefaults()
 				cl = fake.NewFakeClient(z)
-				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				r = &ZookeeperClusterReconciler{Client: cl, Scheme: s, ZkClient: mockZkClient}
 				res, err = r.Reconcile(req)
 			})
 
@@ -207,7 +207,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				st := zk.MakeStatefulSet(z)
 				next.Spec.Replicas = 6
 				cl = fake.NewFakeClient([]runtime.Object{next, st}...)
-				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				r = &ZookeeperClusterReconciler{Client: cl, Scheme: s, ZkClient: mockZkClient}
 				res, err = r.Reconcile(req)
 			})
 
@@ -235,7 +235,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				next := z.DeepCopy()
 				st := zk.MakeStatefulSet(z)
 				cl = fake.NewFakeClient([]runtime.Object{next, st}...)
-				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				r = &ZookeeperClusterReconciler{Client: cl, Scheme: s, ZkClient: mockZkClient}
 				res, err = r.Reconcile(req)
 			})
 
@@ -266,7 +266,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				next = z.DeepCopy()
 				sa = zk.MakeServiceAccount(z)
 				cl = fake.NewFakeClientWithScheme(s, []runtime.Object{next, sa}...)
-				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				r = &ZookeeperClusterReconciler{Client: cl, Scheme: s, ZkClient: mockZkClient}
 				res, err = r.Reconcile(req)
 			})
 
@@ -283,7 +283,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 			It("should update the service account", func() {
 				next.Spec.Pod.ImagePullSecrets = []corev1.LocalObjectReference{{Name: "test-pull-secret"}}
 				cl = fake.NewFakeClientWithScheme(s, []runtime.Object{next, sa}...)
-				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				r = &ZookeeperClusterReconciler{Client: cl, Scheme: s, ZkClient: mockZkClient}
 				_, err := r.Reconcile(req)
 				Ω(err).To(BeNil())
 
@@ -314,7 +314,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				st.Status.CurrentRevision = "CurrentRevision"
 				st.Status.UpdateRevision = "UpdateRevision"
 				cl.Status().Update(context.TODO(), st)
-				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				r = &ZookeeperClusterReconciler{Client: cl, Scheme: s, ZkClient: mockZkClient}
 				res, err = r.Reconcile(req)
 			})
 
@@ -374,7 +374,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				st.Status.CurrentRevision = "complete"
 				st.Status.UpdateRevision = "complete"
 				cl.Status().Update(context.TODO(), st)
-				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				r = &ZookeeperClusterReconciler{Client: cl, Scheme: s, ZkClient: mockZkClient}
 				foundZookeeper := &v1beta1.ZookeeperCluster{}
 				_ = cl.Get(context.TODO(), req.NamespacedName, foundZookeeper)
 				res, err = r.Reconcile(req)
@@ -422,7 +422,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				st.Status.UpdateRevision = "updateRevision"
 				st.Status.UpdatedReplicas = 2
 				cl.Status().Update(context.TODO(), st)
-				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				r = &ZookeeperClusterReconciler{Client: cl, Scheme: s, ZkClient: mockZkClient}
 				res, err = r.Reconcile(req)
 				//sleeping for 3 seconds
 				time.Sleep(3 * time.Second)
@@ -459,7 +459,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				next.Status.IsClusterInUpgradingState()
 				st := zk.MakeStatefulSet(z)
 				cl = fake.NewFakeClient([]runtime.Object{next, st}...)
-				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				r = &ZookeeperClusterReconciler{Client: cl, Scheme: s, ZkClient: mockZkClient}
 				res, err = r.Reconcile(req)
 			})
 
@@ -483,7 +483,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				z.WithDefaults()
 				z.Status.Init()
 				cl = fake.NewFakeClient(z)
-				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				r = &ZookeeperClusterReconciler{Client: cl, Scheme: s, ZkClient: mockZkClient}
 				req.NamespacedName.Namespace = "temp"
 				res, err = r.Reconcile(req)
 			})
@@ -504,7 +504,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				z.WithDefaults()
 				z.Status.Init()
 				cl = fake.NewFakeClient(z)
-				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				r = &ZookeeperClusterReconciler{Client: cl, Scheme: s, ZkClient: mockZkClient}
 				res, err = r.Reconcile(req)
 			})
 
@@ -548,7 +548,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 						Namespace: "Namespace",
 					},
 				}
-				r.client.Create(context.TODO(), pvcDelete)
+				r.Client.Create(context.TODO(), pvcDelete)
 				r.deletePVC(*pvcDelete)
 				r.deletePVC(*pvcDelete)
 			})
@@ -577,7 +577,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				next.Spec.Ports[0].ContainerPort = 2182
 				svc := zk.MakeClientService(z)
 				cl = fake.NewFakeClient([]runtime.Object{next, svc}...)
-				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				r = &ZookeeperClusterReconciler{Client: cl, Scheme: s, ZkClient: mockZkClient}
 				res, err = r.Reconcile(req)
 			})
 
@@ -595,7 +595,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				z.WithDefaults()
 				z.Spec.Persistence = nil
 				cl = fake.NewFakeClient(z)
-				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				r = &ZookeeperClusterReconciler{Client: cl, Scheme: s, ZkClient: mockZkClient}
 				res, err = r.Reconcile(req)
 				err = r.reconcileFinalizers(z)
 				// update deletion timestamp
@@ -622,14 +622,14 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 			})
 			It("should have 1 finalizer, should not raise an error", func() {
 				config.DisableFinalizer = false
-				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				r = &ZookeeperClusterReconciler{Client: cl, Scheme: s, ZkClient: mockZkClient}
 				err = r.reconcileFinalizers(z)
 				Expect(z.ObjectMeta.Finalizers).To(HaveLen(1))
 				Ω(err).To(BeNil())
 			})
 			It("should have 0 finalizer, should not raise an error", func() {
 				config.DisableFinalizer = true
-				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				r = &ZookeeperClusterReconciler{Client: cl, Scheme: s, ZkClient: mockZkClient}
 				err = r.reconcileFinalizers(z)
 				Expect(z.ObjectMeta.Finalizers).To(HaveLen(0))
 				Ω(err).To(BeNil())
@@ -694,7 +694,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				next.Spec.TriggerRollingRestart = true
 				svc = zk.MakeClientService(z)
 				cl = fake.NewFakeClient([]runtime.Object{next, svc}...)
-				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				r = &ZookeeperClusterReconciler{Client: cl, Scheme: s, ZkClient: mockZkClient}
 				res, err = r.Reconcile(req)
 				err = cl.Get(context.TODO(), req.NamespacedName, foundZk)
 			})
@@ -714,7 +714,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				next.Spec.TriggerRollingRestart = false
 				svc = zk.MakeClientService(z)
 				cl = fake.NewFakeClient([]runtime.Object{next, svc}...)
-				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				r = &ZookeeperClusterReconciler{Client: cl, Scheme: s, ZkClient: mockZkClient}
 				res, err = r.Reconcile(req)
 
 				Ω(res.Requeue).To(Equal(false))
@@ -735,7 +735,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				next.Spec.TriggerRollingRestart = false
 				svc = zk.MakeClientService(z)
 				cl = fake.NewFakeClient([]runtime.Object{next, svc}...)
-				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				r = &ZookeeperClusterReconciler{Client: cl, Scheme: s, ZkClient: mockZkClient}
 				res, err = r.Reconcile(req)
 				err = cl.Get(context.TODO(), req.NamespacedName, foundZk)
 
@@ -753,7 +753,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				next.Spec.TriggerRollingRestart = true
 				svc = zk.MakeClientService(z)
 				cl = fake.NewFakeClient([]runtime.Object{next, svc}...)
-				r = &ReconcileZookeeperCluster{client: cl, scheme: s, zkClient: mockZkClient}
+				r = &ZookeeperClusterReconciler{Client: cl, Scheme: s, ZkClient: mockZkClient}
 				res, err = r.Reconcile(req)
 				err = cl.Get(context.TODO(), req.NamespacedName, foundZk)
 
