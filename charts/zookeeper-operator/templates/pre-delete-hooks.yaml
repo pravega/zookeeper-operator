@@ -3,7 +3,6 @@ kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: {{ template "zookeeper-operator.fullname" . }}-pre-delete
-  namespace: {{ .Release.Namespace }}
   annotations:
     "helm.sh/hook": pre-delete
     "helm.sh/hook-weight": "1"
@@ -22,7 +21,6 @@ kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: {{ template "zookeeper-operator.fullname" . }}-pre-delete
-  namespace: {{ .Release.Namespace }}
   annotations:
     "helm.sh/hook": pre-delete
     "helm.sh/hook-weight": "1"
