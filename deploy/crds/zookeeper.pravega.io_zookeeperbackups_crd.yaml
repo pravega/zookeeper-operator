@@ -43,9 +43,7 @@ spec:
                 description: Data Storage Class name
                 type: string
               image:
-                description: ContainerImage defines the fields needed for a Docker
-                  repository image. The format here matches the predominant format
-                  used in Helm charts.
+                description: Image for backup procedure
                 properties:
                   pullPolicy:
                     description: PullPolicy describes a policy for if/when to pull

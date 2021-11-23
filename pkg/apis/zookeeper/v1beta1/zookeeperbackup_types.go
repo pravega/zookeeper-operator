@@ -32,6 +32,7 @@ type ZookeeperBackupSpec struct {
 	// +kubebuilder:validation:Required
 	DataStorageClass string `json:"dataStorageClass,omitempty"`
 
+	// Image for backup procedure
 	Image ContainerImage `json:"image,omitempty"`
 }
 
@@ -47,6 +48,13 @@ func (s *ZookeeperBackupSpec) withDefaults() (changed bool) {
 	if s.DataCapacity == "" {
 		s.DataCapacity = "1Gi"
 		changed = true
+	}
+	if s.Image.Repository == "" {
+		s.Image.Repository = "pravega/zkbackup"
+		s.Image.Tag = "0.1"
+	}
+	if s.Image.Tag == "" {
+		s.Image.Tag = "latest"
 	}
 	return changed
 }
