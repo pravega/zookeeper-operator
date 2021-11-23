@@ -97,7 +97,7 @@ type ReconcileZookeeperBackup struct {
 	// that reads objects from the cache and writes to the apiserver
 	client client.Client
 	scheme *runtime.Scheme
-	log      logr.Logger
+	log    logr.Logger
 }
 
 // Reconcile reads that state of the cluster for a ZookeeperBackup object and makes changes based on the state read
@@ -272,7 +272,7 @@ func (r *ReconcileZookeeperBackup) GetLeaderIP(zkCluster *zookeeperv1beta1.Zooke
 		return "", err
 	}
 
-	adminIp  := foundSvcAdmin.Spec.ClusterIP
+	adminIp := foundSvcAdmin.Spec.ClusterIP
 	svcPort := GetServicePortByName(foundSvcAdmin, "tcp-admin-server")
 
 	resp, err := http.Get(fmt.Sprintf("http://%s:%d/commands/leader", adminIp, svcPort.Port))
@@ -355,24 +355,24 @@ func newCronJobForCR(cr *zookeeperv1beta1.ZookeeperBackup) *batchv1beta1.CronJob
 		},
 		Spec: batchv1beta1.CronJobSpec{
 			Schedule: cr.Spec.Schedule,
-			Suspend: &suspend,
-			JobTemplate: batchv1beta1.JobTemplateSpec {
+			Suspend:  &suspend,
+			JobTemplate: batchv1beta1.JobTemplateSpec{
 				Spec: batchv1.JobSpec{
 					Template: corev1.PodTemplateSpec{
-						Spec: corev1.PodSpec {
+						Spec: corev1.PodSpec{
 							RestartPolicy: "Never",
 							Containers: []corev1.Container{
 								{
-									Name: "run-zookeeperbackup",
-									Image: cr.Spec.Image.ToString(),
+									Name:            "run-zookeeperbackup",
+									Image:           cr.Spec.Image.ToString(),
 									ImagePullPolicy: cr.Spec.Image.PullPolicy,
 									VolumeMounts: []corev1.VolumeMount{
 										{
-											Name: "zookeeperbackup-vol",
+											Name:      "zookeeperbackup-vol",
 											MountPath: backupMountPath,
 										},
 										{
-											Name: "zookeeperbackup-data",
+											Name:      "zookeeperbackup-data",
 											MountPath: "/data",
 										},
 									},

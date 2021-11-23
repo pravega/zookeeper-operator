@@ -15,15 +15,15 @@ type ZookeeperBackupSpec struct {
 
 	// Name of the ZookeeperCluster to backup
 	// +kubebuilder:validation:Required
-	ZookeeperCluster	string 	`json:"zookeeperCluster"`
+	ZookeeperCluster string `json:"zookeeperCluster"`
 	// Schedule in Cron format
 	// +kubebuilder:default:="0 0 */1 * *"
 	// +optional
-	Schedule 			string	`json:"schedule,omitempty"`
+	Schedule string `json:"schedule,omitempty"`
 	// Number of backups to store
 	// +kubebuilder:default:="7"
 	// +optional
-	BackupsToKeep		string	`json:"backupsToKeep,omitempty"`
+	BackupsToKeep string `json:"backupsToKeep,omitempty"`
 	// Data Storage Capacity
 	// +kubebuilder:default:="1Gi"
 	// +optional
