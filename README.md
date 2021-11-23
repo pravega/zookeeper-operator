@@ -29,7 +29,7 @@ The project is currently alpha. While no breaking API changes are currently plan
 
 ### Overview
 
-This operator runs a Zookeeper 3.6.3 cluster, and uses Zookeeper dynamic reconfiguration to handle node membership.
+This operator runs a Zookeeper 3.8.0 cluster, and uses Zookeeper dynamic reconfiguration to handle node membership.
 
 The operator itself is built with the [Operator framework](https://github.com/operator-framework/operator-sdk).
 
@@ -409,7 +409,7 @@ Backup controller takes following responsibilities:
 ### Build the operator image
 
 Requirements:
-  - Go 1.16+
+  - Go 1.17+
 
 Use the `make` command to build the Zookeeper operator image.
 
@@ -460,7 +460,7 @@ You can run the operator locally to help with development, testing, and debuggin
 The following command will run the operator locally with the default Kubernetes config file present at `$HOME/.kube/config`. Use the `--kubeconfig` flag to provide a different path.
 
 ```
-$ operator-sdk up local
+$ make run-local
 ```
 
 ### Installation on Google Kubernetes Engine

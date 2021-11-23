@@ -7,11 +7,13 @@
 # http://www.apache.org/licenses/LICENSE-2.0
 
 SHELL=/bin/bash -o pipefail
+# Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
+CRD_OPTIONS ?= "crd:trivialVersions=true"
 
 PROJECT_NAME=zookeeper-operator
 EXPORTER_NAME=zookeeper-exporter
 APP_NAME=zookeeper
-KUBE_VERSION=1.19.13
+KUBE_VERSION=1.20.13
 REPO=pravega/$(PROJECT_NAME)
 TEST_REPO=testzkop/$(PROJECT_NAME)
 APP_REPO=pravega/$(APP_NAME)
@@ -24,17 +26,100 @@ TEST_IMAGE=$(TEST_REPO)-testimages:$(VERSION)
 DOCKER_TEST_PASS=testzkop@123
 DOCKER_TEST_USER=testzkop
 .PHONY: all build check clean test
+# Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
+ifeq (,$(shell go env GOBIN))
+GOBIN=$(shell go env GOPATH)/bin
+else
+GOBIN=$(shell go env GOBIN)
+endif
+
+# Install CRDs into a cluster
+install: manifests kustomize
+	$(KUSTOMIZE) build config/crd | kubectl apply -f -
+
+# Uninstall CRDs from a cluster
+uninstall: manifests kustomize
+	$(KUSTOMIZE) build config/crd | kubectl delete -f -
+
+crds: ## Generate CRDs
+	- make controller-gen
+	- $(CONTROLLER_GEN) crd paths=./api/... output:dir=./config/crd/bases schemapatch:manifests=./config/crd/bases
+
+
+# Deploy controller in the configured Kubernetes cluster in ~/.kube/config
+deploy: manifests kustomize
+	cd config/manager && $(KUSTOMIZE) edit set image pravega/zookeeper-operator=$(TEST_IMAGE)
+	$(KUSTOMIZE) build config/default | kubectl apply -f -
+
+
+# Deploy controller in the configured Kubernetes cluster in ~/.kube/config
+deploy-test: manifests kustomize
+	cd config/test
+	$(KUSTOMIZE) build config/test | kubectl apply -f -
+
+# Undeploy controller in the configured Kubernetes cluster in ~/.kube/config
+undeploy-test: manifests kustomize
+	cd config/test
+	$(KUSTOMIZE) build config/test | kubectl apply -f -
+
+# Undeploy controller in the configured Kubernetes cluster in ~/.kube/config
+undeploy:
+	$(KUSTOMIZE) build config/default | kubectl delete -f -
+
+# Generate manifests e.g. CRD, RBAC etc.
+manifests: controller-gen
+	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+
+# Run go fmt against code
+fmt:
+	go fmt ./...
+
+# Run go vet against code
+vet:
+	go vet ./...
+
+# find or download controller-gen
+# download controller-gen if necessary
+controller-gen:
+ifeq (, $(shell which controller-gen))
+	@{ \
+	set -e ;\
+	CONTROLLER_GEN_TMP_DIR=$$(mktemp -d) ;\
+	cd $$CONTROLLER_GEN_TMP_DIR ;\
+	go mod init tmp ;\
+	go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.6.2 ;\
+	rm -rf $$CONTROLLER_GEN_TMP_DIR ;\
+	}
+CONTROLLER_GEN=$(GOBIN)/controller-gen
+else
+CONTROLLER_GEN=$(shell which controller-gen)
+endif
+
+kustomize:
+ifeq (, $(shell which kustomize))
+	@{ \
+	set -e ;\
+	KUSTOMIZE_GEN_TMP_DIR=$$(mktemp -d) ;\
+	cd $$KUSTOMIZE_GEN_TMP_DIR ;\
+	go mod init tmp ;\
+	go install sigs.k8s.io/kustomize/kustomize/v3@v3.5.4 ;\
+	rm -rf $$KUSTOMIZE_GEN_TMP_DIR ;\
+	}
+KUSTOMIZE=$(GOBIN)/kustomize
+else
+KUSTOMIZE=$(shell which kustomize)
+endif
 
 all: generate check build
 
 generate:
-	[[ ${OSDK_VERSION} == v0.19* ]] || ( echo "operator-sdk version 0.19 required" ; exit 1 )
-	operator-sdk generate crds --crd-version v1
-	env GOROOT=$(shell go env GOROOT) operator-sdk generate k8s
+	make controller-gen
+	$(CONTROLLER_GEN) object paths="./..."
+	$(CONTROLLER_GEN) crd paths=./api/... output:dir=./config/crd/bases schemapatch:manifests=./config/crd/bases
 	# sync crd generated to helm-chart
 	echo '{{- define "crd.openAPIV3Schema" }}' > charts/zookeeper-operator/templates/_crd_openapiv3schema.tpl
 	echo 'openAPIV3Schema:' >> charts/zookeeper-operator/templates/_crd_openapiv3schema.tpl
-	sed -e '1,/openAPIV3Schema/d' deploy/crds/zookeeper.pravega.io_zookeeperclusters_crd.yaml | sed -n '/served: true/!p;//q' >> charts/zookeeper-operator/templates/_crd_openapiv3schema.tpl
+	sed -e '1,/openAPIV3Schema/d' config/crd/bases/zookeeper.pravega.io_zookeeperclusters.yaml | sed -n '/served: true/!p;//q' >> charts/zookeeper-operator/templates/_crd_openapiv3schema.tpl
 	echo '{{- end }}' >> charts/zookeeper-operator/templates/_crd_openapiv3schema.tpl
 
 
@@ -43,19 +128,19 @@ build: test build-go build-image
 build-go:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
 		-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
-		-o bin/$(PROJECT_NAME)-linux-amd64 cmd/manager/main.go
+		-o bin/$(PROJECT_NAME)-linux-amd64 main.go
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
 		-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
 		-o bin/$(EXPORTER_NAME)-linux-amd64 cmd/exporter/main.go
 	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build \
 		-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
-		-o bin/$(PROJECT_NAME)-darwin-amd64 cmd/manager/main.go
+		-o bin/$(PROJECT_NAME)-darwin-amd64 main.go
 	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build \
 		-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
 		-o bin/$(EXPORTER_NAME)-darwin-amd64 cmd/exporter/main.go
 	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build \
 		-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
-		-o bin/$(PROJECT_NAME)-windows-amd64.exe cmd/manager/main.go
+		-o bin/$(PROJECT_NAME)-windows-amd64.exe main.go
 	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build \
 		-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
 		-o bin/$(EXPORTER_NAME)-windows-amd64.exe cmd/exporter/main.go
@@ -77,19 +162,21 @@ test:
 
 test-e2e: test-e2e-remote
 
-test-e2e-remote: test-login
-	operator-sdk build $(TEST_IMAGE)
+test-e2e-remote:
+	make test-login
+	docker build . -t $(TEST_IMAGE)
 	docker push $(TEST_IMAGE)
-	operator-sdk test local ./test/e2e --operator-namespace default \
-		--namespaced-manifest ./test/e2e/resources/rbac-operator.yaml \
-		--global-manifest deploy/crds/zookeeper.pravega.io_zookeeperclusters_crd.yaml \
-		--image $(TEST_IMAGE) --go-test-flags "-v -timeout 0"
+	make deploy
+	RUN_LOCAL=false go test -v -timeout 2h ./test/e2e... -args -ginkgo.v
+	make undeploy
 
 test-e2e-local:
-	operator-sdk test local ./test/e2e --operator-namespace default --up-local --go-test-flags "-v -timeout 0"
+	make deploy-test
+	RUN_LOCAL=true go test -v -timeout 2h ./test/e2e... -args -ginkgo.v
+	make undeploy-test
 
 run-local:
-	operator-sdk run local
+	go run ./main.go
 
 login:
 	@docker login -u "$(DOCKER_USER)" -p "$(DOCKER_PASS)"
@@ -121,6 +208,3 @@ check-format:
 
 check-license:
 	./scripts/check_license.sh
-
-update-kube-version:
-	./scripts/update_kube_version.sh ${KUBE_VERSION}

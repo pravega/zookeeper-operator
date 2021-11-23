@@ -11,74 +11,51 @@
 package e2e
 
 import (
-	"testing"
-	"time"
-
+	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	zk_e2eutil "github.com/pravega/zookeeper-operator/pkg/test/e2e/e2eutil"
+	"time"
 )
 
-// Test create and delete 1, 2 and all the pods
-func testDeletePods(t *testing.T) {
-	g := NewGomegaWithT(t)
+// Test create and recreate a Zookeeper cluster with the same name
+var _ = Describe("Delete pods in zk clusters", func() {
+	Context("Delete pods, check that pods get recreated", func() {
+		It("should keep number of replicas consistent", func() {
+			defaultCluster := zk_e2eutil.NewDefaultCluster(testNamespace)
 
-	doCleanup := true
-	ctx := framework.NewTestCtx(t)
-	defer func() {
-		if doCleanup {
-			ctx.Cleanup()
-		}
-	}()
+			defaultCluster.WithDefaults()
+			defaultCluster.Status.Init()
+			defaultCluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
+			By("create zk cluster")
+			zk, err := zk_e2eutil.CreateCluster(logger, k8sClient, defaultCluster)
+			Expect(err).NotTo(HaveOccurred())
 
-	namespace, err := ctx.GetNamespace()
-	g.Expect(err).NotTo(HaveOccurred())
-	f := framework.Global
+			// A default zookeeper cluster should have 3 pods
+			podSize := 3
+			Expect(zk_e2eutil.WaitForClusterToBecomeReady(logger, k8sClient, zk, podSize))
 
-	defaultCluster := zk_e2eutil.NewDefaultCluster(namespace)
+			By("Delete one of the pods")
+			podDeleteCount := 1
+			Expect(zk_e2eutil.DeletePods(logger, k8sClient, zk, podDeleteCount))
 
-	defaultCluster.WithDefaults()
-	defaultCluster.Status.Init()
-	defaultCluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
+			time.Sleep(60 * time.Second)
+			Expect(zk_e2eutil.WaitForClusterToBecomeReady(logger, k8sClient, zk, podSize))
 
-	zk, err := zk_e2eutil.CreateCluster(t, f, ctx, defaultCluster)
-	g.Expect(err).NotTo(HaveOccurred())
+			By("Delete two of the pods")
+			podDeleteCount = 2
+			Expect(zk_e2eutil.DeletePods(logger, k8sClient, zk, podDeleteCount))
+			time.Sleep(60 * time.Second)
 
-	// A default zookeeper cluster should have 3 pods
-	podSize := 3
-	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
-	g.Expect(err).NotTo(HaveOccurred())
+			Expect(zk_e2eutil.WaitForClusterToBecomeReady(logger, k8sClient, zk, podSize))
 
-	podDeleteCount := 1
-	err = zk_e2eutil.DeletePods(t, f, ctx, zk, podDeleteCount)
-	g.Expect(err).NotTo(HaveOccurred())
+			By("Delete all of the pods")
+			podDeleteCount = 3
+			Expect(zk_e2eutil.DeletePods(logger, k8sClient, zk, podDeleteCount))
+			time.Sleep(60 * time.Second)
+			Expect(zk_e2eutil.WaitForClusterToBecomeReady(logger, k8sClient, zk, podSize))
 
-	time.Sleep(60 * time.Second)
-	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
-	g.Expect(err).NotTo(HaveOccurred())
-
-	podDeleteCount = 2
-	err = zk_e2eutil.DeletePods(t, f, ctx, zk, podDeleteCount)
-	g.Expect(err).NotTo(HaveOccurred())
-	time.Sleep(60 * time.Second)
-
-	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
-	g.Expect(err).NotTo(HaveOccurred())
-
-	podDeleteCount = 3
-	err = zk_e2eutil.DeletePods(t, f, ctx, zk, podDeleteCount)
-	g.Expect(err).NotTo(HaveOccurred())
-	time.Sleep(60 * time.Second)
-	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
-	g.Expect(err).NotTo(HaveOccurred())
-
-	err = zk_e2eutil.DeleteCluster(t, f, ctx, zk)
-	g.Expect(err).NotTo(HaveOccurred())
-
-	// No need to do cleanup since the cluster CR has already been deleted
-	doCleanup = false
-
-	err = zk_e2eutil.WaitForClusterToTerminate(t, f, ctx, zk)
-	g.Expect(err).NotTo(HaveOccurred())
-
-}
+			Expect(zk_e2eutil.DeleteCluster(logger, k8sClient, zk)).NotTo(HaveOccurred())
+			Expect(zk_e2eutil.WaitForClusterToBecomeReady(logger, k8sClient, zk, podSize))
+		})
+	})
+})
