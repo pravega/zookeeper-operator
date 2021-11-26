@@ -40,7 +40,7 @@ spec:
   {{- end }}
     {{- if .Values.volumeMounts }}
     volumeMounts:
-{{ toYaml .Values.volumeMounts | indent 4 }}
+{{ toYaml .Values.volumeMounts | indent 6 }}
     {{- end }}
   {{- if .Values.volumes }}
   volumes:
