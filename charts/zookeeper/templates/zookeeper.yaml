@@ -43,6 +43,7 @@ spec:
 {{ toYaml .Values.volumes | indent 4 }}
   {{- end }}
   {{- if .Values.volumeMounts }}
+  volumeMounts:
 {{ toYaml .Values.volumeMounts | indent 4 }}
   {{- end }}
   {{- if .Values.initContainers }}
