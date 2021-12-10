@@ -992,8 +992,7 @@ openAPIV3Schema:
                         can be used to provide different probe parameters at the beginning
                         of a Pod''s lifecycle, when it might take a long time to load
                         data or warm a cache, than during steady-state operation.
-                        This cannot be updated. This is a beta feature enabled by
-                        the StartupProbe feature flag. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
+                        This cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
                       properties:
                         exec:
                           description: One and only one of the following should be
@@ -2142,8 +2141,7 @@ openAPIV3Schema:
                         can be used to provide different probe parameters at the beginning
                         of a Pod''s lifecycle, when it might take a long time to load
                         data or warm a cache, than during steady-state operation.
-                        This cannot be updated. This is a beta feature enabled by
-                        the StartupProbe feature flag. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
+                        This cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
                       properties:
                         exec:
                           description: One and only one of the following should be
@@ -2410,18 +2408,14 @@ openAPIV3Schema:
                         type: array
                       dataSource:
                         description: 'This field can be used to specify either: *
-                          An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot
-                          - Beta) * An existing PVC (PersistentVolumeClaim) * An existing
-                          custom resource/object that implements data population (Alpha)
-                          In order to use VolumeSnapshot object types, the appropriate
-                          feature gate must be enabled (VolumeSnapshotDataSource or
-                          AnyVolumeDataSource) If the provisioner or an external controller
-                          can support the specified data source, it will create a
-                          new volume based on the contents of the specified data source.
-                          If the specified data source is not supported, the volume
-                          will not be created and the failure will be reported as
-                          an event. In the future, we plan to support more data source
-                          types and the behavior of the provisioner may change.'
+                          An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot)
+                          * An existing PVC (PersistentVolumeClaim) * An existing
+                          custom resource that implements data population (Alpha)
+                          In order to use custom resource types that implement data
+                          population, the AnyVolumeDataSource feature gate must be
+                          enabled. If the provisioner or an external controller can
+                          support the specified data source, it will create a new
+                          volume based on the contents of the specified data source.'
                         properties:
                           apiGroup:
                             description: APIGroup is the group for the resource being
@@ -3339,7 +3333,7 @@ openAPIV3Schema:
                           support fsGroup based ownership(and permissions). It will
                           have no effect on ephemeral volume types such as: secret,
                           configmaps and emptydir. Valid values are "OnRootMismatch"
-                          and "Always". If not specified defaults to "Always".'
+                          and "Always". If not specified, "Always" is used.'
                         type: string
                       runAsGroup:
                         description: The GID to run the entrypoint of the container
@@ -4104,20 +4098,15 @@ openAPIV3Schema:
                                   type: array
                                 dataSource:
                                   description: 'This field can be used to specify
-                                    either: * An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot
-                                    - Beta) * An existing PVC (PersistentVolumeClaim)
-                                    * An existing custom resource/object that implements
-                                    data population (Alpha) In order to use VolumeSnapshot
-                                    object types, the appropriate feature gate must
-                                    be enabled (VolumeSnapshotDataSource or AnyVolumeDataSource)
-                                    If the provisioner or an external controller can
-                                    support the specified data source, it will create
-                                    a new volume based on the contents of the specified
-                                    data source. If the specified data source is not
-                                    supported, the volume will not be created and
-                                    the failure will be reported as an event. In the
-                                    future, we plan to support more data source types
-                                    and the behavior of the provisioner may change.'
+                                    either: * An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot)
+                                    * An existing PVC (PersistentVolumeClaim) * An
+                                    existing custom resource that implements data
+                                    population (Alpha) In order to use custom resource
+                                    types that implement data population, the AnyVolumeDataSource
+                                    feature gate must be enabled. If the provisioner
+                                    or an external controller can support the specified
+                                    data source, it will create a new volume based
+                                    on the contents of the specified data source.'
                                   properties:
                                     apiGroup:
                                       description: APIGroup is the group for the resource
@@ -4820,8 +4809,6 @@ openAPIV3Schema:
                                 type: object
                             type: object
                           type: array
-                      required:
-                      - sources
                       type: object
                     quobyte:
                       description: Quobyte represents a Quobyte mount on the host

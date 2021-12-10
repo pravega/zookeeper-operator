@@ -60,26 +60,44 @@ metadata:
 data:
   validations.sh: |
     #!/bin/sh
-    set -e
+    set +e
     sleep 30
-
-    replicas=`kubectl get zk -n {{ .Release.Namespace }} {{ template "zookeeper.fullname" . }} -o jsonpath='{.spec.replicas}'`
-    readyReplicas=`kubectl get zk -n {{ .Release.Namespace }} {{ template "zookeeper.fullname" . }} -o jsonpath='{.status.readyReplicas}'`
-    currentVersion=`kubectl get zk -n {{ .Release.Namespace }} {{ template "zookeeper.fullname" . }} -o jsonpath='{.status.currentVersion}'`
-    targetVersion=`kubectl get zk -n {{ .Release.Namespace }} {{ template "zookeeper.fullname" . }} -o jsonpath='{.spec.image.tag}'`
-
-    echo "ZookeeperCluster replicas: $currentReplicas"
-    echo "ZookeeperCluster readyReplicas: $readyReplicas"
-    echo "ZookeeperCluster currentVersion: $currentVersion"
-    echo "ZookeeperCluster targetVersion: $targetVersion"
-
-    if [ $readyReplicas != $replicas ]; then
+    echo "Checking for ready ZK replicas"
+    kubectl get ZookeeperCluster -n {{ .Release.Namespace }} {{ template "zookeeper.fullname" . }}  -o jsonpath='{.status.conditions[?(@.type=="PodsReady")].status}' | grep True
+    if [ $? != 0 ]; then
+        echo "ZK replicas not ready"
         exit 1
     fi
+    set -e
+    replicasZk=`kubectl get ZookeeperCluster -n {{ .Release.Namespace }} {{ template "zookeeper.fullname" . }} -o jsonpath='{.spec.replicas}'`
+    readyReplicasZk=`kubectl get ZookeeperCluster -n {{ .Release.Namespace }} {{ template "zookeeper.fullname" . }} -o jsonpath='{.status.readyReplicas}'`
+    currentVersionZk=`kubectl get ZookeeperCluster -n {{ .Release.Namespace }} {{ template "zookeeper.fullname" . }} -o jsonpath='{.status.currentVersion}'`
+    targetVersionZk=`kubectl get ZookeeperCluster -n {{ .Release.Namespace }} {{ template "zookeeper.fullname" . }} -o jsonpath='{.spec.image.tag}'`
 
-    if [ $currentVersion != $targetVersion ]; then
+    echo
+    echo "ZookeeperCluster replicas: $replicasZk"
+    echo "ZookeeperCluster readyReplicas: $readyReplicasZk"
+    echo "ZookeeperCluster currentVersion: $currentVersionZk"
+    echo "ZookeeperCluster targetVersion: $targetVersionZk"
+    echo
+    if [[ -z $readyReplicasZk ]]; then
+        echo "No ready ZK replicas"
         exit 2
     fi
+    if [[ $replicasZk != $readyReplicasZk ]]; then
+        echo "Wrong number of ZK replicas"
+        exit 3
+    fi
+    if [[ -z $currentVersionZk ]]; then
+        echo "Current ZK version not set"
+        exit 4
+    fi
+    if [[ $currentVersionZk != $targetVersionZk ]]; then
+        echo "Wrong current ZK version"
+        exit 5
+    fi
+
+    echo "ZookeeperCluster is ready"
 ---
 
 apiVersion: batch/v1
