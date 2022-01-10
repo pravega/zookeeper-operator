@@ -41,20 +41,26 @@ The following table lists the configurable parameters of the zookeeper-operator 
 
 | Parameter | Description | Default |
 | ----- | ----------- | ------ |
-| `image.repository` | Image repository | `pravega/zookeeper-operator` |
-| `image.tag` | Image tag | `0.2.13` |
-| `image.pullPolicy` | Image pull policy | `IfNotPresent` |
-| `crd.create` | Create zookeeper CRD | `true` |
-| `rbac.create` | Create RBAC resources | `true` |
-| `serviceAccount.create` | Create service account | `true` |
-| `serviceAccount.name` | Name for the service account | `zookeeper-operator` |
-| `watchNamespace` | Namespaces to be watched  | `""` |
-| `resources` | Specifies resource requirements for the container | `{}` |
-| `nodeSelector` | Map of key-value pairs to be present as labels in the node in which the pod should run | `{}` |
-| `affinity` | Specifies scheduling constraints on pods | `{}` |
-| `tolerations` | Specifies the pod's tolerations | `[]` |
 | `additionalEnv` | Additional Environment Variables | `[]` |
 | `additionalSidecars` | Additional Sidecars Configuration | `[]` |
 | `additionalVolumes` | Additional volumes required for sidecars | `[]` |
+| `affinity` | Specifies scheduling constraints on pods | `{}` |
+| `annotations` | Operator pod annotations | `{}` |
+| `crd.create` | Create zookeeper CRD | `true` |
 | `disableFinalizer` | Disable finalizer for zookeeper clusters, PVCs clean-up will be skipped.| `false` |
-
+| `global.imagePullSecrets` | Lists of secrets to use to pull zookeeper-operator image from a private registry | `[]` |
+| `hooks.backoffLimit` | backoffLimit for batch jobs | `10` |
+| `hooks.delete` | Create pre-delete hook which ensures that the operator cannot be deleted until the zookeeper cluster custom resources have been cleaned up | `true` |
+| `hooks.image.repository` | Image repository for batch jobs | `"lachlanevenson/k8s-kubectl"` |
+| `hooks.image.tag` | Image tag for batch jobs | `"v1.16.10"` |
+| `image.pullPolicy` | Image pull policy | `IfNotPresent` |
+| `image.repository` | Image repository | `pravega/zookeeper-operator` |
+| `image.tag` | Image tag | `0.2.13` |
+| `labels` | Operator pod labels | `{}` |
+| `nodeSelector` | Map of key-value pairs to be present as labels in the node in which the pod should run | `{}` |
+| `rbac.create` | Create RBAC resources | `true` |
+| `resources` | Specifies resource requirements for the container | `{}` |
+| `serviceAccount.create` | Create service account | `true` |
+| `serviceAccount.name` | Name for the service account | `zookeeper-operator` |
+| `tolerations` | Specifies the pod's tolerations | `[]` |
+| `watchNamespace` | Namespaces to be watched  | `""` |
