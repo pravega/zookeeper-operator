@@ -260,6 +260,7 @@ func makeZkConfigString(z *v1beta1.ZookeeperCluster) string {
 		"metricsProvider.className=org.apache.zookeeper.metrics.prometheus.PrometheusMetricsProvider\n" +
 		"metricsProvider.httpPort=7000\n" +
 		"metricsProvider.exportJvmInfo=true\n" +
+		"leaderConnectDelayDuringRetryMs=500\n" +
 		"initLimit=" + strconv.Itoa(z.Spec.Conf.InitLimit) + "\n" +
 		"syncLimit=" + strconv.Itoa(z.Spec.Conf.SyncLimit) + "\n" +
 		"tickTime=" + strconv.Itoa(z.Spec.Conf.TickTime) + "\n" +
