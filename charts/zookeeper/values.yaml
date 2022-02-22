@@ -93,7 +93,7 @@ ephemeral:
 hooks:
   image:
     repository: lachlanevenson/k8s-kubectl
-    tag: v1.16.10
+    tag: v1.23.2
   backoffLimit: 10
   pod:
     annotations: {}
