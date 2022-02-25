@@ -90,8 +90,7 @@ metadata:
     "helm.sh/hook-weight": "2"
     "helm.sh/hook-delete-policy": hook-succeeded, before-hook-creation, hook-failed
 spec:
-  backoffLimit: 1
-  activeDeadlineSeconds: 20
+  backoffLimit: 6
   template:
     metadata:
       name: {{ template "zookeeper-operator.fullname" . }}-pre-delete
@@ -101,6 +100,10 @@ spec:
       containers:
         - name: pre-delete-job
           image: "{{ .Values.hooks.image.repository }}:{{ .Values.hooks.image.tag }}"
+          {{- if .Values.hooks.securityContext }}
+          securityContext:
+{{ toYaml .Values.hooks.securityContext | indent 12 }}
+          {{- end }}
           command:
             - /scripts/pre-delete.sh
           volumeMounts:
