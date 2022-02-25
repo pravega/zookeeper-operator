@@ -24,12 +24,17 @@ type ZookeeperClient interface {
 	CreateNode(*v1beta1.ZookeeperCluster, string) error
 	NodeExists(string) (int32, error)
 	UpdateNode(string, string, int32) error
+	IncReconfig([]string, []string, int64) error
+	GetConfig() (string, int32, error)
 	Close()
 }
 
 type DefaultZookeeperClient struct {
 	conn *zk.Conn
 }
+
+// zookeeper configure path
+const ZOO_CONFIG_PATH = "/zookeeper/config"
 
 func (client *DefaultZookeeperClient) Connect(zkUri string) (err error) {
 	host := []string{zkUri}
@@ -72,6 +77,21 @@ func (client *DefaultZookeeperClient) NodeExists(zNodePath string) (version int3
 		return -1, fmt.Errorf("Znode exists check failed for path %s: %v", zNodePath, err)
 	}
 	return zNodeStat.Version, err
+}
+
+func (client *DefaultZookeeperClient) IncReconfig(joining []string, leaving []string, version int64) (err error) {
+	if _, err := client.conn.IncrementalReconfig(joining, leaving, version); err != nil {
+		return fmt.Errorf("Failed to reconfig node:%s, err:%v", strings.Join(leaving, ","), err)
+	}
+	return nil
+}
+
+func (client *DefaultZookeeperClient) GetConfig() (config string, version int32, err error) {
+	data, stat, err := client.conn.Get(ZOO_CONFIG_PATH)
+	if err != nil {
+		return "", -1, fmt.Errorf("Get config %s error, err:%v", ZOO_CONFIG_PATH, err)
+	}
+	return string(data), stat.Version, nil
 }
 
 func (client *DefaultZookeeperClient) Close() {
