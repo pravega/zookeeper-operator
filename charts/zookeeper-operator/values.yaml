@@ -12,6 +12,13 @@ image:
   tag: 0.2.13
   pullPolicy: IfNotPresent
 
+securityContext: {}
+#  runAsUser: 1001
+#  runAsGroup: 1001
+
+## Additional labels to be added to resources
+labels: {}
+
 ## Install RBAC roles and bindings.
 rbac:
   create: true
@@ -53,11 +60,15 @@ hooks:
   backoffLimit: 10
   image:
     repository: lachlanevenson/k8s-kubectl
-    tag: v1.16.10
+    tag: v1.23.2
   ## Whether to create pre-delete hook which ensures that
   ## the operator cannot be deleted till the zookeeper cluster
   ## custom resources have been cleaned up
   delete: true
+  securityContext: {}
+  #  runAsUser: 1001
+  #  runAsGroup: 1001
+
 
 ## Additional Sidecars Configuration.
 additionalSidecars: {}
