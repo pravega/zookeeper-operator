@@ -14,14 +14,14 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"runtime"
 	"strings"
 
+	"github.com/pkg/errors"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
 
-	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
-	sdkVersion "github.com/operator-framework/operator-sdk/version"
 	"github.com/pravega/zookeeper-operator/pkg/apis"
 	"github.com/pravega/zookeeper-operator/pkg/controller"
 	zkConfig "github.com/pravega/zookeeper-operator/pkg/controller/config"
@@ -52,7 +52,6 @@ func printVersion() {
 	log.Info(fmt.Sprintf("Git SHA: %s", version.GitSHA))
 	log.Info(fmt.Sprintf("Go Version: %s", runtime.Version()))
 	log.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
-	log.Info(fmt.Sprintf("operator-sdk Version: %v", sdkVersion.Version))
 }
 
 func main() {
@@ -70,16 +69,16 @@ func main() {
 		os.Exit(0)
 	}
 
-	namespaces, err := k8sutil.GetWatchNamespace()
-	if err != nil {
-		log.Error(err, "failed to get watch namespace")
+	namespaces, ok := os.LookupEnv("WATCH_NAMESPACE")
+	if !ok {
+		log.Error(errors.New("env variable not set"), "failed to get watch namespace")
 		os.Exit(1)
 	}
-	//When operator is started to watch resources in a specific set of namespaces, we use the MultiNamespacedCacheBuilder cache.
-	//In this scenario, it is also suggested to restrict the provided authorization to this namespace by replacing the default
-	//ClusterRole and ClusterRoleBinding to Role and RoleBinding respectively
-	//For further information see the kubernetes documentation about
-	//Using [RBAC Authorization](https://kubernetes.io/docs/reference/access-authn-authz/rbac/).
+	// When operator is started to watch resources in a specific set of namespaces, we use the MultiNamespacedCacheBuilder cache.
+	// In this scenario, it is also suggested to restrict the provided authorization to this namespace by replacing the default
+	// ClusterRole and ClusterRoleBinding to Role and RoleBinding respectively
+	// For further information see the kubernetes documentation about
+	// Using [RBAC Authorization](https://kubernetes.io/docs/reference/access-authn-authz/rbac/).
 	managerWatchCache := (cache.NewCacheFunc)(nil)
 	if namespaces != "" {
 		ns := strings.Split(namespaces, ",")
@@ -96,7 +95,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	operatorNs, err := k8sutil.GetOperatorNamespace()
+	operatorNs, err := GetOperatorNamespace()
 	if err != nil {
 		log.Error(err, "failed to get operator namespace")
 		os.Exit(1)
@@ -137,4 +136,16 @@ func main() {
 		log.Error(err, "manager exited non-zero")
 		os.Exit(1)
 	}
+}
+
+func GetOperatorNamespace() (string, error) {
+	nsBytes, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace")
+	if err != nil {
+		if os.IsNotExist(err) {
+			return "", errors.New("file does not exist")
+		}
+		return "", err
+	}
+	ns := strings.TrimSpace(string(nsBytes))
+	return ns, nil
 }

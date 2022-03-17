@@ -16,12 +16,13 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/operator-framework/operator-sdk/pkg/predicate"
+	// go "github.com/operator-framework/operator-sdk/pkg/predicate"
 	"github.com/pravega/zookeeper-operator/pkg/controller/config"
 	"github.com/pravega/zookeeper-operator/pkg/utils"
 	"github.com/pravega/zookeeper-operator/pkg/yamlexporter"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	"github.com/go-logr/logr"
 	zookeeperv1beta1 "github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
@@ -53,16 +54,16 @@ var log = logf.Log.WithName("controller_zookeepercluster")
 // to the Manager. The Manager will set fields on the Controller and Start it
 // when the Manager is Started.
 func AddZookeeperReconciler(mgr manager.Manager) error {
-	return add(mgr, newZookeeperClusterReconciler(mgr))
+	return Add(mgr, NewZookeeperClusterReconciler(mgr))
 }
 
-// newReconciler returns a new reconcile.Reconciler
-func newZookeeperClusterReconciler(mgr manager.Manager) reconcile.Reconciler {
+// NewZookeeperClusterReconciler returns a new reconcile.Reconciler
+func NewZookeeperClusterReconciler(mgr manager.Manager) reconcile.Reconciler {
 	return &ReconcileZookeeperCluster{client: mgr.GetClient(), scheme: mgr.GetScheme(), zkClient: new(zk.DefaultZookeeperClient)}
 }
 
-// add adds a new Controller to mgr with r as the reconcile.Reconciler
-func add(mgr manager.Manager, r reconcile.Reconciler) error {
+// Add adds a new Controller to mgr with r as the reconcile.Reconciler
+func Add(mgr manager.Manager, r reconcile.Reconciler) error {
 	// Create a new controller
 	c, err := controller.New("zookeepercluster-controller", mgr,
 		controller.Options{Reconciler: r})
@@ -119,7 +120,7 @@ type reconcileFun func(cluster *zookeeperv1beta1.ZookeeperCluster) error
 
 // Reconcile reads that state of the cluster for a ZookeeperCluster object and
 // makes changes based on the state read and what is in the ZookeeperCluster.Spec
-func (r *ReconcileZookeeperCluster) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (r *ReconcileZookeeperCluster) Reconcile(_ context.Context, request reconcile.Request) (reconcile.Result, error) {
 	r.log = log.WithValues(
 		"Request.Namespace", request.Namespace,
 		"Request.Name", request.Name)
@@ -322,7 +323,7 @@ func (r *ReconcileZookeeperCluster) updateStatefulSet(instance *zookeeperv1beta1
 
 func (r *ReconcileZookeeperCluster) upgradeStatefulSet(instance *zookeeperv1beta1.ZookeeperCluster, foundSts *appsv1.StatefulSet) (err error) {
 
-	//Getting the upgradeCondition from the zk clustercondition
+	// Getting the upgradeCondition from the zk clustercondition
 	_, upgradeCondition := instance.Status.GetClusterCondition(zookeeperv1beta1.ClusterConditionUpgrading)
 
 	if upgradeCondition == nil {
@@ -331,8 +332,8 @@ func (r *ReconcileZookeeperCluster) upgradeStatefulSet(instance *zookeeperv1beta
 		return nil
 	}
 
-	//Setting the upgrade condition to true to trigger the upgrade
-	//When the zk cluster is upgrading Statefulset CurrentRevision and UpdateRevision are not equal and zk cluster image tag is not equal to CurrentVersion
+	// Setting the upgrade condition to true to trigger the upgrade
+	// When the zk cluster is upgrading Statefulset CurrentRevision and UpdateRevision are not equal and zk cluster image tag is not equal to CurrentVersion
 	if upgradeCondition.Status == corev1.ConditionFalse {
 		if instance.Status.IsClusterInReadyState() && foundSts.Status.CurrentRevision != foundSts.Status.UpdateRevision && instance.Spec.Image.Tag != instance.Status.CurrentVersion {
 			instance.Status.TargetVersion = instance.Spec.Image.Tag
@@ -341,20 +342,20 @@ func (r *ReconcileZookeeperCluster) upgradeStatefulSet(instance *zookeeperv1beta
 		}
 	}
 
-	//checking if the upgrade is in progress
+	// checking if the upgrade is in progress
 	if upgradeCondition.Status == corev1.ConditionTrue {
-		//checking when the targetversion is empty
+		// checking when the targetversion is empty
 		if instance.Status.TargetVersion == "" {
 			r.log.Info("upgrading to an unknown version: cancelling upgrade process")
 			return r.clearUpgradeStatus(instance)
 		}
-		//Checking for upgrade completion
+		// Checking for upgrade completion
 		if foundSts.Status.CurrentRevision == foundSts.Status.UpdateRevision {
 			instance.Status.CurrentVersion = instance.Status.TargetVersion
 			r.log.Info("upgrade completed")
 			return r.clearUpgradeStatus(instance)
 		}
-		//updating the upgradecondition if upgrade is in progress
+		// updating the upgradecondition if upgrade is in progress
 		if foundSts.Status.CurrentRevision != foundSts.Status.UpdateRevision {
 			r.log.Info("upgrade in progress")
 			if fmt.Sprint(foundSts.Status.UpdatedReplicas) != upgradeCondition.Message {
@@ -615,7 +616,7 @@ func (r *ReconcileZookeeperCluster) reconcileClusterStatus(instance *zookeeperv1
 	instance.Status.Members.Ready = readyMembers
 	instance.Status.Members.Unready = unreadyMembers
 
-	//If Cluster is in a ready state...
+	// If Cluster is in a ready state...
 	if instance.Spec.Replicas == instance.Status.ReadyReplicas && (!instance.Status.MetaRootCreated) {
 		r.log.Info("Cluster is Ready, Creating ZK Metadata...")
 		zkUri := utils.GetZkServiceUri(instance)

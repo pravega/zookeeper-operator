@@ -685,9 +685,7 @@ openAPIV3Schema:
                       type: array
                       x-kubernetes-list-map-keys:
                       - containerPort
-                      {{- if semverCompare "< 1.18-0" .Capabilities.KubeVersion.GitVersion }}
                       - protocol
-                      {{- end }}
                       x-kubernetes-list-type: map
                     readinessProbe:
                       description: 'Periodic probe of container service readiness.
@@ -1834,9 +1832,7 @@ openAPIV3Schema:
                       type: array
                       x-kubernetes-list-map-keys:
                       - containerPort
-                      {{- if semverCompare "< 1.18-0" .Capabilities.KubeVersion.GitVersion }}
                       - protocol
-                      {{- end }}
                       x-kubernetes-list-type: map
                     readinessProbe:
                       description: 'Periodic probe of container service readiness.

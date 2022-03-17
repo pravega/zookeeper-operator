@@ -11,74 +11,72 @@
 package e2e
 
 import (
-	"testing"
+	"context"
 	"time"
 
+	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	framework "github.com/operator-framework/operator-sdk/pkg/test"
-	zk_e2eutil "github.com/pravega/zookeeper-operator/pkg/test/e2e/e2eutil"
+	"k8s.io/apimachinery/pkg/types"
+
+	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
+	"github.com/pravega/zookeeper-operator/pkg/test/e2e/e2eutil"
 )
 
 // Test create and delete 1, 2 and all the pods
-func testDeletePods(t *testing.T) {
-	g := NewGomegaWithT(t)
+var _ = Describe("Test pods are recreated", func() {
+	namespace := "default"
+	defaultCluster := e2eutil.NewDefaultCluster(namespace)
+	podCount := 3
 
-	doCleanup := true
-	ctx := framework.NewTestCtx(t)
-	defer func() {
-		if doCleanup {
-			ctx.Cleanup()
-		}
-	}()
+	Context("Create a default zookeeper cluster", func() {
+		var (
+			zk             *v1beta1.ZookeeperCluster
+			err            error
+			podDeleteCount int
+		)
+		BeforeEach(func() {
+			defaultCluster.WithDefaults()
+			defaultCluster.Status.Init()
+			defaultCluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
+		})
+		It("should create the cluster successfully", func() {
+			zk, err = e2eutil.CreateCluster(k8sClient, defaultCluster)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(zk).ToNot(BeNil())
+			Expect(func() error {
+				return k8sClient.Get(context.TODO(), types.NamespacedName{Namespace: zk.Namespace, Name: zk.Name}, zk)
+			}()).ToNot(HaveOccurred())
+			Eventually(requests, timeout).Should(Receive(Equal(expectedRequest)))
 
-	namespace, err := ctx.GetNamespace()
-	g.Expect(err).NotTo(HaveOccurred())
-	f := framework.Global
+			// A default zookeeper cluster should have 3 pods
+			Eventually(e2eutil.WaitForClusterToBecomeReady(k8sClient, zk, podCount), timeout).Should(Succeed())
+		})
 
-	defaultCluster := zk_e2eutil.NewDefaultCluster(namespace)
+		It("should restart 1 pod", func() {
+			podDeleteCount := 1
+			err = e2eutil.DeletePods(k8sClient, zk, podDeleteCount)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(e2eutil.WaitForClusterToBecomeReady(k8sClient, zk, podCount), timeout).Should(Succeed())
+		})
+		It("should restart when multiple pods are deleted", func() {
+			podDeleteCount = 2
+			err = e2eutil.DeletePods(k8sClient, zk, podDeleteCount)
+			Expect(err).NotTo(HaveOccurred())
+			time.Sleep(60 * time.Second)
 
-	defaultCluster.WithDefaults()
-	defaultCluster.Status.Init()
-	defaultCluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
+			Eventually(e2eutil.WaitForClusterToBecomeReady(k8sClient, zk, podCount), timeout).Should(Succeed())
 
-	zk, err := zk_e2eutil.CreateCluster(t, f, ctx, defaultCluster)
-	g.Expect(err).NotTo(HaveOccurred())
-
-	// A default zookeeper cluster should have 3 pods
-	podSize := 3
-	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
-	g.Expect(err).NotTo(HaveOccurred())
-
-	podDeleteCount := 1
-	err = zk_e2eutil.DeletePods(t, f, ctx, zk, podDeleteCount)
-	g.Expect(err).NotTo(HaveOccurred())
-
-	time.Sleep(60 * time.Second)
-	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
-	g.Expect(err).NotTo(HaveOccurred())
-
-	podDeleteCount = 2
-	err = zk_e2eutil.DeletePods(t, f, ctx, zk, podDeleteCount)
-	g.Expect(err).NotTo(HaveOccurred())
-	time.Sleep(60 * time.Second)
-
-	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
-	g.Expect(err).NotTo(HaveOccurred())
-
-	podDeleteCount = 3
-	err = zk_e2eutil.DeletePods(t, f, ctx, zk, podDeleteCount)
-	g.Expect(err).NotTo(HaveOccurred())
-	time.Sleep(60 * time.Second)
-	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
-	g.Expect(err).NotTo(HaveOccurred())
-
-	err = zk_e2eutil.DeleteCluster(t, f, ctx, zk)
-	g.Expect(err).NotTo(HaveOccurred())
-
-	// No need to do cleanup since the cluster CR has already been deleted
-	doCleanup = false
-
-	err = zk_e2eutil.WaitForClusterToTerminate(t, f, ctx, zk)
-	g.Expect(err).NotTo(HaveOccurred())
-
-}
+			podDeleteCount = 3
+			err = e2eutil.DeletePods(k8sClient, zk, podDeleteCount)
+			Expect(err).NotTo(HaveOccurred())
+			time.Sleep(60 * time.Second)
+			Eventually(e2eutil.WaitForClusterToBecomeReady(k8sClient, zk, podCount),timeout).Should(Succeed())
+		})
+		It("should successfully tear down the cluster", func() {
+			// Delete cluster
+			err = e2eutil.DeleteCluster(k8sClient, zk)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(e2eutil.WaitForClusterToTerminate(k8sClient, zk),timeout).Should(Succeed())
+		})
+	})
+})
