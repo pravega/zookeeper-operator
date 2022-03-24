@@ -70,13 +70,13 @@ var _ = Describe("Test pods are recreated", func() {
 			err = e2eutil.DeletePods(k8sClient, zk, podDeleteCount)
 			Expect(err).NotTo(HaveOccurred())
 			time.Sleep(60 * time.Second)
-			Eventually(e2eutil.WaitForClusterToBecomeReady(k8sClient, zk, podCount),timeout).Should(Succeed())
+			Eventually(e2eutil.WaitForClusterToBecomeReady(k8sClient, zk, podCount), timeout).Should(Succeed())
 		})
 		It("should successfully tear down the cluster", func() {
 			// Delete cluster
 			err = e2eutil.DeleteCluster(k8sClient, zk)
 			Expect(err).NotTo(HaveOccurred())
-			Eventually(e2eutil.WaitForClusterToTerminate(k8sClient, zk),timeout).Should(Succeed())
+			Eventually(e2eutil.WaitForClusterToTerminate(k8sClient, zk), timeout).Should(Succeed())
 		})
 	})
 })
