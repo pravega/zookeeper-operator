@@ -16,7 +16,6 @@ import (
 	"strconv"
 	"time"
 
-	// go "github.com/operator-framework/operator-sdk/pkg/predicate"
 	"github.com/pravega/zookeeper-operator/pkg/controller/config"
 	"github.com/pravega/zookeeper-operator/pkg/utils"
 	"github.com/pravega/zookeeper-operator/pkg/yamlexporter"
