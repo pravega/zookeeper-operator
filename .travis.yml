@@ -1,10 +1,10 @@
 language: go
 go:
-- '1.13.8'
+- '1.17.8'
 sudo: required
 env:
     global:
-      - KUBERNETES_VERSION=v1.15.0
+      - KUBERNETES_VERSION=v1.21.0
       - OPERATOR_SDK_VERSION=v0.17.0
       - KUBERNETES_CONFIG_FILE=$HOME/.kube/config
       - CHANGE_MINIKUBE_NONE_USER=true
