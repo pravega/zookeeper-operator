@@ -14,7 +14,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
+	"github.com/pravega/zookeeper-operator/api/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	. "github.com/onsi/ginkgo"

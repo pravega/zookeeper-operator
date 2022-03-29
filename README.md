@@ -425,7 +425,7 @@ You can run the operator locally to help with development, testing, and debuggin
 The following command will run the operator locally with the default Kubernetes config file present at `$HOME/.kube/config`. Use the `--kubeconfig` flag to provide a different path.
 
 ```
-$ operator-sdk up local
+$ make run-local
 ```
 
 ### Installation on Google Kubernetes Engine

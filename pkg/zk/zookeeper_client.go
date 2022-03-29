@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
+	"github.com/pravega/zookeeper-operator/api/v1beta1"
 	"github.com/samuel/go-zookeeper/zk"
 )
 

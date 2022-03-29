@@ -19,11 +19,14 @@ COPY go.sum go.sum
 # Download all dependencies.
 RUN go mod download
 
-RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o /src/${PROJECT_NAME} \
-    -ldflags "-X ${REPO_PATH}/pkg/version.Version=${VERSION} -X ${REPO_PATH}/pkg/version.GitSHA=${GIT_SHA}" \
-    /src/cmd/manager
+# Copy the go source
+COPY main.go main.go
+COPY api/ api/
+COPY controllers/ controllers/
 
-# =============================================================================
+# Build
+RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o /src/${PROJECT_NAME} \
+    -ldflags "-X ${REPO_PATH}/pkg/version.Version=${VERSION} -X ${REPO_PATH}/pkg/version.GitSHA=${GIT_SHA}" main.go
 
 FROM ${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}alpine:${ALPINE_VERSION} AS final
 

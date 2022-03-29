@@ -11,78 +11,51 @@
 package e2e
 
 import (
-	"testing"
-
+	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	zk_e2eutil "github.com/pravega/zookeeper-operator/pkg/test/e2e/e2eutil"
 )
 
-// Test create and recreate a Zookeeper cluster with the same name
-func testEphemeralStorage(t *testing.T) {
-	g := NewGomegaWithT(t)
+var _ = Describe("Ephemeral test controller", func() {
+	Context("Check create/scale operations", func() {
+		It("should create and scale up and down a Zookeeper cluster", func() {
+			defaultCluster := zk_e2eutil.NewClusterWithEmptyDir(testNamespace)
+			defaultCluster.WithDefaults()
+			defaultCluster.Status.Init()
+			By("create zk cluster")
+			zk, err := zk_e2eutil.CreateCluster(&t, k8sClient, defaultCluster)
+			Expect(err).NotTo(HaveOccurred())
+			//
+			// A default Zookeeper cluster should have 3 replicas
+			podSize := 3
+			Expect(zk_e2eutil.WaitForClusterToBecomeReady(&t, k8sClient, defaultCluster, podSize)).NotTo(HaveOccurred())
 
-	doCleanup := true
-	ctx := framework.NewTestCtx(t)
-	defer func() {
-		if doCleanup {
-			ctx.Cleanup()
-		}
-	}()
+			// This is to get the latest zk cluster object
+			zk, err = zk_e2eutil.GetCluster(&t, k8sClient, zk)
+			Expect(err).NotTo(HaveOccurred())
 
-	namespace, err := ctx.GetNamespace()
-	g.Expect(err).NotTo(HaveOccurred())
-	f := framework.Global
+			// Scale up zk cluster, increase replicas to 5
+			By("Scale up zk cluster, increase replicas to 5")
+			zk.Spec.Replicas = 5
+			podSize = 5
+			Expect(zk_e2eutil.UpdateCluster(&t, k8sClient, zk)).NotTo(HaveOccurred())
+			Expect(zk_e2eutil.WaitForClusterToBecomeReady(&t, k8sClient, zk, podSize)).NotTo(HaveOccurred())
 
-	defaultCluster := zk_e2eutil.NewClusterWithEmptyDir(namespace)
-	defaultCluster.WithDefaults()
-	defaultCluster.Status.Init()
+			// This is to get the latest zk cluster object
+			zk, err = zk_e2eutil.GetCluster(&t, k8sClient, zk)
+			Expect(err).NotTo(HaveOccurred())
 
-	zk, err := zk_e2eutil.CreateCluster(t, f, ctx, defaultCluster)
-	g.Expect(err).NotTo(HaveOccurred())
+			// Scale down zk cluster back to default
+			By("Scale down zk cluster back to default")
+			zk.Spec.Replicas = 3
+			podSize = 3
+			Expect(zk_e2eutil.UpdateCluster(&t, k8sClient, zk)).NotTo(HaveOccurred())
+			Expect(zk_e2eutil.WaitForClusterToBecomeReady(&t, k8sClient, zk, podSize)).NotTo(HaveOccurred())
 
-	// A default Zookeeper cluster should have 3 replicas
-	podSize := 3
-	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
-	g.Expect(err).NotTo(HaveOccurred())
-
-	// This is to get the latest zk cluster object
-	zk, err = zk_e2eutil.GetCluster(t, f, ctx, zk)
-	g.Expect(err).NotTo(HaveOccurred())
-
-	// Scale up zk cluster, increase replicas to 5
-
-	zk.Spec.Replicas = 5
-	podSize = 5
-
-	err = zk_e2eutil.UpdateCluster(t, f, ctx, zk)
-	g.Expect(err).NotTo(HaveOccurred())
-
-	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
-	g.Expect(err).NotTo(HaveOccurred())
-
-	// This is to get the latest zk cluster object
-	zk, err = zk_e2eutil.GetCluster(t, f, ctx, zk)
-	g.Expect(err).NotTo(HaveOccurred())
-
-	// Scale down zk cluster back to default
-	zk.Spec.Replicas = 3
-	podSize = 3
-
-	err = zk_e2eutil.UpdateCluster(t, f, ctx, zk)
-	g.Expect(err).NotTo(HaveOccurred())
-
-	err = zk_e2eutil.WaitForClusterToBecomeReady(t, f, ctx, zk, podSize)
-	g.Expect(err).NotTo(HaveOccurred())
-
-	// Delete cluster
-	err = zk_e2eutil.DeleteCluster(t, f, ctx, zk)
-	g.Expect(err).NotTo(HaveOccurred())
-
-	// No need to do cleanup since the cluster CR has already been deleted
-	doCleanup = false
-
-	err = zk_e2eutil.WaitForClusterToTerminate(t, f, ctx, zk)
-	g.Expect(err).NotTo(HaveOccurred())
-
-}
+			// Delete cluster
+			By("delete zk cluster")
+			Expect(zk_e2eutil.DeleteCluster(&t, k8sClient, zk)).NotTo(HaveOccurred())
+			Expect(zk_e2eutil.WaitForClusterToTerminate(&t, k8sClient, zk)).NotTo(HaveOccurred())
+		})
+	})
+})
