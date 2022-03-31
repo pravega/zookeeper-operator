@@ -66,7 +66,7 @@ jobs:
       run: |
         echo "inside e2e"
         go env
-        sudo make test-e2e
+        make test-e2e
   publish:
     name: Publish docker image
     runs-on: ubuntu-latest
