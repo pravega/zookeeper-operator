@@ -48,6 +48,7 @@ crds: ## Generate CRDs
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
 deploy: kustomize
+	go env
 	echo "go root in deploy is $(GOROOT)"
 	cd config/manager && $(KUSTOMIZE) edit set image pravega/zookeeper-operator=$(TEST_IMAGE)
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
@@ -174,6 +175,7 @@ test-e2e-remote:
 	docker push $(TEST_IMAGE)
 	echo "goroot is $(GOROOT)"
 	make deploy
+	go env
 	RUN_LOCAL=false go test -v -timeout 1h ./test/e2e...
 	make undeploy
 
