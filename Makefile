@@ -170,11 +170,20 @@ test:
 test-e2e: test-e2e-remote
 
 test-e2e-remote:
+	echo "Before login"
+	go env
 	make test-login
+	echo "Before build"
+	go env
 	docker build . -t $(TEST_IMAGE)
+	echo "After build"
+	go env
 	docker push $(TEST_IMAGE)
+	echo "After push"
+	go env
 	echo "goroot is $(GOROOT)"
 	make deploy
+	echo "After deploy"
 	go env
 	RUN_LOCAL=false go test -v -timeout 1h ./test/e2e...
 	make undeploy
