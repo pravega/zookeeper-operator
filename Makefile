@@ -171,6 +171,7 @@ test-e2e: test-e2e-remote
 
 test-e2e-remote:
 	echo "Before login"
+
 	go env
 	make test-login
 	echo "Before build"
@@ -185,6 +186,9 @@ test-e2e-remote:
 	make deploy
 	echo "After deploy"
 	go env
+	export GOROOT="/opt/hostedtoolcache/go/1.17.8/x64" && \
+	export GOPATH="/home/runner/go" && \
+	go env && \
 	RUN_LOCAL=false go test -v -timeout 1h ./test/e2e...
 	make undeploy
 
