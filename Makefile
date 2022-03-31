@@ -48,6 +48,7 @@ crds: ## Generate CRDs
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
 deploy: manifests kustomize
+	echo "go root in deploy is $(GOROOT)"
 	cd config/manager && $(KUSTOMIZE) edit set image pravega/zookeeper-operator=$(TEST_IMAGE)
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
 
@@ -69,6 +70,7 @@ undeploy:
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: controller-gen
 	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+	echo "GoRoot after manifest generation is $(GOROOT)"
 
 # Run go fmt against code
 fmt:
@@ -96,6 +98,7 @@ CONTROLLER_GEN=$(shell which controller-gen)
 endif
 
 kustomize:
+	echo "Goroot in kustomize is $(GOROOT)"
 ifeq (, $(shell which kustomize))
 	@{ \
 	set -e ;\
@@ -166,6 +169,7 @@ test-e2e-remote:
 	make test-login
 	docker build . -t $(TEST_IMAGE)
 	docker push $(TEST_IMAGE)
+	echo "goroot is $(GOROOT)"
 	make deploy
 	RUN_LOCAL=false go test -v -timeout 1h ./test/e2e...
 	make undeploy
