@@ -12,7 +12,7 @@ on:
   release:
     types:
       - created
-      
+
 # jobs to run
 jobs:
   build:
@@ -33,6 +33,7 @@ jobs:
       uses: codecov/codecov-action@v1.0.12
     - name: Set env
       run: |
+        go env
         echo "KUBERNETES_VERSION=v1.20.13" >> $GITHUB_ENV
         echo "OPERATOR_SDK_VERSION=v0.19.4" >> $GITHUB_ENV
         echo "MINIKUBE_VERSION=v1.24.0" >> $GITHUB_ENV
@@ -40,6 +41,7 @@ jobs:
         echo "CHANGE_MINIKUBE_NONE_USER=true" >> $GITHUB_ENV
     - name: minikube setup
       run: |
+        go env
         curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBERNETES_VERSION/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
         curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBE_VERSION/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
         curl -Lo operator-sdk https://github.com/operator-framework/operator-sdk/releases/download/$OPERATOR_SDK_VERSION/operator-sdk-$OPERATOR_SDK_VERSION-x86_64-linux-gnu && chmod +x operator-sdk && sudo mv operator-sdk /usr/local/bin/
@@ -59,6 +61,7 @@ jobs:
         echo "cluster info"
         sudo kubectl -n kube-system get pod -o wide
         sudo kubectl create secret docker-registry regcred --docker-server=https://index.docker.io/v1/ --docker-username="testanisha"  --docker-password="123456789" --docker-email=testimage456@gmail.com
+        go env
     - name: E2E
       run: sudo make test-e2e
   publish:
