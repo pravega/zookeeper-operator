@@ -47,7 +47,7 @@ crds: ## Generate CRDs
 
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
-deploy: manifests kustomize
+deploy: kustomize
 	echo "go root in deploy is $(GOROOT)"
 	cd config/manager && $(KUSTOMIZE) edit set image pravega/zookeeper-operator=$(TEST_IMAGE)
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
@@ -69,6 +69,8 @@ undeploy:
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: controller-gen
+	echo "GoRoot before manifest generation is $(GOROOT)"
+	export GOROOT="/opt/hostedtoolcache/go/1.17.7/x64"
 	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 	echo "GoRoot after manifest generation is $(GOROOT)"
 
@@ -83,6 +85,7 @@ vet:
 # find or download controller-gen
 # download controller-gen if necessary
 controller-gen:
+	echo "Goroot in controller-gen is $(GOROOT)"
 ifeq (, $(shell which controller-gen))
 	@{ \
 	set -e ;\
