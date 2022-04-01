@@ -13,10 +13,11 @@ package e2eutil
 import (
 	goctx "context"
 	"fmt"
-	"k8s.io/apimachinery/pkg/labels"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"testing"
 	"time"
+
+	"k8s.io/apimachinery/pkg/labels"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	corev1 "k8s.io/api/core/v1"
 
@@ -40,6 +41,7 @@ var (
 // CreateCluster creates a ZookeeperCluster CR with the desired spec
 func CreateCluster(t *testing.T, k8client client.Client, z *api.ZookeeperCluster) (*api.ZookeeperCluster, error) {
 	t.Logf("creating zookeeper cluster: %s", z.Name)
+	z.Spec.Image.PullPolicy = "IfNotPresent"
 	err := k8client.Create(goctx.TODO(), z)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create CR: %v", err)
