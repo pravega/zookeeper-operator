@@ -191,7 +191,7 @@ test-e2e-remote:
 
 test-e2e-local:
 	make deploy-test
-	RUN_LOCAL=true go test -v -timeout 1h ./test/e2e...
+	RUN_LOCAL=true go test -v -timeout 2h ./test/e2e...
 	make undeploy-test
 
 run-local:
