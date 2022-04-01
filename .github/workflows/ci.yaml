@@ -39,7 +39,7 @@ jobs:
       uses: codecov/codecov-action@v1.0.12
     - name: Set env
       run: |
-        echo "KUBERNETES_VERSION=v1.23.1" >> $GITHUB_ENV
+        echo "KUBERNETES_VERSION=v1.22.8" >> $GITHUB_ENV
         echo "OPERATOR_SDK_VERSION=v0.19.4" >> $GITHUB_ENV
         echo "MINIKUBE_VERSION=v1.24.0" >> $GITHUB_ENV
         echo "KUBERNETES_CONFIG_FILE=$HOME/.kube/config" >> $GITHUB_ENV
