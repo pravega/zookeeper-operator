@@ -39,9 +39,9 @@ jobs:
       uses: codecov/codecov-action@v1.0.12
     - name: Set env
       run: |
-        echo "KUBERNETES_VERSION=v1.20.13" >> $GITHUB_ENV
+        echo "KUBERNETES_VERSION=v1.21.7" >> $GITHUB_ENV
         echo "OPERATOR_SDK_VERSION=v0.19.4" >> $GITHUB_ENV
-        echo "MINIKUBE_VERSION=v1.24.0" >> $GITHUB_ENV
+        echo "MINIKUBE_VERSION=v1.25.2" >> $GITHUB_ENV
         echo "KUBERNETES_CONFIG_FILE=$HOME/.kube/config" >> $GITHUB_ENV
         echo "CHANGE_MINIKUBE_NONE_USER=true" >> $GITHUB_ENV
     - name: minikube setup
@@ -65,6 +65,7 @@ jobs:
         sudo kubectl cluster-info
         echo "cluster info"
         sudo kubectl -n kube-system get pod -o wide
+        sudo kubectl version
         sudo kubectl create secret docker-registry regcred --docker-server=https://index.docker.io/v1/ --docker-username="testanisha"  --docker-password="123456789" --docker-email=testimage456@gmail.com
         go env
     - name: E2E
