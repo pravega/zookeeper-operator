@@ -13,6 +13,7 @@ package e2e
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	log "github.com/sirupsen/logrus"
 	zk_e2eutil "github.com/pravega/zookeeper-operator/pkg/test/e2e/e2eutil"
 )
 
@@ -21,35 +22,50 @@ var _ = Describe("Basic test controller", func() {
 	Context("Check create/delete operations", func() {
 		It("should create and recreate a Zookeeper cluster with the same name", func() {
 			By("create Zookeeper cluster")
+			log.Info("--- 1 ---")
 			defaultCluster := zk_e2eutil.NewDefaultCluster(testNamespace)
+			log.Info("--- 2 ---")
 			defaultCluster.WithDefaults()
+			log.Info("--- 3 ---")
 			defaultCluster.Status.Init()
+			log.Info("--- 4 ---")
 			defaultCluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
+			log.Info("--- 5 ---")
 
 			zk, err := zk_e2eutil.CreateCluster(&t, k8sClient, defaultCluster)
+			log.Info("--- 6 ---")
 			Expect(err).NotTo(HaveOccurred())
 
 			podSize := 3
 			Expect(zk_e2eutil.WaitForClusterToBecomeReady(&t, k8sClient, defaultCluster, podSize)).NotTo(HaveOccurred())
+			log.Info("--- 7 ---")
 			Expect(zk_e2eutil.CheckAdminService(&t, k8sClient, zk)).NotTo(HaveOccurred())
+			log.Info("--- 8 ---")
 
 			By("delete created Zookeeper cluster")
 			Expect(k8sClient.Delete(ctx, zk)).Should(Succeed())
+			log.Info("--- 9 ---")
 			Expect(zk_e2eutil.WaitForClusterToTerminate(&t, k8sClient, zk)).NotTo(HaveOccurred())
+			log.Info("--- 10 ---")
 
 			By("create Zookeeper cluster with the same name")
 			defaultCluster = zk_e2eutil.NewDefaultCluster(testNamespace)
 			defaultCluster.WithDefaults()
 			defaultCluster.Status.Init()
 			defaultCluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
+			log.Info("--- 11 ---")
 
 			zk, err = zk_e2eutil.CreateCluster(&t, k8sClient, defaultCluster)
+			log.Info("--- 12 ---")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(zk_e2eutil.WaitForClusterToBecomeReady(&t, k8sClient, defaultCluster, podSize)).NotTo(HaveOccurred())
+			log.Info("--- 13 ---")
 
 			By("delete created Zookeeper cluster")
 			Expect(k8sClient.Delete(ctx, zk)).Should(Succeed())
+			log.Info("--- 14 ---")
 			Expect(zk_e2eutil.WaitForClusterToTerminate(&t, k8sClient, zk)).NotTo(HaveOccurred())
+			log.Info("--- 15 ---")
 		})
 	})
 })
