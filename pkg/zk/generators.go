@@ -258,7 +258,7 @@ func makeZkConfigString(z *v1beta1.ZookeeperCluster) string {
 		"reconfigEnabled=true\n" +
 		"skipACL=yes\n" +
 		"metricsProvider.className=org.apache.zookeeper.metrics.prometheus.PrometheusMetricsProvider\n" +
-		"metricsProvider.httpPort=7000\n" +
+		"metricsProvider.httpPort=" + strconv.Itoa(int(ports.Metrics)) + "\n" +
 		"metricsProvider.exportJvmInfo=true\n" +
 		"initLimit=" + strconv.Itoa(z.Spec.Conf.InitLimit) + "\n" +
 		"syncLimit=" + strconv.Itoa(z.Spec.Conf.SyncLimit) + "\n" +
