@@ -42,7 +42,7 @@ var (
 
 // CreateCluster creates a ZookeeperCluster CR with the desired spec
 func CreateCluster(t *testing.T, k8client client.Client, z *api.ZookeeperCluster) (*api.ZookeeperCluster, error) {
-	log("creating zookeeper cluster: %s", z.Name)
+	log.Printf("creating zookeeper cluster: %s", z.Name)
 	z.Spec.Image.PullPolicy = "IfNotPresent"
 	err := k8client.Create(goctx.TODO(), z)
 	if err != nil {
@@ -54,31 +54,31 @@ func CreateCluster(t *testing.T, k8client client.Client, z *api.ZookeeperCluster
 	if err != nil {
 		return nil, fmt.Errorf("failed to obtain created CR: %v", err)
 	}
-	log("created zookeeper cluster: %s", zk.Name)
+	log.Printf("created zookeeper cluster: %s", zk.Name)
 	return z, nil
 }
 
 // DeleteCluster deletes the ZookeeperCluster CR specified by cluster spec
 func DeleteCluster(t *testing.T, k8client client.Client, z *api.ZookeeperCluster) error {
-	log("deleting zookeeper cluster: %s", z.Name)
+	log.Printf("deleting zookeeper cluster: %s", z.Name)
 	err := k8client.Delete(goctx.TODO(), z)
 	if err != nil {
 		return fmt.Errorf("failed to delete CR: %v", err)
 	}
 
-	log("deleted zookeeper cluster: %s", z.Name)
+	log.Printf("deleted zookeeper cluster: %s", z.Name)
 	return nil
 }
 
 // UpdateCluster updates the ZookeeperCluster CR
 func UpdateCluster(t *testing.T, k8client client.Client, z *api.ZookeeperCluster) error {
-	log("updating zookeeper cluster: %s", z.Name)
+	log.Printf("updating zookeeper cluster: %s", z.Name)
 	err := k8client.Update(goctx.TODO(), z)
 	if err != nil {
 		return fmt.Errorf("failed to update CR: %v", err)
 	}
 
-	log("updated zookeeper cluster: %s", z.Name)
+	log.Printf("updated zookeeper cluster: %s", z.Name)
 	return nil
 }
 
@@ -89,20 +89,20 @@ func GetCluster(t *testing.T, k8client client.Client, z *api.ZookeeperCluster) (
 	if err != nil {
 		return nil, fmt.Errorf("failed to obtain created CR: %v", err)
 	}
-	log("zk cluster has ready replicas %v", zk.Status.ReadyReplicas)
+	log.Printf("zk cluster has ready replicas %v", zk.Status.ReadyReplicas)
 	return zk, nil
 }
 
 // WaitForClusterToBecomeReady will wait until all cluster pods are ready
 func WaitForClusterToBecomeReady(t *testing.T, k8client client.Client, z *api.ZookeeperCluster, size int) error {
-	log("waiting for cluster pods to become ready: %s", z.Name)
+	log.Printf("waiting for cluster pods to become ready: %s", z.Name)
 	err := wait.Poll(RetryInterval, ReadyTimeout, func() (done bool, err error) {
 		cluster, err := GetCluster(t, k8client, z)
 		if err != nil {
 			return false, err
 		}
 
-		log("\twaiting for pods to become ready (%d/%d), pods (%v)", cluster.Status.ReadyReplicas, size, cluster.Status.Members.Ready)
+		log.Printf("\twaiting for pods to become ready (%d/%d), pods (%v)", cluster.Status.ReadyReplicas, size, cluster.Status.Members.Ready)
 
 		_, condition := cluster.Status.GetClusterCondition(api.ClusterConditionPodsReady)
 		if condition != nil && condition.Status == corev1.ConditionTrue && cluster.Status.ReadyReplicas == int32(size) {
@@ -114,14 +114,14 @@ func WaitForClusterToBecomeReady(t *testing.T, k8client client.Client, z *api.Zo
 	if err != nil {
 		return err
 	}
-	log("zookeeper cluster ready: %s", z.Name)
+	log.Printf("zookeeper cluster ready: %s", z.Name)
 	return nil
 
 }
 
 // WaitForClusterToUpgrade will wait until all pods are upgraded
 func WaitForClusterToUpgrade(t *testing.T, k8client client.Client, z *api.ZookeeperCluster, targetVersion string) error {
-	log("waiting for cluster to upgrade: %s", z.Name)
+	log.Printf("waiting for cluster to upgrade: %s", z.Name)
 
 	err := wait.Poll(RetryInterval, UpgradeTimeout, func() (done bool, err error) {
 		cluster, err := GetCluster(t, k8client, z)
@@ -132,7 +132,7 @@ func WaitForClusterToUpgrade(t *testing.T, k8client client.Client, z *api.Zookee
 		_, upgradeCondition := cluster.Status.GetClusterCondition(api.ClusterConditionUpgrading)
 		_, errorCondition := cluster.Status.GetClusterCondition(api.ClusterConditionError)
 
-		log("\twaiting for cluster to upgrade (upgrading: %s; error: %s)", upgradeCondition.Status, errorCondition.Status)
+		log.Printf("\twaiting for cluster to upgrade (upgrading: %s; error: %s)", upgradeCondition.Status, errorCondition.Status)
 
 		if errorCondition.Status == corev1.ConditionTrue {
 			return false, fmt.Errorf("failed upgrading cluster: [%s] %s", errorCondition.Reason, errorCondition.Message)
@@ -149,13 +149,13 @@ func WaitForClusterToUpgrade(t *testing.T, k8client client.Client, z *api.Zookee
 		return err
 	}
 
-	log("zookeeper cluster upgraded: %s", z.Name)
+	log.Printf("zookeeper cluster upgraded: %s", z.Name)
 	return nil
 }
 
 // WaitForClusterToTerminate will wait until all cluster pods are terminated
 func WaitForClusterToTerminate(t *testing.T, k8client client.Client, z *api.ZookeeperCluster) error {
-	log("waiting for zookeeper cluster to terminate: %s", z.Name)
+	log.Printf("waiting for zookeeper cluster to terminate: %s", z.Name)
 
 	listOptions := []client.ListOption{
 		client.InNamespace(z.GetNamespace()),
@@ -175,7 +175,7 @@ func WaitForClusterToTerminate(t *testing.T, k8client client.Client, z *api.Zook
 			pod := &podList.Items[i]
 			names = append(names, pod.Name)
 		}
-		log("waiting for pods to terminate, running pods (%v)", names)
+		log.Printf("waiting for pods to terminate, running pods (%v)", names)
 		if len(names) != 0 {
 			return false, nil
 		}
@@ -199,7 +199,7 @@ func WaitForClusterToTerminate(t *testing.T, k8client client.Client, z *api.Zook
 			pvc := &pvcList.Items[i]
 			names = append(names, pvc.Name)
 		}
-		log("waiting for pvc to terminate (%v)", names)
+		log.Printf("waiting for pvc to terminate (%v)", names)
 		if len(names) != 0 {
 			return false, nil
 		}
@@ -211,7 +211,7 @@ func WaitForClusterToTerminate(t *testing.T, k8client client.Client, z *api.Zook
 		return err
 	}
 
-	log("zookeeper cluster terminated: %s", z.Name)
+	log.Printf("zookeeper cluster terminated: %s", z.Name)
 	return nil
 }
 func DeletePods(t *testing.T, k8client client.Client, z *api.ZookeeperCluster, size int) error {
@@ -228,13 +228,13 @@ func DeletePods(t *testing.T, k8client client.Client, z *api.ZookeeperCluster, s
 
 	for i := 0; i < size; i++ {
 		pod = &podList.Items[i]
-		log("podnameis %v", pod.Name)
+		log.Printf("podnameis %v", pod.Name)
 		err := k8client.Delete(goctx.TODO(), pod)
 		if err != nil {
 			return fmt.Errorf("failed to delete pod: %v", err)
 		}
 
-		log("deleted zookeeper pod: %s", pod.Name)
+		log.Printf("deleted zookeeper pod: %s", pod.Name)
 
 	}
 	return nil
@@ -259,8 +259,8 @@ func CheckAdminService(t *testing.T, k8client client.Client, z *api.ZookeeperClu
 
 	for _, sn := range serviceList.Items {
 		if sn.Name == "zookeeper-admin-server" {
-			log("Admin service is enabled")
-			log("servicenameis %v", sn.Name)
+			log.Printf("Admin service is enabled")
+			log.Printf("servicenameis %v", sn.Name)
 			return nil
 		}
 	}
