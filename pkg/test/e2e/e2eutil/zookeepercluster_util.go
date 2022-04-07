@@ -34,9 +34,9 @@ var (
 	Timeout              = time.Second * 60
 	CleanupRetryInterval = time.Second * 5
 	CleanupTimeout       = time.Second * 5
-	ReadyTimeout         = time.Minute * 5
-	UpgradeTimeout       = time.Minute * 10
-	TerminateTimeout     = time.Minute * 5
+	ReadyTimeout         = time.Minute * 15
+	UpgradeTimeout       = time.Minute * 25
+	TerminateTimeout     = time.Minute * 15
 	VerificationTimeout  = time.Minute * 5
 )
 
@@ -99,7 +99,7 @@ func WaitForClusterToBecomeReady(t *testing.T, k8client client.Client, z *api.Zo
 	err := wait.Poll(RetryInterval, ReadyTimeout, func() (done bool, err error) {
 		cluster, err := GetCluster(t, k8client, z)
 		log.Printf("### Printing Cluster Details ###")
-		log.Printf(cluster)
+		log.Printf("cluster is %v", cluster)
 		log.Printf("######")
 		if err != nil {
 			return false, err
@@ -108,16 +108,16 @@ func WaitForClusterToBecomeReady(t *testing.T, k8client client.Client, z *api.Zo
 		log.Printf("\twaiting for pods to become ready (%d/%d), pods (%v)", cluster.Status.ReadyReplicas, size, cluster.Status.Members.Ready)
 
 		log.Printf("### Printing Cluster Spec ###")
-		log.Printf(cluster.Spec)
+		log.Printf("cluster.spec is %v", cluster.Spec)
 		log.Printf("######")
 
 		log.Printf("### Printing Cluster Status ###")
-		log.Printf(cluster.Status)
+		log.Printf("cluster.status is %v", cluster.Status)
 		log.Printf("######")
 
-		pods, err = GetPods(t, k8client, z)
+		pods, err := GetPods(t, k8client, z)
 		log.Printf("### Printing Output of get pods ###")
-		log.Printf(pods)
+		log.Printf("pods is %v", pods)
 		log.Printf("######")
 
 		_, condition := cluster.Status.GetClusterCondition(api.ClusterConditionPodsReady)
