@@ -13,8 +13,8 @@ package e2e
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	log "github.com/sirupsen/logrus"
 	zk_e2eutil "github.com/pravega/zookeeper-operator/pkg/test/e2e/e2eutil"
+	log "github.com/sirupsen/logrus"
 )
 
 // Test create and recreate a Zookeeper cluster with the same name

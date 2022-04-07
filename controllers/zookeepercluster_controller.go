@@ -50,7 +50,7 @@ var _ reconcile.Reconciler = &ZookeeperClusterReconciler{}
 
 // ZookeeperClusterReconciler reconciles a ZookeeperCluster object
 type ZookeeperClusterReconciler struct {
-	Client   client.Client
+	Client client.Client
 	// Log      logr.Logger
 	Scheme   *runtime.Scheme
 	ZkClient zk.ZookeeperClient
