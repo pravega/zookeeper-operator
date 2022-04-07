@@ -115,7 +115,7 @@ func WaitForClusterToBecomeReady(t *testing.T, k8client client.Client, z *api.Zo
 		log.Printf(cluster.Status)
 		log.Printf("######")
 
-		pods, err = GetPods(t, k8client, z);
+		pods, err = GetPods(t, k8client, z)
 		log.Printf("### Printing Output of get pods ###")
 		log.Printf(pods)
 		log.Printf("######")
