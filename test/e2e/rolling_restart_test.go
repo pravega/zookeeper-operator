@@ -26,19 +26,19 @@ var _ = Describe("Perform rolling restart on zk cluster", func() {
 			cluster.Status.Init()
 			cluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
 
-			zk, err := zk_e2eutil.CreateCluster(&t, k8sClient, cluster)
+			zk, err := zk_e2eutil.CreateCluster(logger, k8sClient, cluster)
 			Expect(err).NotTo(HaveOccurred())
 
 			// A default Zookeepercluster should have 3 replicas
 			podSize := 3
 			start := time.Now().Minute()*60 + time.Now().Second()
-			Expect(zk_e2eutil.WaitForClusterToBecomeReady(&t, k8sClient, zk, podSize)).NotTo(HaveOccurred())
+			Expect(zk_e2eutil.WaitForClusterToBecomeReady(logger, k8sClient, zk, podSize)).NotTo(HaveOccurred())
 			clusterCreateDuration := time.Now().Minute()*60 + time.Now().Second() - start
 
 			// This is to get the latest Zookeeper cluster object
-			zk, err = zk_e2eutil.GetCluster(&t, k8sClient, zk)
+			zk, err = zk_e2eutil.GetCluster(logger, k8sClient, zk)
 			Expect(err).NotTo(HaveOccurred())
-			podList, err := zk_e2eutil.GetPods(&t, k8sClient, zk)
+			podList, err := zk_e2eutil.GetPods(k8sClient, zk)
 			Expect(err).NotTo(HaveOccurred())
 			for i := 0; i < len(podList.Items); i++ {
 				Expect(podList.Items[i].Annotations).NotTo(HaveKey("restartTime"))
@@ -47,14 +47,14 @@ var _ = Describe("Perform rolling restart on zk cluster", func() {
 
 			// Trigger a rolling restart
 			zk.Spec.TriggerRollingRestart = true
-			err = zk_e2eutil.UpdateCluster(&t, k8sClient, zk)
+			err = zk_e2eutil.UpdateCluster(logger, k8sClient, zk)
 			// zk_e2eutil.WaitForClusterToBecomeReady(...) will return as soon as any pod is restarted as the cluster is briefly reported to be healthy even though the restart is not completed. this method is hence called after a sleep to ensure that the restart has completed before asserting the test cases.
 			time.Sleep(time.Duration(clusterCreateDuration) * 2 * time.Second)
-			Expect(zk_e2eutil.WaitForClusterToBecomeReady(&t, k8sClient, zk, podSize)).NotTo(HaveOccurred())
+			Expect(zk_e2eutil.WaitForClusterToBecomeReady(logger, k8sClient, zk, podSize)).NotTo(HaveOccurred())
 
-			zk, err = zk_e2eutil.GetCluster(&t, k8sClient, zk)
+			zk, err = zk_e2eutil.GetCluster(logger, k8sClient, zk)
 			Expect(err).NotTo(HaveOccurred())
-			newPodList, err := zk_e2eutil.GetPods(&t, k8sClient, zk)
+			newPodList, err := zk_e2eutil.GetPods(k8sClient, zk)
 			Expect(err).NotTo(HaveOccurred())
 			var firstRestartTime []string
 			for i := 0; i < len(newPodList.Items); i++ {
@@ -65,14 +65,14 @@ var _ = Describe("Perform rolling restart on zk cluster", func() {
 
 			// Trigger a rolling restart again
 			zk.Spec.TriggerRollingRestart = true
-			err = zk_e2eutil.UpdateCluster(&t, k8sClient, zk)
+			err = zk_e2eutil.UpdateCluster(logger, k8sClient, zk)
 			// zk_e2eutil.WaitForClusterToBecomeReady(...) will return as soon as any pod is restarted as the cluster is briefly reported to be healthy even though the complete restart is not completed. this method is hence called after a sleep to ensure that the restart has completed before asserting the test cases.
 			time.Sleep(time.Duration(clusterCreateDuration) * 2 * time.Second)
-			Expect(zk_e2eutil.WaitForClusterToBecomeReady(&t, k8sClient, zk, podSize)).NotTo(HaveOccurred())
+			Expect(zk_e2eutil.WaitForClusterToBecomeReady(logger, k8sClient, zk, podSize)).NotTo(HaveOccurred())
 
-			zk, err = zk_e2eutil.GetCluster(&t, k8sClient, zk)
+			zk, err = zk_e2eutil.GetCluster(logger, k8sClient, zk)
 			Expect(err).NotTo(HaveOccurred())
-			newPodList2, err := zk_e2eutil.GetPods(&t, k8sClient, zk)
+			newPodList2, err := zk_e2eutil.GetPods(k8sClient, zk)
 			Expect(err).NotTo(HaveOccurred())
 			for i := 0; i < len(newPodList2.Items); i++ {
 				Expect(newPodList2.Items[i].Annotations).To(HaveKey("restartTime"))
@@ -81,9 +81,9 @@ var _ = Describe("Perform rolling restart on zk cluster", func() {
 			Expect(zk.GetTriggerRollingRestart()).To(Equal(false))
 
 			// Delete cluster
-			Expect(zk_e2eutil.DeleteCluster(&t, k8sClient, zk)).NotTo(HaveOccurred())
+			Expect(zk_e2eutil.DeleteCluster(logger, k8sClient, zk)).NotTo(HaveOccurred())
 
-			Expect(zk_e2eutil.WaitForClusterToTerminate(&t, k8sClient, zk)).NotTo(HaveOccurred())
+			Expect(zk_e2eutil.WaitForClusterToTerminate(logger, k8sClient, zk)).NotTo(HaveOccurred())
 		})
 	})
 })

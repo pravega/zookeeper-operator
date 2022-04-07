@@ -23,39 +23,39 @@ var _ = Describe("Ephemeral test controller", func() {
 			defaultCluster.WithDefaults()
 			defaultCluster.Status.Init()
 			By("create zk cluster")
-			zk, err := zk_e2eutil.CreateCluster(&t, k8sClient, defaultCluster)
+			zk, err := zk_e2eutil.CreateCluster(logger, k8sClient, defaultCluster)
 			Expect(err).NotTo(HaveOccurred())
 			//
 			// A default Zookeeper cluster should have 3 replicas
 			podSize := 3
-			Expect(zk_e2eutil.WaitForClusterToBecomeReady(&t, k8sClient, defaultCluster, podSize)).NotTo(HaveOccurred())
+			Expect(zk_e2eutil.WaitForClusterToBecomeReady(logger, k8sClient, defaultCluster, podSize)).NotTo(HaveOccurred())
 
 			// This is to get the latest zk cluster object
-			zk, err = zk_e2eutil.GetCluster(&t, k8sClient, zk)
+			zk, err = zk_e2eutil.GetCluster(logger, k8sClient, zk)
 			Expect(err).NotTo(HaveOccurred())
 
 			// Scale up zk cluster, increase replicas to 5
 			By("Scale up zk cluster, increase replicas to 5")
 			zk.Spec.Replicas = 5
 			podSize = 5
-			Expect(zk_e2eutil.UpdateCluster(&t, k8sClient, zk)).NotTo(HaveOccurred())
-			Expect(zk_e2eutil.WaitForClusterToBecomeReady(&t, k8sClient, zk, podSize)).NotTo(HaveOccurred())
+			Expect(zk_e2eutil.UpdateCluster(logger, k8sClient, zk)).NotTo(HaveOccurred())
+			Expect(zk_e2eutil.WaitForClusterToBecomeReady(logger, k8sClient, zk, podSize)).NotTo(HaveOccurred())
 
 			// This is to get the latest zk cluster object
-			zk, err = zk_e2eutil.GetCluster(&t, k8sClient, zk)
+			zk, err = zk_e2eutil.GetCluster(logger, k8sClient, zk)
 			Expect(err).NotTo(HaveOccurred())
 
 			// Scale down zk cluster back to default
 			By("Scale down zk cluster back to default")
 			zk.Spec.Replicas = 3
 			podSize = 3
-			Expect(zk_e2eutil.UpdateCluster(&t, k8sClient, zk)).NotTo(HaveOccurred())
-			Expect(zk_e2eutil.WaitForClusterToBecomeReady(&t, k8sClient, zk, podSize)).NotTo(HaveOccurred())
+			Expect(zk_e2eutil.UpdateCluster(logger, k8sClient, zk)).NotTo(HaveOccurred())
+			Expect(zk_e2eutil.WaitForClusterToBecomeReady(logger, k8sClient, zk, podSize)).NotTo(HaveOccurred())
 
 			// Delete cluster
 			By("delete zk cluster")
-			Expect(zk_e2eutil.DeleteCluster(&t, k8sClient, zk)).NotTo(HaveOccurred())
-			Expect(zk_e2eutil.WaitForClusterToTerminate(&t, k8sClient, zk)).NotTo(HaveOccurred())
+			Expect(zk_e2eutil.DeleteCluster(logger, k8sClient, zk)).NotTo(HaveOccurred())
+			Expect(zk_e2eutil.WaitForClusterToTerminate(logger, k8sClient, zk)).NotTo(HaveOccurred())
 		})
 	})
 })

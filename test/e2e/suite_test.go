@@ -12,6 +12,7 @@ package e2e
 
 import (
 	"context"
+	"github.com/go-logr/logr"
 	api "github.com/pravega/zookeeper-operator/api/v1beta1"
 	zookeeperv1beta1 "github.com/pravega/zookeeper-operator/api/v1beta1"
 	zookeepercontroller "github.com/pravega/zookeeper-operator/controllers"
@@ -38,7 +39,7 @@ var (
 	ctx           context.Context
 	cancel        context.CancelFunc
 	testNamespace = "default"
-	t             testing.T
+	logger        logr.Logger
 )
 
 func TestAPIs(t *testing.T) {
@@ -47,7 +48,8 @@ func TestAPIs(t *testing.T) {
 }
 
 var _ = BeforeSuite(func() {
-	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
+	logger = zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true))
+	logf.SetLogger(logger)
 
 	ctx, cancel = context.WithCancel(context.TODO())
 
