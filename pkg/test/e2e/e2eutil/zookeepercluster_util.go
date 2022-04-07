@@ -30,7 +30,7 @@ import (
 )
 
 var (
-	RetryInterval        = time.Second * 5
+	RetryInterval        = time.Second * 20
 	Timeout              = time.Second * 60
 	CleanupRetryInterval = time.Second * 5
 	CleanupTimeout       = time.Second * 5
@@ -98,11 +98,27 @@ func WaitForClusterToBecomeReady(t *testing.T, k8client client.Client, z *api.Zo
 	log.Printf("waiting for cluster pods to become ready: %s", z.Name)
 	err := wait.Poll(RetryInterval, ReadyTimeout, func() (done bool, err error) {
 		cluster, err := GetCluster(t, k8client, z)
+		log.Printf("### Printing Cluster Details ###")
+		log.Printf(cluster)
+		log.Printf("######")
 		if err != nil {
 			return false, err
 		}
 
 		log.Printf("\twaiting for pods to become ready (%d/%d), pods (%v)", cluster.Status.ReadyReplicas, size, cluster.Status.Members.Ready)
+
+		log.Printf("### Printing Cluster Spec ###")
+		log.Printf(cluster.Spec)
+		log.Printf("######")
+
+		log.Printf("### Printing Cluster Status ###")
+		log.Printf(cluster.Status)
+		log.Printf("######")
+
+		pods, err = GetPods(t, k8client, z);
+		log.Printf("### Printing Output of get pods ###")
+		log.Printf(pods)
+		log.Printf("######")
 
 		_, condition := cluster.Status.GetClusterCondition(api.ClusterConditionPodsReady)
 		if condition != nil && condition.Status == corev1.ConditionTrue && cluster.Status.ReadyReplicas == int32(size) {
@@ -239,6 +255,7 @@ func DeletePods(t *testing.T, k8client client.Client, z *api.ZookeeperCluster, s
 	}
 	return nil
 }
+
 func GetPods(t *testing.T, k8client client.Client, z *api.ZookeeperCluster) (*corev1.PodList, error) {
 	listOptions := []client.ListOption{
 		client.InNamespace(z.GetNamespace()),
@@ -248,6 +265,7 @@ func GetPods(t *testing.T, k8client client.Client, z *api.ZookeeperCluster) (*co
 	err := k8client.List(goctx.TODO(), &podList, listOptions...)
 	return &podList, err
 }
+
 func CheckAdminService(t *testing.T, k8client client.Client, z *api.ZookeeperCluster) error {
 	serviceList := corev1.ServiceList{}
 	listOptions := []client.ListOption{client.InNamespace(z.GetNamespace()),
