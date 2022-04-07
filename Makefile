@@ -167,12 +167,12 @@ test-e2e-remote:
 	docker build . -t $(TEST_IMAGE)
 	docker push $(TEST_IMAGE)
 	make deploy
-	RUN_LOCAL=false go test -v -timeout 1h ./test/e2e...
+	RUN_LOCAL=false go test -v -timeout 2h ./test/e2e... -args -ginkgo.v
 	make undeploy
 
 test-e2e-local:
 	make deploy-test
-	RUN_LOCAL=true go test -v -timeout 1h ./test/e2e...
+	RUN_LOCAL=true go test -v -timeout 2h ./test/e2e... -args -ginkgo.v
 	make undeploy-test
 
 run-local:

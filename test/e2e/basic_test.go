@@ -26,16 +26,16 @@ var _ = Describe("Basic test controller", func() {
 			defaultCluster.Status.Init()
 			defaultCluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
 
-			zk, err := zk_e2eutil.CreateCluster(&t, k8sClient, defaultCluster)
+			zk, err := zk_e2eutil.CreateCluster(logger, k8sClient, defaultCluster)
 			Expect(err).NotTo(HaveOccurred())
 
 			podSize := 3
-			Expect(zk_e2eutil.WaitForClusterToBecomeReady(&t, k8sClient, defaultCluster, podSize)).NotTo(HaveOccurred())
-			Expect(zk_e2eutil.CheckAdminService(&t, k8sClient, zk)).NotTo(HaveOccurred())
+			Expect(zk_e2eutil.WaitForClusterToBecomeReady(logger, k8sClient, defaultCluster, podSize)).NotTo(HaveOccurred())
+			Expect(zk_e2eutil.CheckAdminService(logger, k8sClient, zk)).NotTo(HaveOccurred())
 
 			By("delete created Zookeeper cluster")
 			Expect(k8sClient.Delete(ctx, zk)).Should(Succeed())
-			Expect(zk_e2eutil.WaitForClusterToTerminate(&t, k8sClient, zk)).NotTo(HaveOccurred())
+			Expect(zk_e2eutil.WaitForClusterToTerminate(logger, k8sClient, zk)).NotTo(HaveOccurred())
 
 			By("create Zookeeper cluster with the same name")
 			defaultCluster = zk_e2eutil.NewDefaultCluster(testNamespace)
@@ -43,13 +43,13 @@ var _ = Describe("Basic test controller", func() {
 			defaultCluster.Status.Init()
 			defaultCluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
 
-			zk, err = zk_e2eutil.CreateCluster(&t, k8sClient, defaultCluster)
+			zk, err = zk_e2eutil.CreateCluster(logger, k8sClient, defaultCluster)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(zk_e2eutil.WaitForClusterToBecomeReady(&t, k8sClient, defaultCluster, podSize)).NotTo(HaveOccurred())
+			Expect(zk_e2eutil.WaitForClusterToBecomeReady(logger, k8sClient, defaultCluster, podSize)).NotTo(HaveOccurred())
 
 			By("delete created Zookeeper cluster")
 			Expect(k8sClient.Delete(ctx, zk)).Should(Succeed())
-			Expect(zk_e2eutil.WaitForClusterToTerminate(&t, k8sClient, zk)).NotTo(HaveOccurred())
+			Expect(zk_e2eutil.WaitForClusterToTerminate(logger, k8sClient, zk)).NotTo(HaveOccurred())
 		})
 	})
 })
