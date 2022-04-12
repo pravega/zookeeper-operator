@@ -14,18 +14,20 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"os"
+	"runtime"
+	"strings"
+
 	"github.com/operator-framework/operator-lib/leader"
-	zkConfig "github.com/pravega/zookeeper-operator/pkg/controller/config"
-	"github.com/pravega/zookeeper-operator/pkg/version"
-	zkClient "github.com/pravega/zookeeper-operator/pkg/zk"
 	"github.com/sirupsen/logrus"
 	apimachineryruntime "k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	"os"
-	"runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
-	"strings"
+
+	zkConfig "github.com/pravega/zookeeper-operator/pkg/controller/config"
+	"github.com/pravega/zookeeper-operator/pkg/version"
+	zkClient "github.com/pravega/zookeeper-operator/pkg/zk"
 
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -115,6 +117,13 @@ func main() {
 		ZkClient: new(zkClient.DefaultZookeeperClient),
 	}).SetupWithManager(mgr); err != nil {
 		log.Error(err, "unable to create controller", "controller", "ZookeeperCluster")
+		os.Exit(1)
+	}
+	if err = (&controllers.ZookeeperBackupReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		log.Error(err, "unable to create controller", "controller", "ZookeeperBackup")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder

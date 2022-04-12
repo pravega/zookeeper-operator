@@ -20,8 +20,7 @@ import (
 // ZookeeperBackupSpec defines the desired state of ZookeeperBackup
 type ZookeeperBackupSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
-	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
+	// Important: Run "make" to regenerate code after modifying this file
 
 	// Name of the ZookeeperCluster to backup
 	// +kubebuilder:validation:Required
@@ -72,15 +71,13 @@ func (s *ZookeeperBackupSpec) withDefaults() (changed bool) {
 // ZookeeperBackupStatus defines the observed state of ZookeeperBackup
 type ZookeeperBackupStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
-	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
+	// Important: Run "make" to regenerate code after modifying this file
 }
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+//+kubebuilder:object:root=true
+//+kubebuilder:subresource:status
 
 // ZookeeperBackup is the Schema for the zookeeperbackups API
-// +kubebuilder:subresource:status
-// +kubebuilder:resource:path=zookeeperbackups,scope=Namespaced
 type ZookeeperBackup struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -93,7 +90,7 @@ func (z *ZookeeperBackup) WithDefaults() bool {
 	return z.Spec.withDefaults()
 }
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+//+kubebuilder:object:root=true
 
 // ZookeeperBackupList contains a list of ZookeeperBackup
 type ZookeeperBackupList struct {

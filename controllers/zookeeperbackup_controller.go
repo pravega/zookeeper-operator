@@ -1,14 +1,13 @@
 /**
  * Copyright (c) 2018 Dell Inc., or its subsidiaries. All Rights Reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (&the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  */
-
-package zookeeperbackup
+package controllers
 
 import (
 	"context"
@@ -18,9 +17,9 @@ import (
 	"io"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"net/http"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"strconv"
 	"strings"
-	"time"
 
 	zookeeperv1beta1 "github.com/pravega/zookeeper-operator/api/v1beta1"
 	batchv1 "k8s.io/api/batch/v1"
@@ -31,94 +30,29 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"github.com/mitchellh/hashstructure/v2"
 )
 
-// ReconcileTime is the delay between reconciliations
-const ReconcileTime = 60 * time.Second
 
-var log = logf.Log.WithName("controller_zookeeperbackup")
+var logBk = logf.Log.WithName("controller_zookeeperbackup")
 
-/**
-* USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
-* business logic.  Delete these comments after modifying this file.*
- */
-
-// Add creates a new ZookeeperBackup Controller and adds it to the Manager. The Manager will set fields on the Controller
-// and Start it when the Manager is Started.
-func Add(mgr manager.Manager) error {
-	return add(mgr, newReconciler(mgr))
-}
-
-// newReconciler returns a new reconcile.Reconciler
-func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileZookeeperBackup{client: mgr.GetClient(), scheme: mgr.GetScheme()}
-}
-
-// add adds a new Controller to mgr with r as the reconcile.Reconciler
-func add(mgr manager.Manager, r reconcile.Reconciler) error {
-	// Create a new controller
-	c, err := controller.New("zookeeperbackup-controller", mgr, controller.Options{Reconciler: r})
-	if err != nil {
-		return err
-	}
-
-	// Watch for changes to primary resource ZookeeperBackup
-	err = c.Watch(&source.Kind{Type: &zookeeperv1beta1.ZookeeperBackup{}}, &handler.EnqueueRequestForObject{})
-	if err != nil {
-		return err
-	}
-
-	// Watch for changes to resource CronJob and requeue the owner ZookeeperBackup
-	err = c.Watch(&source.Kind{Type: &batchv1beta1.CronJob{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &zookeeperv1beta1.ZookeeperBackup{},
-	})
-	if err != nil {
-		return err
-	}
-
-	// Watch for changes to resource PVC and requeue the owner ZookeeperBackup
-	err = c.Watch(&source.Kind{Type: &corev1.PersistentVolumeClaim{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &zookeeperv1beta1.ZookeeperBackup{},
-	})
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// blank assignment to verify that ReconcileZookeeperBackup implements reconcile.Reconciler
-var _ reconcile.Reconciler = &ReconcileZookeeperBackup{}
-
-// ReconcileZookeeperBackup reconciles a ZookeeperBackup object
-type ReconcileZookeeperBackup struct {
-	// This client, initialized using mgr.Client() above, is a split client
-	// that reads objects from the cache and writes to the apiserver
+// ZookeeperBackupReconciler reconciles a ZookeeperBackup object
+type ZookeeperBackupReconciler struct {
 	client client.Client
 	scheme *runtime.Scheme
 	log    logr.Logger
 }
 
-// Reconcile reads that state of the cluster for a ZookeeperBackup object and makes changes based on the state read
-// and what is in the ZookeeperBackup.Spec
-// TODO(user): Modify this Reconcile function to implement your Controller logic.  This example creates
-// a Pod as an example
-// Note:
-// The Controller will requeue the Request to be processed again if the returned error is non-nil or
-// Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
-func (r *ReconcileZookeeperBackup) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	r.log = log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
+//+kubebuilder:rbac:groups=zookeeper.pravega.io.zookeeper.pravega.io,resources=zookeeperbackups,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=zookeeper.pravega.io.zookeeper.pravega.io,resources=zookeeperbackups/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=zookeeper.pravega.io.zookeeper.pravega.io,resources=zookeeperbackups/finalizers,verbs=update
+
+func (r *ZookeeperBackupReconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+	r.log = logBk.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	r.log.Info("Reconciling ZookeeperBackup")
 
 	// Fetch the ZookeeperBackup instance
@@ -229,7 +163,7 @@ func (r *ReconcileZookeeperBackup) Reconcile(request reconcile.Request) (reconci
 	// Calculate hash of CronJob Spec
 	hash, err := hashstructure.Hash(cronJob.Spec, hashstructure.FormatV2, nil)
 	if err != nil {
-		panic(err)
+		return reconcile.Result{}, err
 	}
 	hashStr := strconv.FormatUint(hash, 10)
 
@@ -269,7 +203,7 @@ func (r *ReconcileZookeeperBackup) Reconcile(request reconcile.Request) (reconci
 	return reconcile.Result{RequeueAfter: ReconcileTime}, nil
 }
 
-func (r *ReconcileZookeeperBackup) GetLeaderIP(zkCluster *zookeeperv1beta1.ZookeeperCluster) (string, error) {
+func (r *ZookeeperBackupReconciler) GetLeaderIP(zkCluster *zookeeperv1beta1.ZookeeperCluster) (string, error) {
 	// Get zookeeper leader via zookeeper admin server
 	svcAdminName := zkCluster.GetAdminServerServiceName()
 	foundSvcAdmin := &corev1.Service{}
@@ -428,4 +362,11 @@ func newCronJobForCR(cr *zookeeperv1beta1.ZookeeperBackup) *batchv1beta1.CronJob
 			},
 		},
 	}
+}
+
+// SetupWithManager sets up the controller with the Manager.
+func (r *ZookeeperBackupReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&zookeeperv1beta1.ZookeeperBackup{}).
+		Complete(r)
 }
