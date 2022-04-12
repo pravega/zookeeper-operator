@@ -16,6 +16,8 @@ ports: []
   #   name: quorum
   # - containerPort: 8080
   #   name: admin-server
+  # - containerPort: 7000
+  #   name: metrics
 kubernetesClusterDomain: "cluster.local"
 probes:
   readiness:
