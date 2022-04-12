@@ -34,17 +34,17 @@ var _ = Describe("Image pull secret check", func() {
 				},
 			}
 			By("create zk cluster with non-default spec")
-			zk, err := zk_e2eutil.CreateCluster(&t, k8sClient, defaultCluster)
+			zk, err := zk_e2eutil.CreateCluster(logger, k8sClient, defaultCluster)
 			Expect(err).NotTo(HaveOccurred())
 
 			// A default Zookeeper cluster should have 3 replicas
 			podSize := 3
-			Expect(zk_e2eutil.WaitForClusterToBecomeReady(&t, k8sClient, zk, podSize)).NotTo(HaveOccurred())
-			Expect(zk_e2eutil.CheckAdminService(&t, k8sClient, zk)).NotTo(HaveOccurred())
+			Expect(zk_e2eutil.WaitForClusterToBecomeReady(logger, k8sClient, zk, podSize)).NotTo(HaveOccurred())
+			Expect(zk_e2eutil.CheckAdminService(logger, k8sClient, zk)).NotTo(HaveOccurred())
 
 			By("delete zk cluster")
-			Expect(zk_e2eutil.DeleteCluster(&t, k8sClient, zk)).NotTo(HaveOccurred())
-			Expect(zk_e2eutil.WaitForClusterToTerminate(&t, k8sClient, zk)).NotTo(HaveOccurred())
+			Expect(zk_e2eutil.DeleteCluster(logger, k8sClient, zk)).NotTo(HaveOccurred())
+			Expect(zk_e2eutil.WaitForClusterToTerminate(logger, k8sClient, zk)).NotTo(HaveOccurred())
 		})
 	})
 })
