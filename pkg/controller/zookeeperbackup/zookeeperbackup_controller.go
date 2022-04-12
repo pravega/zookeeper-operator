@@ -22,7 +22,7 @@ import (
 	"strings"
 	"time"
 
-	zookeeperv1beta1 "github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
+	zookeeperv1beta1 "github.com/pravega/zookeeper-operator/api/v1beta1"
 	batchv1 "k8s.io/api/batch/v1"
 	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"

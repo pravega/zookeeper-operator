@@ -10,6 +10,7 @@ rules:
   - zookeeper.pravega.io.zookeeper.pravega.io
   resources:
   - zookeeperclusters
+  - zookeeperbackups
   verbs:
   - create
   - delete
