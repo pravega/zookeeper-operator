@@ -13,11 +13,12 @@ package e2eutil
 import (
 	goctx "context"
 	"fmt"
+	"time"
+
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"time"
 
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -26,14 +27,10 @@ import (
 )
 
 var (
-	RetryInterval        = time.Second * 5
-	Timeout              = time.Second * 60
-	CleanupRetryInterval = time.Second * 5
-	CleanupTimeout       = time.Second * 5
-	ReadyTimeout         = time.Minute * 5
-	UpgradeTimeout       = time.Minute * 10
-	TerminateTimeout     = time.Minute * 5
-	VerificationTimeout  = time.Minute * 5
+	RetryInterval    = time.Second * 15
+	ReadyTimeout     = time.Minute * 15
+	UpgradeTimeout   = time.Minute * 25
+	TerminateTimeout = time.Minute * 15
 )
 
 // CreateCluster creates a ZookeeperCluster CR with the desired spec
@@ -96,7 +93,6 @@ func WaitForClusterToBecomeReady(logger logr.Logger, k8client client.Client, z *
 		}
 
 		logger.Info(fmt.Sprintf("waiting for pods to become ready (%d/%d), pods (%v)", cluster.Status.ReadyReplicas, size, cluster.Status.Members.Ready))
-
 		_, condition := cluster.Status.GetClusterCondition(api.ClusterConditionPodsReady)
 		if condition != nil && condition.Status == corev1.ConditionTrue && cluster.Status.ReadyReplicas == int32(size) {
 			return true, nil
@@ -219,7 +215,7 @@ func DeletePods(logger logr.Logger, k8client client.Client, z *api.ZookeeperClus
 
 	for i := 0; i < size; i++ {
 		pod = &podList.Items[i]
-		logger.Info(fmt.Sprintf("podnameis %v", pod.Name))
+		logger.Info(fmt.Sprintf("podname: %v", pod.Name))
 		err = k8client.Delete(goctx.TODO(), pod)
 		if err != nil {
 			return fmt.Errorf("failed to delete pod: %v", err)
