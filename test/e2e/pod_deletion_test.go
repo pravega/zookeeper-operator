@@ -11,10 +11,11 @@
 package e2e
 
 import (
+	"time"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	zk_e2eutil "github.com/pravega/zookeeper-operator/pkg/test/e2e/e2eutil"
-	"time"
 )
 
 // Test create and recreate a Zookeeper cluster with the same name
@@ -55,7 +56,7 @@ var _ = Describe("Delete pods in zk clusters", func() {
 			Expect(zk_e2eutil.WaitForClusterToBecomeReady(logger, k8sClient, zk, podSize))
 
 			Expect(zk_e2eutil.DeleteCluster(logger, k8sClient, zk)).NotTo(HaveOccurred())
-			Expect(zk_e2eutil.WaitForClusterToBecomeReady(logger, k8sClient, zk, podSize))
+			Expect(zk_e2eutil.WaitForClusterToTerminate(logger, k8sClient, zk)).NotTo(HaveOccurred())
 		})
 	})
 })

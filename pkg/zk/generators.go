@@ -128,7 +128,7 @@ func makeZkPodSpec(z *v1beta1.ZookeeperCluster, volumes []v1.Volume) v1.PodSpec 
 			FailureThreshold:    z.Spec.Probes.ReadinessProbe.FailureThreshold,
 			SuccessThreshold:    z.Spec.Probes.ReadinessProbe.SuccessThreshold,
 
-			Handler: v1.Handler{
+			ProbeHandler: v1.ProbeHandler{
 				Exec: &v1.ExecAction{Command: []string{"zookeeperReady.sh"}},
 			},
 		},
@@ -138,7 +138,7 @@ func makeZkPodSpec(z *v1beta1.ZookeeperCluster, volumes []v1.Volume) v1.PodSpec 
 			TimeoutSeconds:      z.Spec.Probes.LivenessProbe.TimeoutSeconds,
 			FailureThreshold:    z.Spec.Probes.LivenessProbe.FailureThreshold,
 
-			Handler: v1.Handler{
+			ProbeHandler: v1.ProbeHandler{
 				Exec: &v1.ExecAction{Command: []string{"zookeeperLive.sh"}},
 			},
 		},
@@ -147,7 +147,7 @@ func makeZkPodSpec(z *v1beta1.ZookeeperCluster, volumes []v1.Volume) v1.PodSpec 
 			{Name: "conf", MountPath: "/conf"},
 		}...),
 		Lifecycle: &v1.Lifecycle{
-			PreStop: &v1.Handler{
+			PreStop: &v1.LifecycleHandler{
 				Exec: &v1.ExecAction{
 					Command: []string{"zookeeperTeardown.sh"},
 				},
@@ -375,7 +375,7 @@ func MakePodDisruptionBudget(z *v1beta1.ZookeeperCluster) *policyv1beta1.PodDisr
 	}
 }
 
-//MakeServiceAccount returns the service account for zookeeper Cluster
+// MakeServiceAccount returns the service account for zookeeper Cluster
 func MakeServiceAccount(z *v1beta1.ZookeeperCluster) *v1.ServiceAccount {
 	return &v1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
