@@ -37,27 +37,26 @@ import (
 	"github.com/mitchellh/hashstructure/v2"
 )
 
-
 var logBk = logf.Log.WithName("controller_zookeeperbackup")
 
 // ZookeeperBackupReconciler reconciles a ZookeeperBackup object
 type ZookeeperBackupReconciler struct {
-	client client.Client
-	scheme *runtime.Scheme
-	log    logr.Logger
+	Client client.Client
+	Scheme *runtime.Scheme
+	Log    logr.Logger
 }
 
 //+kubebuilder:rbac:groups=zookeeper.pravega.io.zookeeper.pravega.io,resources=zookeeperbackups,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=zookeeper.pravega.io.zookeeper.pravega.io,resources=zookeeperbackups/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=zookeeper.pravega.io.zookeeper.pravega.io,resources=zookeeperbackups/finalizers,verbs=update
 
-func (r *ZookeeperBackupReconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	r.log = logBk.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	r.log.Info("Reconciling ZookeeperBackup")
+func (r *ZookeeperBackupReconciler) Reconcile(_ context.Context, request reconcile.Request) (reconcile.Result, error) {
+	r.Log = logBk.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
+	r.Log.Info("Reconciling ZookeeperBackup")
 
 	// Fetch the ZookeeperBackup instance
 	zookeeperBackup := &zookeeperv1beta1.ZookeeperBackup{}
-	err := r.client.Get(context.TODO(), request.NamespacedName, zookeeperBackup)
+	err := r.Client.Get(context.TODO(), request.NamespacedName, zookeeperBackup)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
@@ -74,16 +73,16 @@ func (r *ZookeeperBackupReconciler) Reconcile(request reconcile.Request) (reconc
 	pvc := newPVCForZookeeperBackup(zookeeperBackup)
 
 	// Set ZookeeperBackup instance as the owner and controller
-	if err := controllerutil.SetControllerReference(zookeeperBackup, pvc, r.scheme); err != nil {
+	if err := controllerutil.SetControllerReference(zookeeperBackup, pvc, r.Scheme); err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// Check if PVC already created
 	foundPVC := &corev1.PersistentVolumeClaim{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pvc.Name, Namespace: pvc.Namespace}, foundPVC)
+	err = r.Client.Get(context.TODO(), types.NamespacedName{Name: pvc.Name, Namespace: pvc.Namespace}, foundPVC)
 	if err != nil && errors.IsNotFound(err) {
-		r.log.Info("Creating a new PersistenVolumeClaim")
-		err = r.client.Create(context.TODO(), pvc)
+		r.Log.Info("Creating a new PersistenVolumeClaim")
+		err = r.Client.Create(context.TODO(), pvc)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
@@ -95,20 +94,20 @@ func (r *ZookeeperBackupReconciler) Reconcile(request reconcile.Request) (reconc
 	cronJob := newCronJobForCR(zookeeperBackup)
 
 	// Set ZookeeperBackup instance as the owner and controller
-	if err := controllerutil.SetControllerReference(zookeeperBackup, cronJob, r.scheme); err != nil {
+	if err := controllerutil.SetControllerReference(zookeeperBackup, cronJob, r.Scheme); err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// Check if zookeeper cluster exists
 	foundZookeeperCluster := &zookeeperv1beta1.ZookeeperCluster{}
 	zkCluster := zookeeperBackup.Spec.ZookeeperCluster
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: zkCluster, Namespace: zookeeperBackup.Namespace}, foundZookeeperCluster)
+	err = r.Client.Get(context.TODO(), types.NamespacedName{Name: zkCluster, Namespace: zookeeperBackup.Namespace}, foundZookeeperCluster)
 	if err != nil && errors.IsNotFound(err) {
-		r.log.Error(err, fmt.Sprintf("Zookeeper cluster '%s' not found", zkCluster))
+		r.Log.Error(err, fmt.Sprintf("Zookeeper cluster '%s' not found", zkCluster))
 		return reconcile.Result{}, err
 	}
 	if foundZookeeperCluster.Status.Replicas != foundZookeeperCluster.Status.ReadyReplicas {
-		r.log.Info(fmt.Sprintf("Not all cluster replicas are ready: %d/%d. Suspend CronJob",
+		r.Log.Info(fmt.Sprintf("Not all cluster replicas are ready: %d/%d. Suspend CronJob",
 			foundZookeeperCluster.Status.ReadyReplicas, foundZookeeperCluster.Status.Replicas))
 		*cronJob.Spec.Suspend = true
 	} else {
@@ -120,7 +119,7 @@ func (r *ZookeeperBackupReconciler) Reconcile(request reconcile.Request) (reconc
 	if err != nil && errors.IsNotFound(err) {
 		return reconcile.Result{}, err
 	}
-	r.log.Info(fmt.Sprintf("Leader IP (hostname): %s", leaderIp))
+	r.Log.Info(fmt.Sprintf("Leader IP (hostname): %s", leaderIp))
 	leaderHostname := strings.Split(leaderIp, ".")[0]
 
 	// Landing backup pod on the same node with leader
@@ -129,11 +128,11 @@ func (r *ZookeeperBackupReconciler) Reconcile(request reconcile.Request) (reconc
 		client.InNamespace(request.NamespacedName.Namespace),
 		client.MatchingLabels{"app": zkCluster},
 	}
-	err = r.client.List(context.TODO(), podList, opts...)
+	err = r.Client.List(context.TODO(), podList, opts...)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			msg := fmt.Sprintf("Pods cannot be found by label app:%s", zookeeperBackup.Name)
-			r.log.Error(err, msg)
+			r.Log.Error(err, msg)
 		}
 		return reconcile.Result{}, err
 	}
@@ -142,7 +141,7 @@ func (r *ZookeeperBackupReconciler) Reconcile(request reconcile.Request) (reconc
 	for _, pod := range podList.Items {
 		if pod.Spec.Hostname == leaderHostname {
 			leaderFound = true
-			r.log.Info(fmt.Sprintf("Leader was found. Pod: %s (node: %s)", pod.Name, pod.Spec.NodeName))
+			r.Log.Info(fmt.Sprintf("Leader was found. Pod: %s (node: %s)", pod.Name, pod.Spec.NodeName))
 			// Set appropriate NodeSelector and PVC ClaimName
 			cronJob.Spec.JobTemplate.Spec.Template.Spec.NodeSelector =
 				map[string]string{"kubernetes.io/hostname": pod.Spec.NodeName}
@@ -152,7 +151,7 @@ func (r *ZookeeperBackupReconciler) Reconcile(request reconcile.Request) (reconc
 		}
 	}
 	if !leaderFound {
-		r.log.Info("Pod with leader role wasn't found. Suspend CronJob")
+		r.Log.Info("Pod with leader role wasn't found. Suspend CronJob")
 		*cronJob.Spec.Suspend = true
 	}
 
@@ -169,37 +168,37 @@ func (r *ZookeeperBackupReconciler) Reconcile(request reconcile.Request) (reconc
 
 	// Check if this CronJob already exists
 	foundCJ := &batchv1beta1.CronJob{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: cronJob.Name, Namespace: cronJob.Namespace}, foundCJ)
+	err = r.Client.Get(context.TODO(), types.NamespacedName{Name: cronJob.Name, Namespace: cronJob.Namespace}, foundCJ)
 	if err != nil && errors.IsNotFound(err) {
-		r.log.Info("Creating a new CronJob", "CronJob.Namespace", cronJob.Namespace, "CronJob.Name", cronJob.Name)
+		r.Log.Info("Creating a new CronJob", "CronJob.Namespace", cronJob.Namespace, "CronJob.Name", cronJob.Name)
 		cronJob.Annotations["last-applied-hash"] = hashStr
-		err = r.client.Create(context.TODO(), cronJob)
+		err = r.Client.Create(context.TODO(), cronJob)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
 
 		// CronJob created successfully
-		r.log.Info("CronJob created successfully.", "RequeueAfter", ReconcileTime)
+		r.Log.Info("CronJob created successfully.", "RequeueAfter", ReconcileTime)
 		return reconcile.Result{RequeueAfter: ReconcileTime}, nil
 	} else if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	if foundCJ.Annotations["last-applied-hash"] == hashStr {
-		r.log.Info("CronJob already exists and looks updated", "CronJob.Namespace", foundCJ.Namespace, "CronJob.Name", foundCJ.Name)
+		r.Log.Info("CronJob already exists and looks updated", "CronJob.Namespace", foundCJ.Namespace, "CronJob.Name", foundCJ.Name)
 	} else {
 		cronJob.Annotations["last-applied-hash"] = hashStr
-		r.log.Info("Update CronJob", "Namespace", cronJob.Namespace, "Name", cronJob.Name)
+		r.Log.Info("Update CronJob", "Namespace", cronJob.Namespace, "Name", cronJob.Name)
 		//cronJob.ObjectMeta.ResourceVersion = foundCJ.ObjectMeta.ResourceVersion
-		err = r.client.Update(context.TODO(), cronJob)
+		err = r.Client.Update(context.TODO(), cronJob)
 		if err != nil {
-			r.log.Error(err, "CronJob cannot be updated")
+			r.Log.Error(err, "CronJob cannot be updated")
 			return reconcile.Result{}, err
 		}
 	}
 
 	// Requeue
-	r.log.Info(fmt.Sprintf("Rerun reconclie after %s sec.", ReconcileTime))
+	r.Log.Info(fmt.Sprintf("Rerun reconclie after %s sec.", ReconcileTime))
 	return reconcile.Result{RequeueAfter: ReconcileTime}, nil
 }
 
@@ -207,12 +206,12 @@ func (r *ZookeeperBackupReconciler) GetLeaderIP(zkCluster *zookeeperv1beta1.Zook
 	// Get zookeeper leader via zookeeper admin server
 	svcAdminName := zkCluster.GetAdminServerServiceName()
 	foundSvcAdmin := &corev1.Service{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{
+	err := r.Client.Get(context.TODO(), types.NamespacedName{
 		Name:      svcAdminName,
 		Namespace: zkCluster.Namespace,
 	}, foundSvcAdmin)
 	if err != nil && errors.IsNotFound(err) {
-		r.log.Error(err, fmt.Sprintf("Zookeeper admin service '%s' not found", svcAdminName))
+		r.Log.Error(err, fmt.Sprintf("Zookeeper admin service '%s' not found", svcAdminName))
 		return "", err
 	}
 
@@ -221,19 +220,19 @@ func (r *ZookeeperBackupReconciler) GetLeaderIP(zkCluster *zookeeperv1beta1.Zook
 
 	resp, err := http.Get(fmt.Sprintf("http://%s:%d/commands/leader", adminIp, svcPort.Port))
 	if err != nil {
-		r.log.Error(err, "Admin service error response")
+		r.Log.Error(err, "Admin service error response")
 		return "", err
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		r.log.Error(err, "Can't read response body")
+		r.Log.Error(err, "Can't read response body")
 		return "", err
 	}
 	var result map[string]interface{}
 	err = json.Unmarshal(body, &result)
 	if err != nil {
-		r.log.Error(err, "Can't unmarshal json")
+		r.Log.Error(err, "Can't unmarshal json")
 		return "", err
 	}
 	leaderIp := result["leader_ip"].(string)

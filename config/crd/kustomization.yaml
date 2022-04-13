@@ -3,7 +3,7 @@
 # It should be run by config/default
 resources:
 - bases/zookeeper.pravega.io_zookeeperclusters.yaml
-- bases/zookeeper.pravega.io.zookeeper.pravega.io_zookeeperbackups.yaml
+- bases/zookeeper.pravega.io_zookeeperbackups.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:
