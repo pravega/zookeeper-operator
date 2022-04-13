@@ -12,6 +12,9 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"time"
+
 	"github.com/pravega/zookeeper-operator/pkg/controller/config"
 	"github.com/pravega/zookeeper-operator/pkg/utils"
 	"github.com/pravega/zookeeper-operator/pkg/yamlexporter"
@@ -19,8 +22,6 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
-	"strconv"
-	"time"
 
 	"github.com/go-logr/logr"
 	zookeeperv1beta1 "github.com/pravega/zookeeper-operator/api/v1beta1"
@@ -59,7 +60,7 @@ type reconcileFun func(cluster *zookeeperv1beta1.ZookeeperCluster) error
 // +kubebuilder:rbac:groups=zookeeper.pravega.io.zookeeper.pravega.io,resources=zookeeperclusters,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=zookeeper.pravega.io.zookeeper.pravega.io,resources=zookeeperclusters/status,verbs=get;update;patch
 
-func (r *ZookeeperClusterReconciler) Reconcile(request ctrl.Request) (ctrl.Result, error) {
+func (r *ZookeeperClusterReconciler) Reconcile(_ context.Context, request ctrl.Request) (ctrl.Result, error) {
 	r.Log = log.WithValues(
 		"Request.Namespace", request.Namespace,
 		"Request.Name", request.Name)
@@ -262,7 +263,7 @@ func (r *ZookeeperClusterReconciler) updateStatefulSet(instance *zookeeperv1beta
 
 func (r *ZookeeperClusterReconciler) upgradeStatefulSet(instance *zookeeperv1beta1.ZookeeperCluster, foundSts *appsv1.StatefulSet) (err error) {
 
-	//Getting the upgradeCondition from the zk clustercondition
+	// Getting the upgradeCondition from the zk clustercondition
 	_, upgradeCondition := instance.Status.GetClusterCondition(zookeeperv1beta1.ClusterConditionUpgrading)
 
 	if upgradeCondition == nil {
@@ -271,8 +272,8 @@ func (r *ZookeeperClusterReconciler) upgradeStatefulSet(instance *zookeeperv1bet
 		return nil
 	}
 
-	//Setting the upgrade condition to true to trigger the upgrade
-	//When the zk cluster is upgrading Statefulset CurrentRevision and UpdateRevision are not equal and zk cluster image tag is not equal to CurrentVersion
+	// Setting the upgrade condition to true to trigger the upgrade
+	// When the zk cluster is upgrading Statefulset CurrentRevision and UpdateRevision are not equal and zk cluster image tag is not equal to CurrentVersion
 	if upgradeCondition.Status == corev1.ConditionFalse {
 		if instance.Status.IsClusterInReadyState() && foundSts.Status.CurrentRevision != foundSts.Status.UpdateRevision && instance.Spec.Image.Tag != instance.Status.CurrentVersion {
 			instance.Status.TargetVersion = instance.Spec.Image.Tag
@@ -281,20 +282,20 @@ func (r *ZookeeperClusterReconciler) upgradeStatefulSet(instance *zookeeperv1bet
 		}
 	}
 
-	//checking if the upgrade is in progress
+	// checking if the upgrade is in progress
 	if upgradeCondition.Status == corev1.ConditionTrue {
-		//checking when the targetversion is empty
+		// checking when the targetversion is empty
 		if instance.Status.TargetVersion == "" {
 			r.Log.Info("upgrading to an unknown version: cancelling upgrade process")
 			return r.clearUpgradeStatus(instance)
 		}
-		//Checking for upgrade completion
+		// Checking for upgrade completion
 		if foundSts.Status.CurrentRevision == foundSts.Status.UpdateRevision {
 			instance.Status.CurrentVersion = instance.Status.TargetVersion
 			r.Log.Info("upgrade completed")
 			return r.clearUpgradeStatus(instance)
 		}
-		//updating the upgradecondition if upgrade is in progress
+		// updating the upgradecondition if upgrade is in progress
 		if foundSts.Status.CurrentRevision != foundSts.Status.UpdateRevision {
 			r.Log.Info("upgrade in progress")
 			if fmt.Sprint(foundSts.Status.UpdatedReplicas) != upgradeCondition.Message {
@@ -555,7 +556,7 @@ func (r *ZookeeperClusterReconciler) reconcileClusterStatus(instance *zookeeperv
 	instance.Status.Members.Ready = readyMembers
 	instance.Status.Members.Unready = unreadyMembers
 
-	//If Cluster is in a ready state...
+	// If Cluster is in a ready state...
 	if instance.Spec.Replicas == instance.Status.ReadyReplicas && (!instance.Status.MetaRootCreated) {
 		r.Log.Info("Cluster is Ready, Creating ZK Metadata...")
 		zkUri := utils.GetZkServiceUri(instance)
