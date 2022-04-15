@@ -354,6 +354,10 @@ func makeService(name string, ports []v1.ServicePort, clusterIP bool, external b
 // MakePodDisruptionBudget returns a pdb for the zookeeper cluster
 func MakePodDisruptionBudget(z *v1beta1.ZookeeperCluster) *policyv1beta1.PodDisruptionBudget {
 	pdbCount := intstr.FromInt(1)
+	// Support FTT=2 with 5 or more replicas
+	if z.Spec.Replicas >= 5 {
+		pdbCount = intstr.FromInt(2)
+	}
 	return &policyv1beta1.PodDisruptionBudget{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PodDisruptionBudget",

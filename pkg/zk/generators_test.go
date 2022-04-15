@@ -564,37 +564,91 @@ var _ = Describe("Generators Spec", func() {
 		var domainName string
 		var zkClusterName string
 
-		BeforeEach(func() {
-			domainName = "zk.com."
-			z := &v1beta1.ZookeeperCluster{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "example",
-					Namespace: "default",
-				},
-				Spec: v1beta1.ZookeeperClusterSpec{
-					DomainName: domainName,
-					Labels: map[string]string{
-						"exampleLabel": "exampleValue",
+		Context("general check", func() {
+			BeforeEach(func() {
+				domainName = "zk.com."
+				z := &v1beta1.ZookeeperCluster{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "example",
+						Namespace: "default",
 					},
-				},
-			}
-			z.WithDefaults()
-			pdb = zk.MakePodDisruptionBudget(z)
-			zkClusterName = z.GetName()
+					Spec: v1beta1.ZookeeperClusterSpec{
+						DomainName: domainName,
+						Labels: map[string]string{
+							"exampleLabel": "exampleValue",
+						},
+					},
+				}
+				z.WithDefaults()
+				pdb = zk.MakePodDisruptionBudget(z)
+				zkClusterName = z.GetName()
+			})
+
+			It("should have kind PodDisruptionBudget", func() {
+				Ω(pdb.GetObjectKind().GroupVersionKind().Kind).To(Equal("PodDisruptionBudget"))
+			})
+
+			It("should have selector is zookeeper cluster name", func() {
+				Ω(pdb.Spec.Selector.MatchLabels["app"]).To(BeEquivalentTo(zkClusterName))
+			})
+
+			It("should have custom labels set", func() {
+				Ω(pdb.GetLabels()).To(HaveKeyWithValue(
+					"exampleLabel",
+					"exampleValue"))
+			})
 		})
 
-		It("should have kind PodDisruptionBudget", func() {
-			Ω(pdb.GetObjectKind().GroupVersionKind().Kind).To(Equal("PodDisruptionBudget"))
+		Context("small cluster", func() {
+			BeforeEach(func() {
+				domainName = "zk.com."
+				z := &v1beta1.ZookeeperCluster{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "example",
+						Namespace: "default",
+					},
+					Spec: v1beta1.ZookeeperClusterSpec{
+						Replicas:   4,
+						DomainName: domainName,
+						Labels: map[string]string{
+							"exampleLabel": "exampleValue",
+						},
+					},
+				}
+				z.WithDefaults()
+				pdb = zk.MakePodDisruptionBudget(z)
+				zkClusterName = z.GetName()
+			})
+
+			It("should have kind PodDisruptionBudget", func() {
+				Ω(pdb.Spec.MaxUnavailable.IntVal).To(BeEquivalentTo(1))
+			})
 		})
 
-		It("should have selector is zookeeper cluster name", func() {
-			Ω(pdb.Spec.Selector.MatchLabels["app"]).To(BeEquivalentTo(zkClusterName))
-		})
+		Context("large cluster", func() {
+			BeforeEach(func() {
+				domainName = "zk.com."
+				z := &v1beta1.ZookeeperCluster{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "example",
+						Namespace: "default",
+					},
+					Spec: v1beta1.ZookeeperClusterSpec{
+						Replicas:   5,
+						DomainName: domainName,
+						Labels: map[string]string{
+							"exampleLabel": "exampleValue",
+						},
+					},
+				}
+				z.WithDefaults()
+				pdb = zk.MakePodDisruptionBudget(z)
+				zkClusterName = z.GetName()
+			})
 
-		It("should have custom labels set", func() {
-			Ω(pdb.GetLabels()).To(HaveKeyWithValue(
-				"exampleLabel",
-				"exampleValue"))
+			It("should have kind PodDisruptionBudget", func() {
+				Ω(pdb.Spec.MaxUnavailable.IntVal).To(BeEquivalentTo(2))
+			})
 		})
 	})
 })
