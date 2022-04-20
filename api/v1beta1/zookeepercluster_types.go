@@ -160,7 +160,7 @@ type ZookeeperClusterSpec struct {
 	// MaxUnavailableReplicas defines the
 	// MaxUnavailable Replicas in pdb.
 	// Default is 1.
-	MaxUnavailableReplicas int32 `json:"maxUnavailableReplicas,,omitempty"`
+	MaxUnavailableReplicas int32 `json:"maxUnavailableReplicas,omitempty"`
 }
 
 type Probes struct {
