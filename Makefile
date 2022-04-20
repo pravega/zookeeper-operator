@@ -113,6 +113,7 @@ endif
 all: generate check build
 
 generate:
+	$(CONTROLLER_GEN) object paths="./..."
 	make manifests
 	# sync crd generated to helm-chart
 	echo '{{- define "crd.openAPIV3Schema" }}' > charts/zookeeper-operator/templates/_crd_openapiv3schema.tpl
