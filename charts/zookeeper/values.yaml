@@ -1,4 +1,5 @@
 replicas: 3
+maxUnavailableReplicas:
 
 image:
   repository: pravega/zookeeper

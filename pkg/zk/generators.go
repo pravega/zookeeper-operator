@@ -353,7 +353,7 @@ func makeService(name string, ports []v1.ServicePort, clusterIP bool, external b
 
 // MakePodDisruptionBudget returns a pdb for the zookeeper cluster
 func MakePodDisruptionBudget(z *v1beta1.ZookeeperCluster) *policyv1beta1.PodDisruptionBudget {
-	pdbCount := intstr.FromInt(1)
+	pdbCount := intstr.FromInt(int(z.Spec.MaxUnavailableReplicas))
 	return &policyv1beta1.PodDisruptionBudget{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PodDisruptionBudget",

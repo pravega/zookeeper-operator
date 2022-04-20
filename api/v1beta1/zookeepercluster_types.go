@@ -156,6 +156,11 @@ type ZookeeperClusterSpec struct {
 	// for the zookeeper pods.
 	// +optional
 	Probes *Probes `json:"probes,omitempty"`
+
+	// MaxUnavailableReplicas defines the
+	// MaxUnavailable Replicas in pdb.
+	// Default is 1.
+	MaxUnavailableReplicas int32 `json:"maxUnavailableReplicas,,omitempty"`
 }
 
 type Probes struct {
@@ -281,6 +286,10 @@ func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) 
 			s.StorageType = "persistence"
 			changed = true
 		}
+	}
+	if s.MaxUnavailableReplicas < 1 {
+		s.MaxUnavailableReplicas = 1
+		changed = true
 	}
 	return changed
 }
