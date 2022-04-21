@@ -66,10 +66,10 @@ Create the operator role and role binding.
 
 ```
 // default namespace
-$ kubectl create -f config/rbac/default_ns/rbac.yaml
+$ kubectl create -f config/rbac/default_ns_rbac.yaml
 
 // all namespaces
-$ kubectl create -f config/rbac/all_ns/rbac.yaml
+$ kubectl create -f config/rbac/all_ns_rbac.yaml
 ```
 
 Deploy the Zookeeper operator.
@@ -316,9 +316,9 @@ To delete all clusters, delete all cluster CR objects before uninstalling the op
 
 ```
 $ kubectl delete -f config/manager/manager.yaml
-$ kubectl delete -f config/rbac/default_ns/rbac.yaml
+$ kubectl delete -f config/rbac/default_ns_rbac.yaml
 // or, depending on how you deployed it
-$ kubectl delete -f config/rbac/all_ns/rbac.yaml
+$ kubectl delete -f config/rbac/all_ns_rbac.yaml
 ```
 
 ### The AdminServer
