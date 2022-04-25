@@ -12,23 +12,27 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
-	"github.com/operator-framework/operator-lib/leader"
+	"io/ioutil"
+	"os"
+	"runtime"
+	"strings"
+
 	zkConfig "github.com/pravega/zookeeper-operator/pkg/controller/config"
+	"github.com/pravega/zookeeper-operator/pkg/utils"
 	"github.com/pravega/zookeeper-operator/pkg/version"
 	zkClient "github.com/pravega/zookeeper-operator/pkg/zk"
 	"github.com/sirupsen/logrus"
 	apimachineryruntime "k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	"os"
-	"runtime"
-	"sigs.k8s.io/controller-runtime/pkg/cache"
-	"strings"
-
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	api "github.com/pravega/zookeeper-operator/api/v1beta1"
@@ -69,11 +73,17 @@ func main() {
 		log.Error(err, "unable to get WatchNamespace, "+
 			"the manager will watch and manage resources in all namespaces")
 	}
+
 	printVersion()
 
 	if versionFlag {
 		os.Exit(0)
 	}
+
+	if zkConfig.DisableFinalizer {
+		logrus.Warn("----- Running with finalizer disabled. -----")
+	}
+
 	//When operator is started to watch resources in a specific set of namespaces, we use the MultiNamespacedCacheBuilder cache.
 	//In this scenario, it is also suggested to restrict the provided authorization to this namespace by replacing the default
 	//ClusterRole and ClusterRoleBinding to Role and RoleBinding respectively
@@ -87,12 +97,23 @@ func main() {
 		}
 		managerWatchCache = cache.MultiNamespacedCacheBuilder(ns)
 	}
-	ctx := context.TODO()
+
+	// Get a config to talk to the apiserver
+	cfg, err := config.GetConfig()
+	if err != nil {
+		logrus.Fatal(err)
+	}
+
+	operatorNs, err := GetOperatorNamespace()
+	if err != nil {
+		log.Error(err, "failed to get operator namespace")
+		os.Exit(1)
+	}
 
 	// Become the leader before proceeding
-	err = leader.Become(ctx, "zookeeper-operator-lock")
+	err = utils.BecomeLeader(context.TODO(), cfg, "zookeeper-operator-lock", operatorNs)
 	if err != nil {
-		logrus.Error(err)
+		log.Error(err, "")
 		os.Exit(1)
 	}
 
@@ -137,5 +158,17 @@ func getWatchNamespace() (string, error) {
 	if !found {
 		return "", fmt.Errorf("%s must be set", watchNamespaceEnvVar)
 	}
+	return ns, nil
+}
+
+func GetOperatorNamespace() (string, error) {
+	nsBytes, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace")
+	if err != nil {
+		if os.IsNotExist(err) {
+			return "", errors.New("file does not exist")
+		}
+		return "", err
+	}
+	ns := strings.TrimSpace(string(nsBytes))
 	return ns, nil
 }

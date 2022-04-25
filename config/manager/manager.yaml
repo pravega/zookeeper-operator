@@ -17,8 +17,9 @@ spec:
         - name: zookeeper-operator
           # Replace this with the built image name
           image: pravega/zookeeper-operator:0.2.13
-          args:
-            - "--metrics-bind-address=127.0.0.1:60000"
+          ports:
+          - containerPort: 60000
+            name: metrics
           command:
           - zookeeper-operator
           imagePullPolicy: Always
