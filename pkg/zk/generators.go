@@ -11,6 +11,8 @@
 package zk
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -96,13 +98,29 @@ func MakeStatefulSet(z *v1beta1.ZookeeperCluster) *appsv1.StatefulSet {
 							"kind": "ZookeeperMember",
 						},
 					),
-					Annotations: z.Spec.Pod.Annotations,
+					Annotations: makeZkPodAnnotations(z),
 				},
 				Spec: makeZkPodSpec(z, extraVolumes),
 			},
 			VolumeClaimTemplates: pvcs,
 		},
 	}
+}
+
+// makeZkPodAnnotations returns a map of annotations containing hashed zk config
+// and annotations from CR
+func makeZkPodAnnotations(z *v1beta1.ZookeeperCluster) map[string]string {
+	podAnnotationFromCR := z.Spec.Pod.Annotations
+	hashedZkConfig := sha256.Sum256([]byte(makeZkConfigString(z)))
+
+	annotations := []map[string]string{
+		{
+			"zookeeperConfig": hex.EncodeToString(hashedZkConfig[:]),
+		},
+		podAnnotationFromCR,
+	}
+
+	return mergeAnnotations(annotations...)
 }
 
 func makeZkPodSpec(z *v1beta1.ZookeeperCluster, volumes []v1.Volume) v1.PodSpec {
@@ -393,6 +411,18 @@ func mergeLabels(l ...map[string]string) map[string]string {
 	for _, v := range l {
 		for lKey, lValue := range v {
 			res[lKey] = lValue
+		}
+	}
+	return res
+}
+
+// mergeAnnotations merges annotation maps
+func mergeAnnotations(annotations ...map[string]string) map[string]string {
+	res := make(map[string]string)
+
+	for _, a := range annotations {
+		for k, v := range a {
+			res[k] = v
 		}
 	}
 	return res
