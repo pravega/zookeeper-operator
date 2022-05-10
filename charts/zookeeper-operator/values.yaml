@@ -9,7 +9,7 @@ global:
 
 image:
   repository: pravega/zookeeper-operator
-  tag: 0.2.13
+  tag: 0.2.14
   pullPolicy: IfNotPresent
 
 securityContext: {}

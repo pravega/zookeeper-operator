@@ -3,7 +3,7 @@ maxUnavailableReplicas:
 
 image:
   repository: pravega/zookeeper
-  tag: 0.2.13
+  tag: 0.2.14
   pullPolicy: IfNotPresent
 
 triggerRollingRestart: false
