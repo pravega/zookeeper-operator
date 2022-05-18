@@ -20,7 +20,6 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/operator-framework/operator-lib/leader"
 	zkConfig "github.com/pravega/zookeeper-operator/pkg/controller/config"
 	"github.com/pravega/zookeeper-operator/pkg/utils"
 	"github.com/pravega/zookeeper-operator/pkg/version"
