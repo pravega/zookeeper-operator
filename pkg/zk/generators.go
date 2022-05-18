@@ -258,7 +258,7 @@ func makeZkConfigString(z *v1beta1.ZookeeperCluster) string {
 		"reconfigEnabled=true\n" +
 		"skipACL=yes\n" +
 		"metricsProvider.className=org.apache.zookeeper.metrics.prometheus.PrometheusMetricsProvider\n" +
-		"metricsProvider.httpPort=7000\n" +
+		"metricsProvider.httpPort=" + strconv.Itoa(int(ports.Metrics)) + "\n" +
 		"metricsProvider.exportJvmInfo=true\n" +
 		"initLimit=" + strconv.Itoa(z.Spec.Conf.InitLimit) + "\n" +
 		"syncLimit=" + strconv.Itoa(z.Spec.Conf.SyncLimit) + "\n" +
@@ -353,7 +353,7 @@ func makeService(name string, ports []v1.ServicePort, clusterIP bool, external b
 
 // MakePodDisruptionBudget returns a pdb for the zookeeper cluster
 func MakePodDisruptionBudget(z *v1beta1.ZookeeperCluster) *policyv1beta1.PodDisruptionBudget {
-	pdbCount := intstr.FromInt(1)
+	pdbCount := intstr.FromInt(int(z.Spec.MaxUnavailableReplicas))
 	return &policyv1beta1.PodDisruptionBudget{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PodDisruptionBudget",

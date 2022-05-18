@@ -1,8 +1,9 @@
 replicas: 3
+maxUnavailableReplicas:
 
 image:
   repository: pravega/zookeeper
-  tag: 0.2.13
+  tag: 0.2.14
   pullPolicy: IfNotPresent
 
 triggerRollingRestart: false
@@ -16,6 +17,8 @@ ports: []
   #   name: quorum
   # - containerPort: 8080
   #   name: admin-server
+  # - containerPort: 7000
+  #   name: metrics
 kubernetesClusterDomain: "cluster.local"
 probes:
   readiness:

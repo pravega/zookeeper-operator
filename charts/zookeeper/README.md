@@ -54,9 +54,10 @@ The following table lists the configurable parameters of the zookeeper chart and
 | Parameter | Description | Default |
 | ----- | ----------- | ------ |
 | `replicas` | Expected size of the zookeeper cluster (valid range is from 1 to 7) | `3` |
+| `maxUnavailableReplicas` | Max unavailable replicas in pdb | `1` |
 | `triggerRollingRestart` | If true, the zookeeper cluster is restarted. After the restart is triggered, this value is auto-reverted to false. | `false` |
 | `image.repository` | Image repository | `pravega/zookeeper` |
-| `image.tag` | Image tag | `0.2.13` |
+| `image.tag` | Image tag | `0.2.14` |
 | `image.pullPolicy` | Image pull policy | `IfNotPresent` |
 | `domainName` | External host name appended for dns annotation | |
 | `kubernetesClusterDomain` | Domain of the kubernetes cluster | `cluster.local` |

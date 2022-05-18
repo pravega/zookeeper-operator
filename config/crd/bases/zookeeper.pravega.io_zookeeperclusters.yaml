@@ -2687,6 +2687,11 @@ spec:
                 description: Labels specifies the labels to attach to pods the operator
                   creates for the zookeeper cluster.
                 type: object
+              maxUnavailableReplicas:
+                description: MaxUnavailableReplicas defines the MaxUnavailable Replicas
+                  in pdb. Default is 1.
+                format: int32
+                type: integer
               persistence:
                 description: Persistence is the configuration for zookeeper persistent
                   layer. PersistentVolumeClaimSpec and VolumeReclaimPolicy can be

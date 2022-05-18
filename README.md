@@ -29,7 +29,7 @@ The project is currently alpha. While no breaking API changes are currently plan
 
 ### Overview
 
-This operator runs a Zookeeper 3.8.0 cluster, and uses Zookeeper dynamic reconfiguration to handle node membership.
+This operator runs a Zookeeper 3.7.0 cluster, and uses Zookeeper dynamic reconfiguration to handle node membership.
 
 The operator itself is built with the [Operator framework](https://github.com/operator-framework/operator-sdk).
 
@@ -58,7 +58,7 @@ To understand how to deploy the zookeeper operator using helm, refer to [this](c
 Register the `ZookeeperCluster` custom resource definition (CRD).
 
 ```
-$ kubectl create -f deploy/crds
+$ kubectl create -f config/crd/bases
 ```
 
 You can choose to enable Zookeeper operator for all namespaces or just for a specific namespace. The example is using the `default` namespace, but feel free to edit the Yaml files and use a different namespace.
@@ -67,20 +67,16 @@ Create the operator role and role binding.
 
 ```
 // default namespace
-$ kubectl create -f deploy/default_ns/rbac.yaml
+$ kubectl create -f config/rbac/default_ns_rbac.yaml
 
 // all namespaces
-$ kubectl create -f deploy/all_ns/rbac.yaml
+$ kubectl create -f config/rbac/all_ns_rbac.yaml
 ```
 
 Deploy the Zookeeper operator.
 
 ```
-// default namespace
-$ kubectl create -f deploy/default_ns/operator.yaml
-
-// all namespaces
-$ kubectl create -f deploy/all_ns/operator.yaml
+$ kubectl create -f deploy/manager/manager.yaml
 ```
 
 Verify that the Zookeeper operator is running.
@@ -320,9 +316,10 @@ Refer to [this](charts/zookeeper-operator#uninstalling-the-chart).
 To delete all clusters, delete all cluster CR objects before uninstalling the operator.
 
 ```
-$ kubectl delete -f deploy/default_ns
+$ kubectl delete -f config/manager/manager.yaml
+$ kubectl delete -f config/rbac/default_ns_rbac.yaml
 // or, depending on how you deployed it
-$ kubectl delete -f deploy/all_ns
+$ kubectl delete -f config/rbac/all_ns_rbac.yaml
 ```
 
 ### The AdminServer

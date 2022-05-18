@@ -8,6 +8,9 @@ metadata:
 {{ include "zookeeper.commonLabels" . | indent 4 }}
 spec:
   replicas: {{ .Values.replicas }}
+  {{- if .Values.maxUnavailableReplicas }}
+  maxUnavailableReplicas: {{ .Values.maxUnavailableReplicas }}
+  {{- end }}
   image:
     repository: {{ .Values.image.repository }}
     tag: {{ .Values.image.tag }}
