@@ -8,17 +8,19 @@
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 
-ARG DOCKER_REGISTRY
-FROM  ${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}openjdk:11-jdk
+FROM gradle:jdk17
+
 RUN mkdir /zu
 COPY zu /zu
 WORKDIR /zu
-RUN ./gradlew --console=verbose --info shadowJar
+RUN ./gradlew shadowJar
 
-FROM ${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}zookeeper:3.7.1
+# use forked base zookeeper 3.7.1 docker image
+# that runs on openjdk-17
+FROM adobe/zookeeper:3.7.1-apache-zk-20220513
 COPY bin /usr/local/bin
 RUN chmod +x /usr/local/bin/*
 COPY --from=0 /zu/build/libs/zu.jar /opt/libs/
 
 RUN apt-get -q update && \
-    apt-get install -y dnsutils curl procps socat
+    apt-get install --no-install-recommends -y dnsutils curl procps socat

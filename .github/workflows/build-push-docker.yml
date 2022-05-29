@@ -32,7 +32,32 @@ jobs:
           ref="${ref////-}"
           echo $ref
           echo ::set-output name=tag::$ref
+      - name: Build and push zookeeper Apache image
+        uses: docker/build-push-action@v1
+        if: ${{ startsWith(github.ref, 'refs/tags/zk') }}
+        with:
+          path: docker/zookeeper-image
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: adobe/zookeeper
+          tags: 3.7.1-apache-${{ steps.vars.outputs.tag }}
+          add_git_labels: true
+          always_pull: true
+          push: ${{ startsWith(github.ref, 'refs/tags/zk') }}
+      - name: Build and push zookeeper image
+        if: ${{ !startsWith(github.ref, 'refs/tags/zk') }}
+        uses: docker/build-push-action@v1
+        with:
+          path: docker
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: adobe/zookeeper
+          tags: 3.7.1-${{ steps.vars.outputs.tag }}
+          add_git_labels: true
+          always_pull: true
+          push: ${{ startsWith(github.ref, 'refs/tags/') && !startsWith(github.ref, 'refs/tags/zk') }}
       - name: Build and push zookeeper-operator image
+        if: ${{ !startsWith(github.ref, 'refs/tags/zk') }}
         uses: docker/build-push-action@v1
         with:
           dockerfile: Dockerfile
@@ -41,28 +66,6 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: adobe/zookeeper-operator
           tag_with_ref: true
-          add_git_labels: true
-          always_pull: true
-          push: ${{ startsWith(github.ref, 'refs/tags/') && !startsWith(github.ref, 'refs/tags/zk') }}
-      - name: Build and push zookeeper Apache image
-        uses: docker/build-push-action@v1
-        with:
-          path: docker/zookeeper-image
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: adobe/zookeeper
-          tags: 3.6.3-apache-${{ steps.vars.outputs.tag }}
-          add_git_labels: true
-          always_pull: true
-          push: ${{ startsWith(github.ref, 'refs/tags/zk') }}
-      - name: Build and push zookeeper image
-        uses: docker/build-push-action@v1
-        with:
-          path: docker
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: adobe/zookeeper
-          tags: 3.6.3-${{ steps.vars.outputs.tag }}
           add_git_labels: true
           always_pull: true
           push: ${{ startsWith(github.ref, 'refs/tags/') && !startsWith(github.ref, 'refs/tags/zk') }}

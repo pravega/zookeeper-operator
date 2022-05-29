@@ -2,8 +2,8 @@ replicas: 3
 maxUnavailableReplicas:
 
 image:
-  repository: pravega/zookeeper
-  tag: 0.2.15
+  repository: adobe/zookeeper
+  tag: 3.7.1-0.2.13-adobe-20220513
   pullPolicy: IfNotPresent
 
 triggerRollingRestart: false
