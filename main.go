@@ -139,8 +139,9 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&controllers.ZookeeperBackupReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Client:       mgr.GetClient(),
+		Scheme:       mgr.GetScheme(),
+		LeaderGetter: controllers.GetLeader,
 	}).SetupWithManager(mgr); err != nil {
 		log.Error(err, "unable to create controller", "controller", "ZookeeperBackup")
 		os.Exit(1)

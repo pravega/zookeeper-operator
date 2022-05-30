@@ -13,7 +13,6 @@ package controllers
 import (
 	"context"
 	"os"
-	"testing"
 	"time"
 
 	"github.com/pravega/zookeeper-operator/api/v1beta1"
@@ -32,11 +31,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
-
-func TestZookeepercluster(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "ZookeeperCluster Controller Spec")
-}
 
 type MockZookeeperClient struct {
 	// dummy struct

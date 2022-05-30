@@ -60,10 +60,11 @@ func (s *ZookeeperBackupSpec) withDefaults() (changed bool) {
 	}
 	if s.Image.Repository == "" {
 		s.Image.Repository = "pravega/zkbackup"
-		s.Image.Tag = "0.1"
+		changed = true
 	}
 	if s.Image.Tag == "" {
 		s.Image.Tag = "latest"
+		changed = true
 	}
 	return changed
 }
