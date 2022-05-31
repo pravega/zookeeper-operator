@@ -51,7 +51,7 @@ var _ = Describe("ZookeeperBackup Types", func() {
 		})
 
 		It("should have a default image for backup", func() {
-			Ω(zkBk.Spec.Image.Repository).To(BeEquivalentTo("pravega/zkbackup"))
+			Ω(zkBk.Spec.Image.Repository).To(BeEquivalentTo("pravega/zookeeper-operator"))
 			Ω(zkBk.Spec.Image.Tag).To(BeEquivalentTo("latest"))
 		})
 	})

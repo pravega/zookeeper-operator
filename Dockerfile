@@ -28,8 +28,13 @@ COPY controllers/ controllers/
 RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o /src/${PROJECT_NAME} \
     -ldflags "-X ${REPO_PATH}/pkg/version.Version=${VERSION} -X ${REPO_PATH}/pkg/version.GitSHA=${GIT_SHA}" main.go
 
-FROM ${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}alpine:${ALPINE_VERSION} AS final
+# Backup script
+COPY build_backup/backup.sh /zookeeper/backup.sh
+RUN chmod +x /zookeeper/backup.sh
+# Install tools for backup
+RUN apk update && apk add findutils tar
 
+FROM ${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}alpine:${ALPINE_VERSION} AS final
 
 ARG PROJECT_NAME=zookeeper-operator
 
