@@ -290,7 +290,7 @@ func (s *ZookeeperClusterSpec) withDefaults(z *ZookeeperCluster) (changed bool) 
 	}
 	if s.MaxUnavailableReplicas < 1 {
 		s.MaxUnavailableReplicas = 1
-		changed = true
+		//changed = true
 	}
 	return changed
 }
