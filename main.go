@@ -64,9 +64,11 @@ func printVersion() {
 func main() {
 	var metricsAddr string
 	flag.StringVar(&metricsAddr, "metrics-bind-address", "127.0.0.1:6000", "The address the metric endpoint binds to.")
+	opts := zap.Options{}
+	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
 
-	ctrl.SetLogger(zap.New(zap.UseDevMode(false)))
+	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
 	namespaces, err := getWatchNamespace()
 	if err != nil {
