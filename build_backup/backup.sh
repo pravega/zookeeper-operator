@@ -1,6 +1,6 @@
 #!/bin/sh
 
-echo "--------------- Check required parameters ---------------"
+echo "--------------- Check required env variables ---------------"
 _req_envs="
 Required parameters: \n
 BACKUPDIR: $BACKUPDIR \n
@@ -14,6 +14,10 @@ if [ -z "$BACKUPDIR" ] || [ -z "$ZOOKEEPERDATADIR" ] || [ -z "$BACKUPS_TO_KEEP" 
   exit 1
 fi
 
+echo "--------------- Check BACKUPS_TO_KEEP variable ---------------"
+if ! [[ $BACKUPS_TO_KEEP =~ ^[0-9]+$ ]] ;
+   then echo "Error: $BACKUPS_TO_KEEP not a number" >&2; exit 1
+fi
 # Create backup directory if absent.
 # ----------------------------------
 echo "--------------- Check backup/tmp dirs ---------------"
@@ -53,7 +57,7 @@ BACKUPS_AMOUNT=`find . -path "*/zookeeper-*.tar.gz" -type f -printf "\n%AD %AT %
 TO_DELETE=$(( $BACKUPS_AMOUNT - $BACKUPS_TO_KEEP ))
 if [ $TO_DELETE -gt 0 ] ; then
     echo "Keeping only $BACKUPS_TO_KEEP full backups"
-    ls -t | tail -n -$TO_DELETE | xargs -d '\n' rm -rf
+    ls -t zookeeper-*.tar.gz | tail -n -$TO_DELETE | xargs -d '\n' rm -rf
 else
     echo "There are less backups than required, nothing to delete."
 fi

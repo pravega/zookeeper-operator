@@ -162,6 +162,7 @@ var _ = Describe("ZookeeperBackup controller", func() {
 					jobSpec = newCronJobForCR(zkBk)
 
 					zkCl.WithDefaults()
+					zkCl.Status.ReadyReplicas = 3
 					zkBk.WithDefaults()
 					cl = fake.NewClientBuilder().WithScheme(scheme.Scheme).WithRuntimeObjects(zkCl, zkBk, leaderPod).Build()
 					rCl = &ZookeeperClusterReconciler{Client: cl, Scheme: s, ZkClient: mockZkClient}

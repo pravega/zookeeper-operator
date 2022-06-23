@@ -116,6 +116,7 @@ generate:
 	# sync crd generated to helm-chart
 	echo '{{- if .Values.crd.create }}' > charts/zookeeper-operator/templates/zookeeper.pravega.io_zookeeperclusters_crd.yaml
 	cat config/crd/bases/zookeeper.pravega.io_zookeeperclusters.yaml >> charts/zookeeper-operator/templates/zookeeper.pravega.io_zookeeperclusters_crd.yaml
+	cat config/crd/bases/zookeeper.pravega.io_zookeeperbackups.yaml >> charts/zookeeper-operator/templates/zookeeper.pravega.io_zookeeperclusters_crd.yaml
 	echo '{{- end }}' >> charts/zookeeper-operator/templates/zookeeper.pravega.io_zookeeperclusters_crd.yaml
 
 

@@ -375,7 +375,7 @@ approach described in [article](https://www.elastic.co/blog/zookeeper-backup-a-t
 Exmaple CR of zookeeper backup:
 ```yaml
 apiVersion: "zookeeper.pravega.io/v1beta1"
-kind: "ZookeeperCluster"
+kind: "ZookeeperBackup"
 metadata:
   name: "example-backup"
 spec:

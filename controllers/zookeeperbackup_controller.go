@@ -95,6 +95,7 @@ func (r *ZookeeperBackupReconciler) Reconcile(_ context.Context, request reconci
 	pvc := newPVCForZookeeperBackup(zookeeperBackup)
 	// Set ZookeeperBackup instance as the owner and controller
 	if err := controllerutil.SetControllerReference(zookeeperBackup, pvc, r.Scheme); err != nil {
+		r.Log.Error(err, fmt.Sprintf("Can't set reference for pvc '%s'", pvc.Name))
 		return reconcile.Result{}, err
 	}
 	if pvc.Annotations == nil {
@@ -116,6 +117,7 @@ func (r *ZookeeperBackupReconciler) Reconcile(_ context.Context, request reconci
 		pvc.Annotations["last-applied-hash"] = pvcHashStr
 		err = r.Client.Create(context.TODO(), pvc)
 		if err != nil {
+			r.Log.Error(err, fmt.Sprintf("Can't create pvc '%s'", pvc.Name))
 			return reconcile.Result{}, err
 		}
 	} else if err != nil {
@@ -129,7 +131,7 @@ func (r *ZookeeperBackupReconciler) Reconcile(_ context.Context, request reconci
 			r.Log.Info("Update PVC", "Namespace", pvc.Namespace, "Name", pvc.Name)
 			err = r.Client.Update(context.TODO(), pvc)
 			if err != nil {
-				r.Log.Error(err, "PVC cannot be updated")
+				r.Log.Error(err, fmt.Sprintf("PVC '%s' cannot be updated", pvc.Name))
 				return reconcile.Result{}, err
 			}
 		}
@@ -143,7 +145,7 @@ func (r *ZookeeperBackupReconciler) Reconcile(_ context.Context, request reconci
 	}
 
 	// Check Zookeeper Cluster status
-	if foundZookeeperCluster.Status.Replicas != foundZookeeperCluster.Status.ReadyReplicas {
+	if foundZookeeperCluster.Spec.Replicas != foundZookeeperCluster.Status.ReadyReplicas {
 		r.Log.Info(fmt.Sprintf("Not all cluster replicas are ready: %d/%d. Suspend CronJob",
 			foundZookeeperCluster.Status.ReadyReplicas, foundZookeeperCluster.Status.Replicas))
 		*cronJob.Spec.Suspend = true
@@ -156,8 +158,8 @@ func (r *ZookeeperBackupReconciler) Reconcile(_ context.Context, request reconci
 		Name:      svcAdminName,
 		Namespace: foundZookeeperCluster.Namespace,
 	}, foundSvcAdmin)
-	if err != nil && errors.IsNotFound(err) {
-		r.Log.Error(err, fmt.Sprintf("Zookeeper admin service '%s' not found", svcAdminName))
+	if err != nil {
+		r.Log.Error(err, fmt.Sprintf("Can't get Zookeeper admin service '%s'", svcAdminName))
 		return reconcile.Result{}, err
 	}
 
