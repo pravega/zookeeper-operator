@@ -113,10 +113,7 @@ all: generate check build
 generate:
 	$(CONTROLLER_GEN) object paths="./..."
 	make manifests
-	# sync crd generated to helm-chart
-	echo '{{- if .Values.crd.create }}' > charts/zookeeper-operator/templates/zookeeper.pravega.io_zookeeperclusters_crd.yaml
-	cat config/crd/bases/zookeeper.pravega.io_zookeeperclusters.yaml >> charts/zookeeper-operator/templates/zookeeper.pravega.io_zookeeperclusters_crd.yaml
-	echo '{{- end }}' >> charts/zookeeper-operator/templates/zookeeper.pravega.io_zookeeperclusters_crd.yaml
+	cp -f config/crd/bases/zookeeper.pravega.io_zookeeperclusters.yaml charts/zookeeper-operator/templates/zookeeper.pravega.io_zookeeperclusters_crd.yaml
 
 
 build: test build-go build-image
