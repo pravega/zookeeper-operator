@@ -28,7 +28,7 @@ The project is currently alpha. While no breaking API changes are currently plan
 
 ### Overview
 
-This operator runs a Zookeeper 3.7.0 cluster, and uses Zookeeper dynamic reconfiguration to handle node membership.
+This operator runs a Zookeeper 3.7.1 cluster, and uses Zookeeper dynamic reconfiguration to handle node membership.
 
 The operator itself is built with the [Operator framework](https://github.com/operator-framework/operator-sdk).
 
@@ -75,7 +75,7 @@ $ kubectl create -f config/rbac/all_ns_rbac.yaml
 Deploy the Zookeeper operator.
 
 ```
-$ kubectl create -f deploy/manager/manager.yaml
+$ kubectl create -f config/manager/manager.yaml
 ```
 
 Verify that the Zookeeper operator is running.
