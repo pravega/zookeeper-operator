@@ -76,7 +76,7 @@ $ kubectl create -f config/rbac/all_ns_rbac.yaml
 Deploy the Zookeeper operator.
 
 ```
-$ kubectl create -f deploy/manager/manager.yaml
+$ kubectl create -f config/manager/manager.yaml
 ```
 
 Verify that the Zookeeper operator is running.
