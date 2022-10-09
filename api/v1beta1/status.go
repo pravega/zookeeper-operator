@@ -33,10 +33,10 @@ type ZookeeperClusterStatus struct {
 	// Members is the zookeeper members in the cluster
 	Members MembersStatus `json:"members,omitempty"`
 
-	// Replicas is the number of number of desired replicas in the cluster
+	// Replicas is the number of desired replicas in the cluster
 	Replicas int32 `json:"replicas,omitempty"`
 
-	// ReadyReplicas is the number of number of ready replicas in the cluster
+	// ReadyReplicas is the number of ready replicas in the cluster
 	ReadyReplicas int32 `json:"readyReplicas,omitempty"`
 
 	// InternalClientEndpoint is the internal client IP and port
