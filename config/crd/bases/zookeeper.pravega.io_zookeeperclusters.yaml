@@ -5831,13 +5831,12 @@ spec:
               metaRootCreated:
                 type: boolean
               readyReplicas:
-                description: ReadyReplicas is the number of number of ready replicas
-                  in the cluster
+                description: ReadyReplicas is the number of ready replicas in the
+                  cluster
                 format: int32
                 type: integer
               replicas:
-                description: Replicas is the number of number of desired replicas
-                  in the cluster
+                description: Replicas is the number of desired replicas in the cluster
                 format: int32
                 type: integer
               targetVersion:
