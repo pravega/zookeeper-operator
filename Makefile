@@ -156,7 +156,7 @@ build-and-push-multiarch-image:
 		--build-arg DOCKER_REGISTRY=$(DOCKER_REGISTRY) \
 		--build-arg GIT_SHA=$(GIT_SHA) \
 		--platform=linux/amd64,linux/arm64 \
-		-t $(REPO):$(VERSION)
+		-t $(REPO):$(VERSION) \
 		-t $(REPO):latest \
 		.
 
