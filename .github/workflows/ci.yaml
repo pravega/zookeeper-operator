@@ -77,6 +77,6 @@ jobs:
       uses: docker/setup-qemu-action@v2
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
-    - name: Pushing docker images
+    - name: Build and publish docker images
       run: |
         make push-multiarch
