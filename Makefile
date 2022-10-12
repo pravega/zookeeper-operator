@@ -149,7 +149,7 @@ build-zk-image:
 	docker build --build-arg VERSION=$(VERSION)  --build-arg DOCKER_REGISTRY=$(DOCKER_REGISTRY) --build-arg GIT_SHA=$(GIT_SHA) -t $(APP_REPO):$(VERSION) ./docker
 	docker tag $(APP_REPO):$(VERSION) $(APP_REPO):latest
 
-build-and-push-multiarch:
+build-and-push-multiarch-image:
 	docker buildx build \
 		--push \
 		--build-arg VERSION=$(VERSION) \
