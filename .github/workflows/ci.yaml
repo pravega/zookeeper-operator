@@ -15,62 +15,66 @@ on:
 
 # jobs to run
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Set up Go 1.17
-      uses: actions/setup-go@v2
-      with:
-        go-version: 1.17
-      id: go
-    - name: Set up Go for root
-      run: |
-        sudo ln -sf `which go` `sudo which go` || true
-        sudo go version
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
-    - name: get go version
-      run: go version
-    - name: Gofmt and License checks
-      run: make check
-    - name: unit tests
-      run: make test
-    - name: Codecov
-      uses: codecov/codecov-action@v1.0.12
-    - name: Set env
-      run: |
-        echo "KUBERNETES_VERSION=v1.23.1" >> $GITHUB_ENV
-        echo "MINIKUBE_VERSION=v1.25.2" >> $GITHUB_ENV
-        echo "KUBERNETES_CONFIG_FILE=$HOME/.kube/config" >> $GITHUB_ENV
-        echo "CHANGE_MINIKUBE_NONE_USER=true" >> $GITHUB_ENV
-    - name: minikube setup
-      run: |
-        curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBERNETES_VERSION/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
-        curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBE_VERSION/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
-        sudo mount --make-rshared /
-        sudo apt-get install -y conntrack
-        CHANGE_MINIKUBE_NONE_USER=true
-        export KUBERNETES_CONFIG_FILE=$HOME/.kube/config
-        export KUBERNETES_CONFIG_FILE=$HOME/.kube/config;export CHANGE_MINIKUBE_NONE_USER=true;sudo minikube start --vm-driver=none --bootstrapper=kubeadm --kubernetes-version=$KUBERNETES_VERSION
-        echo "minikube started, updating context"
-        export KUBERNETES_CONFIG_FILE=$HOME/.kube/config;export CHANGE_MINIKUBE_NONE_USER=true; sudo minikube update-context
-        echo "context is updated"
-        #JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl get nodes -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1; done
-        sleep 60
-        sudo kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=kube-system:default
-        echo "created cluster role"
-        sudo kubectl cluster-info
-        echo "cluster info"
-        sudo kubectl -n kube-system get pod -o wide
-        sudo kubectl create secret docker-registry regcred --docker-server=https://index.docker.io/v1/ --docker-username="testanisha"  --docker-password="123456789" --docker-email=testimage456@gmail.com
-    - name: E2E
-      run: sudo make test-e2e
+  # build:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - name: Set up Go 1.17
+  #     uses: actions/setup-go@v2
+  #     with:
+  #       go-version: 1.17
+  #     id: go
+  #   - name: Set up Go for root
+  #     run: |
+  #       sudo ln -sf `which go` `sudo which go` || true
+  #       sudo go version
+  #   - name: Check out code into the Go module directory
+  #     uses: actions/checkout@v2
+  #   - name: get go version
+  #     run: go version
+  #   - name: Gofmt and License checks
+  #     run: make check
+  #   - name: unit tests
+  #     run: make test
+  #   - name: Codecov
+  #     uses: codecov/codecov-action@v1.0.12
+  #   - name: Set env
+  #     run: |
+  #       echo "KUBERNETES_VERSION=v1.23.1" >> $GITHUB_ENV
+  #       echo "MINIKUBE_VERSION=v1.25.2" >> $GITHUB_ENV
+  #       echo "KUBERNETES_CONFIG_FILE=$HOME/.kube/config" >> $GITHUB_ENV
+  #       echo "CHANGE_MINIKUBE_NONE_USER=true" >> $GITHUB_ENV
+  #   - name: minikube setup
+  #     run: |
+  #       curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBERNETES_VERSION/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+  #       curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBE_VERSION/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
+  #       sudo mount --make-rshared /
+  #       sudo apt-get install -y conntrack
+  #       CHANGE_MINIKUBE_NONE_USER=true
+  #       export KUBERNETES_CONFIG_FILE=$HOME/.kube/config
+  #       export KUBERNETES_CONFIG_FILE=$HOME/.kube/config;export CHANGE_MINIKUBE_NONE_USER=true;sudo minikube start --vm-driver=none --bootstrapper=kubeadm --kubernetes-version=$KUBERNETES_VERSION
+  #       echo "minikube started, updating context"
+  #       export KUBERNETES_CONFIG_FILE=$HOME/.kube/config;export CHANGE_MINIKUBE_NONE_USER=true; sudo minikube update-context
+  #       echo "context is updated"
+  #       #JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl get nodes -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1; done
+  #       sleep 60
+  #       sudo kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=kube-system:default
+  #       echo "created cluster role"
+  #       sudo kubectl cluster-info
+  #       echo "cluster info"
+  #       sudo kubectl -n kube-system get pod -o wide
+  #       sudo kubectl create secret docker-registry regcred --docker-server=https://index.docker.io/v1/ --docker-username="testanisha"  --docker-password="123456789" --docker-email=testimage456@gmail.com
+  #   - name: E2E
+  #     run: sudo make test-e2e
   publish:
     name: Publish docker image
     runs-on: ubuntu-latest
-    needs: build
+    #needs: build
     if: github.event_name == 'release' && github.event.action == 'created'
     steps:
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
     - name: Pushing docker images
       run: sudo make push
     - name: Uploading binary files

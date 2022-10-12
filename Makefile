@@ -149,6 +149,25 @@ build-zk-image:
 	docker build --build-arg VERSION=$(VERSION)  --build-arg DOCKER_REGISTRY=$(DOCKER_REGISTRY) --build-arg GIT_SHA=$(GIT_SHA) -t $(APP_REPO):$(VERSION) ./docker
 	docker tag $(APP_REPO):$(VERSION) $(APP_REPO):latest
 
+build-multiarch-image:
+	docker buildx build \
+		--build-arg VERSION=$(VERSION) \
+		--build-arg DOCKER_REGISTRY=$(DOCKER_REGISTRY) \
+		--build-arg GIT_SHA=$(GIT_SHA) \
+		--platform=linux/amd64,linux/arm64 \
+		-t $(REPO):$(VERSION) .
+	docker tag $(REPO):$(VERSION) $(REPO):latest
+
+build-multiarch-zk-image:
+	docker buildx build \
+		--build-arg VERSION=$(VERSION)  \
+		--build-arg DOCKER_REGISTRY=$(DOCKER_REGISTRY) \
+		--build-arg GIT_SHA=$(GIT_SHA) \
+		--platform=linux/amd64,linux/arm64 \
+		-t $(APP_REPO):$(VERSION) \
+		./docker
+	docker tag $(APP_REPO):$(VERSION) $(APP_REPO):latest
+
 build-zk-image-swarm:
 	docker build --build-arg VERSION=$(VERSION)-swarm  --build-arg DOCKER_REGISTRY=$(DOCKER_REGISTRY) --build-arg GIT_SHA=$(GIT_SHA) \
 		-f ./docker/Dockerfile-swarm -t $(APP_REPO):$(VERSION)-swarm ./docker
@@ -180,7 +199,7 @@ login:
 test-login:
 	echo "$(DOCKER_TEST_PASS)" | docker login -u "$(DOCKER_TEST_USER)" --password-stdin
 
-push: build-image build-zk-image login
+push: build-multiarch-image build-multiarch-zk-image login
 	docker push $(REPO):$(VERSION)
 	docker push $(REPO):latest
 	docker push $(APP_REPO):$(VERSION)
