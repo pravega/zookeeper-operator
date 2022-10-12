@@ -79,7 +79,7 @@ jobs:
       uses: docker/setup-buildx-action@v2
     - name: Run docker login
       run: |
-        echo "${{ secrets.DOCKER_PASS }}" | docker login -u "${{ secrets.DOCKER_PASS }}" --password-stdin
+        echo "${{ secrets.DOCKER_PASS }}" | docker login -u "${{ secrets.DOCKER_USER }}" --password-stdin
     - name: Build and publish docker images
       run: |
         make build-and-push-multiarch-image
