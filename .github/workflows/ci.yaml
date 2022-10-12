@@ -71,6 +71,8 @@ jobs:
     #needs: build
     if: github.event_name == 'release' && github.event.action == 'created'
     steps:
+    - name: Check out code
+      uses: actions/checkout@v3
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2
     - name: Set up Docker Buildx
