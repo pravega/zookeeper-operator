@@ -13,9 +13,9 @@ CRD_OPTIONS ?= "crd"
 PROJECT_NAME=zookeeper-operator
 EXPORTER_NAME=zookeeper-exporter
 APP_NAME=zookeeper
-REPO=pravega/$(PROJECT_NAME)
+REPO=mmoscher/$(PROJECT_NAME)
 TEST_REPO=testzkop/$(PROJECT_NAME)
-APP_REPO=pravega/$(APP_NAME)
+APP_REPO=mmoscher/$(APP_NAME)
 ALTREPO=emccorp/$(PROJECT_NAME)
 APP_ALTREPO=emccorp/$(APP_NAME)
 VERSION=$(shell git describe --always --tags --dirty | tr -d "v" | sed "s/\(.*\)-g`git rev-parse --short HEAD`/\1/")
@@ -204,14 +204,14 @@ push: build-multiarch-image build-multiarch-zk-image login
 	docker push $(REPO):latest
 	docker push $(APP_REPO):$(VERSION)
 	docker push $(APP_REPO):latest
-	docker tag $(REPO):$(VERSION) $(ALTREPO):$(VERSION)
-	docker tag $(REPO):$(VERSION) $(ALTREPO):latest
-	docker tag $(APP_REPO):$(VERSION) $(APP_ALTREPO):$(VERSION)
-	docker tag $(APP_REPO):$(VERSION) $(APP_ALTREPO):latest
-	docker push $(ALTREPO):$(VERSION)
-	docker push $(ALTREPO):latest
-	docker push $(APP_ALTREPO):$(VERSION)
-	docker push $(APP_ALTREPO):latest
+	# docker tag $(REPO):$(VERSION) $(ALTREPO):$(VERSION)
+	# docker tag $(REPO):$(VERSION) $(ALTREPO):latest
+	# docker tag $(APP_REPO):$(VERSION) $(APP_ALTREPO):$(VERSION)
+	# docker tag $(APP_REPO):$(VERSION) $(APP_ALTREPO):latest
+	# docker push $(ALTREPO):$(VERSION)
+	# docker push $(ALTREPO):latest
+	# docker push $(APP_ALTREPO):$(VERSION)
+	# docker push $(APP_ALTREPO):latest
 
 clean:
 	rm -f bin/$(PROJECT_NAME)
