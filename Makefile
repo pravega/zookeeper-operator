@@ -151,22 +151,25 @@ build-zk-image:
 
 build-multiarch-image:
 	docker buildx build \
+		--push \
 		--build-arg VERSION=$(VERSION) \
 		--build-arg DOCKER_REGISTRY=$(DOCKER_REGISTRY) \
 		--build-arg GIT_SHA=$(GIT_SHA) \
 		--platform=linux/amd64,linux/arm64 \
-		-t $(REPO):$(VERSION) .
-	docker tag $(REPO):$(VERSION) $(REPO):latest
+		-t $(REPO):$(VERSION)
+		-t $(REPO):latest \
+		.
 
 build-multiarch-zk-image:
 	docker buildx build \
+		--push \
 		--build-arg VERSION=$(VERSION)  \
 		--build-arg DOCKER_REGISTRY=$(DOCKER_REGISTRY) \
 		--build-arg GIT_SHA=$(GIT_SHA) \
 		--platform=linux/amd64,linux/arm64 \
 		-t $(APP_REPO):$(VERSION) \
+		-t $(APP_REPO):latest \
 		./docker
-	docker tag $(APP_REPO):$(VERSION) $(APP_REPO):latest
 
 build-zk-image-swarm:
 	docker build --build-arg VERSION=$(VERSION)-swarm  --build-arg DOCKER_REGISTRY=$(DOCKER_REGISTRY) --build-arg GIT_SHA=$(GIT_SHA) \
@@ -194,24 +197,26 @@ run-local:
 	go run ./main.go
 
 login:
-	@docker login -u "$(DOCKER_USER)" -p "$(DOCKER_PASS)"
+	echo "$(DOCKER_PASS)" | docker login -u "$(DOCKER_USER)" --password-stdin
 
 test-login:
 	echo "$(DOCKER_TEST_PASS)" | docker login -u "$(DOCKER_TEST_USER)" --password-stdin
 
-push: build-multiarch-image build-multiarch-zk-image login
+push-multiarch: login build-multiarch-image build-multiarch-zk-image
+
+push: build-image build-zk-image login
 	docker push $(REPO):$(VERSION)
 	docker push $(REPO):latest
 	docker push $(APP_REPO):$(VERSION)
 	docker push $(APP_REPO):latest
-	# docker tag $(REPO):$(VERSION) $(ALTREPO):$(VERSION)
-	# docker tag $(REPO):$(VERSION) $(ALTREPO):latest
-	# docker tag $(APP_REPO):$(VERSION) $(APP_ALTREPO):$(VERSION)
-	# docker tag $(APP_REPO):$(VERSION) $(APP_ALTREPO):latest
-	# docker push $(ALTREPO):$(VERSION)
-	# docker push $(ALTREPO):latest
-	# docker push $(APP_ALTREPO):$(VERSION)
-	# docker push $(APP_ALTREPO):latest
+	docker tag $(REPO):$(VERSION) $(ALTREPO):$(VERSION)
+	docker tag $(REPO):$(VERSION) $(ALTREPO):latest
+	docker tag $(APP_REPO):$(VERSION) $(APP_ALTREPO):$(VERSION)
+	docker tag $(APP_REPO):$(VERSION) $(APP_ALTREPO):latest
+	docker push $(ALTREPO):$(VERSION)
+	docker push $(ALTREPO):latest
+	docker push $(APP_ALTREPO):$(VERSION)
+	docker push $(APP_ALTREPO):latest
 
 clean:
 	rm -f bin/$(PROJECT_NAME)
