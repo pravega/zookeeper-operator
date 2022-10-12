@@ -149,7 +149,7 @@ build-zk-image:
 	docker build --build-arg VERSION=$(VERSION)  --build-arg DOCKER_REGISTRY=$(DOCKER_REGISTRY) --build-arg GIT_SHA=$(GIT_SHA) -t $(APP_REPO):$(VERSION) ./docker
 	docker tag $(APP_REPO):$(VERSION) $(APP_REPO):latest
 
-build-multiarch-image:
+build-and-push-multiarch:
 	docker buildx build \
 		--push \
 		--build-arg VERSION=$(VERSION) \
@@ -160,7 +160,7 @@ build-multiarch-image:
 		-t $(REPO):latest \
 		.
 
-build-multiarch-zk-image:
+ build-and-push-multiarch-zk-image:
 	docker buildx build \
 		--push \
 		--build-arg VERSION=$(VERSION)  \
@@ -201,8 +201,6 @@ login:
 
 test-login:
 	echo "$(DOCKER_TEST_PASS)" | docker login -u "$(DOCKER_TEST_USER)" --password-stdin
-
-push-multiarch: login build-multiarch-image build-multiarch-zk-image
 
 push: build-image build-zk-image login
 	docker push $(REPO):$(VERSION)
