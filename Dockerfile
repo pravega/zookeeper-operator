@@ -1,7 +1,7 @@
 ARG DOCKER_REGISTRY
 ARG DISTROLESS_DOCKER_REGISTRY
 ARG ALPINE_VERSION=3.17
-FROM ${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}golang:1.19-alpine${ALPINE_VERSION} as go-builder
+FROM --platform=$BUILDPLATFORM ${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}golang:1.19-alpine${ALPINE_VERSION} as go-builder
 
 ARG PROJECT_NAME=zookeeper-operator
 ARG REPO_PATH=github.com/pravega/$PROJECT_NAME
@@ -9,6 +9,9 @@ ARG REPO_PATH=github.com/pravega/$PROJECT_NAME
 # Build version and commit should be passed in when performing docker build
 ARG VERSION=0.0.0-localdev
 ARG GIT_SHA=0000000
+
+ARG TARGETOS=linux
+ARG TARGETARCH=amd64
 
 WORKDIR /src
 COPY pkg ./pkg
@@ -26,7 +29,7 @@ COPY api/ api/
 COPY controllers/ controllers/
 
 # Build
-RUN GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o /src/${PROJECT_NAME} \
+RUN GOOS=${TARGETOS} GOARCH=${TARGETARCH} CGO_ENABLED=0 go build -o /src/${PROJECT_NAME} \
     -ldflags "-X ${REPO_PATH}/pkg/version.Version=${VERSION} -X ${REPO_PATH}/pkg/version.GitSHA=${GIT_SHA}" main.go
 
 FROM ${DISTROLESS_DOCKER_REGISTRY:-gcr.io/}distroless/static-debian11:nonroot AS final
