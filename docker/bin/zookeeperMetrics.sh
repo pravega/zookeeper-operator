@@ -13,4 +13,4 @@ set -ex
 
 source /conf/env.sh
 
-echo mntr | nc localhost $CLIENT_PORT >& 1
+echo mntr | socat stdio tcp:localhost:$CLIENT_PORT >& 1
