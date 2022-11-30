@@ -280,16 +280,16 @@ func makeZkConfigString(z *v1beta1.ZookeeperCluster) string {
 }
 
 func makeZkLog4JQuietConfigString() string {
-	return "log4j.rootLogger=ERROR, CONSOLE\n" +
+	return "log4j.rootLogger=DEBUG, CONSOLE\n" +
 		"log4j.appender.CONSOLE=org.apache.log4j.ConsoleAppender\n" +
-		"log4j.appender.CONSOLE.Threshold=ERROR\n" +
+		"log4j.appender.CONSOLE.Threshold=DEBUG\n" +
 		"log4j.appender.CONSOLE.layout=org.apache.log4j.PatternLayout\n" +
 		"log4j.appender.CONSOLE.layout.ConversionPattern=%d{ISO8601} [myid:%X{myid}] - %-5p [%t:%C{1}@%L] - %m%n\n"
 }
 
 func makeZkLog4JConfigString() string {
 	return "zookeeper.root.logger=CONSOLE\n" +
-		"zookeeper.console.threshold=INFO\n" +
+		"zookeeper.console.threshold=DEBUG\n" +
 		"log4j.rootLogger=${zookeeper.root.logger}\n" +
 		"log4j.appender.CONSOLE=org.apache.log4j.ConsoleAppender\n" +
 		"log4j.appender.CONSOLE.Threshold=${zookeeper.console.threshold}\n" +
