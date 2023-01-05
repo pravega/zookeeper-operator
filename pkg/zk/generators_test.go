@@ -209,6 +209,10 @@ var _ = Describe("Generators Spec", func() {
 					"exampleLabel",
 					"exampleValue"))
 			})
+
+			It("should have blank topologySpreadConstraints", func() {
+				Ω(sts.Spec.Template.Spec.TopologySpreadConstraints).To(HaveLen(0))
+			})
 		})
 
 		Context("with pod policy annotations", func() {
