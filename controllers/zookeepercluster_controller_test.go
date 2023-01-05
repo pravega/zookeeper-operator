@@ -16,18 +16,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pravega/zookeeper-operator/api/v1beta1"
-	"github.com/pravega/zookeeper-operator/pkg/controller/config"
-	"github.com/pravega/zookeeper-operator/pkg/zk"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	policyv1beta1 "k8s.io/api/policy/v1beta1"
+	policyv1 "k8s.io/api/policy/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	"github.com/pravega/zookeeper-operator/api/v1beta1"
+	"github.com/pravega/zookeeper-operator/pkg/controller/config"
+	"github.com/pravega/zookeeper-operator/pkg/zk"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -185,7 +186,7 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 			})
 
 			It("should create a pdb", func() {
-				foundPdb := &policyv1beta1.PodDisruptionBudget{}
+				foundPdb := &policyv1.PodDisruptionBudget{}
 				err = cl.Get(context.TODO(), req.NamespacedName, foundPdb)
 				Ω(err).To(BeNil())
 			})
