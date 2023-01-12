@@ -172,9 +172,10 @@ func makeZkPodSpec(z *v1beta1.ZookeeperCluster, volumes []v1.Volume) v1.PodSpec 
 
 	zkContainer.Env = append(zkContainer.Env, z.Spec.Pod.Env...)
 	podSpec := v1.PodSpec{
-		Containers: append(z.Spec.Containers, zkContainer),
-		Affinity:   z.Spec.Pod.Affinity,
-		Volumes:    append(z.Spec.Volumes, volumes...),
+		Containers:                append(z.Spec.Containers, zkContainer),
+		Affinity:                  z.Spec.Pod.Affinity,
+		TopologySpreadConstraints: z.Spec.Pod.TopologySpreadConstraints,
+		Volumes:                   append(z.Spec.Volumes, volumes...),
 	}
 	if !reflect.DeepEqual(v1.PodSecurityContext{}, z.Spec.Pod.SecurityContext) {
 		podSpec.SecurityContext = z.Spec.Pod.SecurityContext
