@@ -15,19 +15,19 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/pravega/zookeeper-operator/pkg/controller/config"
-	"github.com/pravega/zookeeper-operator/pkg/utils"
-	"github.com/pravega/zookeeper-operator/pkg/yamlexporter"
-	"github.com/pravega/zookeeper-operator/pkg/zk"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
+	"github.com/pravega/zookeeper-operator/pkg/controller/config"
+	"github.com/pravega/zookeeper-operator/pkg/utils"
+	"github.com/pravega/zookeeper-operator/pkg/yamlexporter"
+	"github.com/pravega/zookeeper-operator/pkg/zk"
+
 	"github.com/go-logr/logr"
-	zookeeperv1beta1 "github.com/pravega/zookeeper-operator/api/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	policyv1beta1 "k8s.io/api/policy/v1beta1"
+	policyv1 "k8s.io/api/policy/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -38,6 +38,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	zookeeperv1beta1 "github.com/pravega/zookeeper-operator/api/v1beta1"
 )
 
 // ReconcileTime is the delay between reconciliations
@@ -467,7 +469,7 @@ func (r *ZookeeperClusterReconciler) reconcilePodDisruptionBudget(instance *zook
 	if err = controllerutil.SetControllerReference(instance, pdb, r.Scheme); err != nil {
 		return err
 	}
-	foundPdb := &policyv1beta1.PodDisruptionBudget{}
+	foundPdb := &policyv1.PodDisruptionBudget{}
 	err = r.Client.Get(context.TODO(), types.NamespacedName{
 		Name:      pdb.Name,
 		Namespace: pdb.Namespace,

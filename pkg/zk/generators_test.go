@@ -12,18 +12,18 @@ package zk_test
 
 import (
 	"fmt"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
+	policyv1 "k8s.io/api/policy/v1"
 
-	"strings"
+	appsv1 "k8s.io/api/apps/v1"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/pravega/zookeeper-operator/api/v1beta1"
 	"github.com/pravega/zookeeper-operator/pkg/utils"
 	"github.com/pravega/zookeeper-operator/pkg/zk"
-	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
-	policyv1beta1 "k8s.io/api/policy/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -208,6 +208,10 @@ var _ = Describe("Generators Spec", func() {
 				Ω(sts.Spec.Template.ObjectMeta.Labels).To(HaveKeyWithValue(
 					"exampleLabel",
 					"exampleValue"))
+			})
+
+			It("should have blank topologySpreadConstraints", func() {
+				Ω(sts.Spec.Template.Spec.TopologySpreadConstraints).To(HaveLen(0))
 			})
 		})
 
@@ -560,7 +564,7 @@ var _ = Describe("Generators Spec", func() {
 	})
 
 	Context("#MakePodDisruptionBudget", func() {
-		var pdb *policyv1beta1.PodDisruptionBudget
+		var pdb *policyv1.PodDisruptionBudget
 		var domainName string
 		var zkClusterName string
 

@@ -173,6 +173,9 @@ var _ = Describe("ZookeeperCluster DeepCopy", func() {
 		It("value of Tol should be example", func() {
 			Ω(z2.Spec.Pod.Tolerations[0].Key).To(Equal("tol"))
 		})
+		It("have empty topologySpreadConstraints", func() {
+			Ω(z2.Spec.Pod.TopologySpreadConstraints).To(HaveLen(0))
+		})
 		It("checking status conditions", func() {
 			Ω(z2.Status.Conditions[0].Reason).To(Equal(z1.Status.Conditions[0].Reason))
 		})
@@ -241,6 +244,14 @@ var _ = Describe("ZookeeperCluster DeepCopy", func() {
 			var podpolicy *v1beta1.PodPolicy
 			podpolicy2 := podpolicy.DeepCopy()
 			Ω(podpolicy2).To(BeNil())
+		})
+		It("checking for deepcopy podpolicy.topologyspreadconstraints", func() {
+			t := v1.TopologySpreadConstraint{}
+			podpolicy := v1beta1.PodPolicy{
+				TopologySpreadConstraints: []v1.TopologySpreadConstraint{t},
+			}
+			podpolicy2 := podpolicy.DeepCopy()
+			Ω(podpolicy2.TopologySpreadConstraints).To(HaveLen(1))
 		})
 		It("checking for nil zookeepercluster", func() {
 			var zk *v1beta1.ZookeeperCluster
