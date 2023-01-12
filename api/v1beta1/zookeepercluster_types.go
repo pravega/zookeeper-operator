@@ -446,6 +446,9 @@ type PodPolicy struct {
 	// The scheduling constraints on pods.
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
 
+	// TopologySpreadConstraints to apply to the pods
+	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
+
 	// Resources is the resource requirements for the container.
 	// This field cannot be updated once the cluster is created.
 	Resources v1.ResourceRequirements `json:"resources,omitempty"`
