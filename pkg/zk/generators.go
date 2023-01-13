@@ -92,6 +92,7 @@ func MakeStatefulSet(z *v1beta1.ZookeeperCluster) *appsv1.StatefulSet {
 					GenerateName: z.GetName(),
 					Labels: mergeLabels(
 						z.Spec.Labels,
+						z.Spec.Pod.Labels,
 						map[string]string{
 							"app":  z.GetName(),
 							"kind": "ZookeeperMember",

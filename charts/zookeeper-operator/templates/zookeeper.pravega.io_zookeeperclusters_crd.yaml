@@ -2684,8 +2684,9 @@ spec:
               labels:
                 additionalProperties:
                   type: string
-                description: Labels specifies the labels to attach to pods the operator
-                  creates for the zookeeper cluster.
+                description: Labels specifies the labels to attach to all resources
+                  the operator creates for the zookeeper cluster, including StatefulSet,
+                  Pod, PersistentVolumeClaim, Service, ConfigMap, et al.
                 type: object
               maxUnavailableReplicas:
                 description: MaxUnavailableReplicas defines the MaxUnavailable Replicas
@@ -3875,7 +3876,8 @@ spec:
                     additionalProperties:
                       type: string
                     description: Labels specifies the labels to attach to pods the
-                      operator creates for the zookeeper cluster.
+                      operator creates for the zookeeper cluster. Overrides any values
+                      specified in Spec.Labels.
                     type: object
                   nodeSelector:
                     additionalProperties:
