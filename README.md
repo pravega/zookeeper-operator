@@ -18,6 +18,7 @@ The project is currently alpha. While no breaking API changes are currently plan
     * [Upgrade the Zookeeper Operator](#upgrade-the-operator)
     * [Uninstall the Operator](#uninstall-the-operator)
     * [The AdminServer](#the-adminserver)
+    * [Automatic backup (tech preview)](#automatic-backup-tech-preview)
  * [Development](#development)
     * [Build the Operator Image](#build-the-operator-image)
     * [Direct Access to Cluster](#direct-access-to-the-cluster)
@@ -365,6 +366,40 @@ The list of available commands are
 /commands/watches_by_path
 /commands/zabstate
 ```
+
+### Automatic backup (tech preview)
+In Zookeeper operator was implemented dedicated controller responsible for automatic backups of zookeeper data. Current 
+implementation provides periodic copying of transaction logs and snapshots (on-disk representation of the data) to 
+dedicated persistence volume with specified storage class within kubernetes cluster. Advantages and disadvantages of such
+approach described in [article](https://www.elastic.co/blog/zookeeper-backup-a-treatise).
+Exmaple CR of zookeeper backup:
+```yaml
+apiVersion: "zookeeper.pravega.io/v1beta1"
+kind: "ZookeeperBackup"
+metadata:
+  name: "example-backup"
+spec:
+    zookeeperCluster: "zookeeper-cluster"
+    schedule: "0 0 */1 * *"
+    backupsToKeep: "7"
+    dataStorageClass: "backup-class"
+    image:
+      repository: "pravega/zkbackup"
+      tag: "0.1"
+```
+
+Parameters:
+- *zookeeperCluster* (required) - name of zookeeper cluster to backup.
+- *schedule* (optional) - the schedule in Cron format.
+- *backupsToKeep* (optional) - number of stored backups.
+- *dataStorageClass* (required) - storage class used for persistence volume for backups. Storage class and related provisioner should be configured separately.
+- *image* (optional) - image for backup procedure.
+
+Backup controller takes following responsibilities:
+- Provide cluster health check and cancel backup operation if required.
+- Detect ZK leader pod and prepare/reconfigure CronJob configuration (Backup pod should land on node where leader is elected).
+- Schedule CronJob with a backup script.
+- Provide mechanism to periodic checks to make sure CronJob configuration is updated and valid (for example in case of new leader election)
 
 ## Development
 

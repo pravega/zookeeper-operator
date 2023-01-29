@@ -336,3 +336,107 @@ var _ = Describe("ZookeeperCluster DeepCopy", func() {
 
 	})
 })
+
+var _ = Describe("ZookeeperBackup DeepCopy", func() {
+	Context("with defaults", func() {
+		var (
+			str1, str1a, str1b, str2, str2a, str2b string
+			zkBk, zkBkCopy, zkBkCopy2              *v1beta1.ZookeeperBackup
+		)
+		BeforeEach(func() {
+			zkBk = &v1beta1.ZookeeperBackup{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "example",
+					Namespace: "default",
+				},
+			}
+			zkBk.Spec = v1beta1.ZookeeperBackupSpec{
+				ZookeeperCluster: "ZK_Cluster1",
+			}
+
+			zkBk.WithDefaults()
+			zkBkCopy = zkBk.DeepCopy()
+			zkBkCopy2 = zkBk.DeepCopy()
+
+			str1 = zkBk.Spec.ZookeeperCluster
+			str1a = zkBkCopy.Spec.ZookeeperCluster
+			str1b = zkBkCopy2.Spec.ZookeeperCluster
+
+			str2 = "0 12 */1 * *"
+			zkBk.Spec.Schedule = str2
+			zkBkCopy.Spec = *zkBk.Spec.DeepCopy()
+			zkBk.Spec.DeepCopyInto(&zkBkCopy2.Spec)
+			str2a = zkBkCopy.Spec.Schedule
+			str2b = zkBkCopy2.Spec.Schedule
+
+			zkBkCopy.Status = *zkBk.Status.DeepCopy()
+			zkBk.Status.DeepCopyInto(&zkBkCopy.Status)
+
+		})
+		It("value of str1, str1a and str1b should be equal", func() {
+			Ω(str1a).To(Equal(str1))
+			Ω(str1b).To(Equal(str1))
+		})
+		It("value of str2, str2a and str2b should be 0 12 */1 * *", func() {
+			Ω(str2a).To(Equal(str2))
+			Ω(str2b).To(Equal(str2))
+		})
+
+		It("checking of nil DeepCopy for ZookeeperBackup", func() {
+			var zk *v1beta1.ZookeeperBackup
+			zkCopy := zk.DeepCopy()
+			Ω(zkCopy).To(BeNil())
+		})
+
+		It("checking of DeepCopyObject for ZookeeperBackup", func() {
+			zkObj := zkBk.DeepCopyObject()
+			Ω(zkObj.GetObjectKind().GroupVersionKind().Version).To(Equal(""))
+		})
+		It("checking of nil DeepCopyObject for ZookeeperBackup", func() {
+			var zk *v1beta1.ZookeeperBackup
+			zkCopy := zk.DeepCopyObject()
+			Ω(zkCopy).To(BeNil())
+		})
+
+		It("checking of nil DeepCopy for ZookeeperBackupList", func() {
+			var backupList *v1beta1.ZookeeperBackupList
+			backupList2 := backupList.DeepCopy()
+			Ω(backupList2).To(BeNil())
+		})
+
+		It("checking of DeepCopyObject for ZookeeperBackupList", func() {
+			var backupList v1beta1.ZookeeperBackupList
+			backupList.ResourceVersion = "v1beta1"
+			backupList2 := backupList.DeepCopyObject()
+			Ω(backupList2).ShouldNot(BeNil())
+		})
+		It("checking of DeepCopyObject for ZookeeperBackupList with items", func() {
+			var backupList v1beta1.ZookeeperBackupList
+			backupList.ResourceVersion = "v1beta1"
+			backupList.Items = []v1beta1.ZookeeperBackup{
+				{
+					Spec: v1beta1.ZookeeperBackupSpec{},
+				},
+			}
+			backupList2 := backupList.DeepCopyObject()
+			Ω(backupList2).ShouldNot(BeNil())
+		})
+		It("checking of nil DeepCopyObject for ZookeeperBackupList", func() {
+			var backupList *v1beta1.ZookeeperBackupList
+			backupList2 := backupList.DeepCopyObject()
+			Ω(backupList2).To(BeNil())
+		})
+
+		It("checking of nil DeepCopy for ZookeeperBackupSpec", func() {
+			var backupSpec *v1beta1.ZookeeperBackupSpec
+			backupSpec2 := backupSpec.DeepCopy()
+			Ω(backupSpec2).To(BeNil())
+		})
+
+		It("checking of nil DeepCopy for ZookeeperBackupStatus", func() {
+			var backupStatus *v1beta1.ZookeeperBackupStatus
+			backupStatus2 := backupStatus.DeepCopy()
+			Ω(backupStatus2).To(BeNil())
+		})
+	})
+})

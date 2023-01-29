@@ -13,7 +13,6 @@ package controllers
 import (
 	"context"
 	"os"
-	"testing"
 	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -33,11 +32,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
-
-func TestZookeepercluster(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "ZookeeperCluster Controller Spec")
-}
 
 type MockZookeeperClient struct {
 	// dummy struct
