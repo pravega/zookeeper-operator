@@ -3,7 +3,7 @@ ARG ALPINE_VERSION=3.15
 FROM ${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}golang:1.18-alpine${ALPINE_VERSION} as go-builder
 
 ARG PROJECT_NAME=zookeeper-operator
-ARG REPO_PATH=github.com/pravega/$PROJECT_NAME
+ARG REPO_PATH=github.com/mesosphere/$PROJECT_NAME
 
 # Build version and commit should be passed in when performing docker build
 ARG VERSION=0.0.0-localdev
