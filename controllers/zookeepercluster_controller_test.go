@@ -603,10 +603,16 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				now := metav1.Now()
 				z.SetDeletionTimestamp(&now)
 				cl.Update(context.TODO(), z)
-				err = r.reconcileFinalizers(z)
 			})
 			It("should not raise an error", func() {
+				err = r.reconcileFinalizers(z)
 				Ω(err).To(BeNil())
+			})
+			It("should not raise an error", func() {
+				z.Spec.Persistence.VolumeReclaimPolicy = v1beta1.VolumeReclaimPolicyDelete
+				cl.Update(context.TODO(), z)
+				err = r.reconcileFinalizers(z)
+				Ω(err.Error()).To(Equal("finalizer already done, do not continue reconcile"))
 			})
 		})
 

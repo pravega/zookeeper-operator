@@ -15,6 +15,8 @@ import (
 	"strconv"
 	"time"
 
+	"errors"
+
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
@@ -28,7 +30,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	policyv1 "k8s.io/api/policy/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -48,6 +50,8 @@ const ReconcileTime = 30 * time.Second
 var log = logf.Log.WithName("controller_zookeepercluster")
 
 var _ reconcile.Reconciler = &ZookeeperClusterReconciler{}
+
+var ErrFinalizerDone = errors.New("finalizer already done")
 
 // ZookeeperClusterReconciler reconciles a ZookeeperCluster object
 type ZookeeperClusterReconciler struct {
@@ -72,7 +76,7 @@ func (r *ZookeeperClusterReconciler) Reconcile(_ context.Context, request ctrl.R
 	instance := &zookeeperv1beta1.ZookeeperCluster{}
 	err := r.Client.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if kerrors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile
 			// request. Owned objects are automatically garbage collected. For
 			// additional cleanup logic use finalizers.
@@ -100,8 +104,14 @@ func (r *ZookeeperClusterReconciler) Reconcile(_ context.Context, request ctrl.R
 		}
 		return reconcile.Result{Requeue: true}, nil
 	}
+	if err := r.reconcileFinalizers(instance); err != nil {
+		if errors.Is(err, ErrFinalizerDone) {
+			err = nil
+		}
+		return reconcile.Result{}, err
+	}
+
 	for _, fun := range []reconcileFun{
-		r.reconcileFinalizers,
 		r.reconcileConfigMap,
 		r.reconcileStatefulSet,
 		r.reconcileClientService,
@@ -171,7 +181,7 @@ func (r *ZookeeperClusterReconciler) reconcileStatefulSet(instance *zookeeperv1b
 		// Check if this ServiceAccount already exists
 		foundServiceAccount := &corev1.ServiceAccount{}
 		err = r.Client.Get(context.TODO(), types.NamespacedName{Name: serviceAccount.Name, Namespace: serviceAccount.Namespace}, foundServiceAccount)
-		if err != nil && errors.IsNotFound(err) {
+		if err != nil && kerrors.IsNotFound(err) {
 			r.Log.Info("Creating a new ServiceAccount", "ServiceAccount.Namespace", serviceAccount.Namespace, "ServiceAccount.Name", serviceAccount.Name)
 			err = r.Client.Create(context.TODO(), serviceAccount)
 			if err != nil {
@@ -197,7 +207,7 @@ func (r *ZookeeperClusterReconciler) reconcileStatefulSet(instance *zookeeperv1b
 		Name:      sts.Name,
 		Namespace: sts.Namespace,
 	}, foundSts)
-	if err != nil && errors.IsNotFound(err) {
+	if err != nil && kerrors.IsNotFound(err) {
 		r.Log.Info("Creating a new Zookeeper StatefulSet",
 			"StatefulSet.Namespace", sts.Namespace,
 			"StatefulSet.Name", sts.Name)
@@ -359,7 +369,7 @@ func (r *ZookeeperClusterReconciler) reconcileClientService(instance *zookeeperv
 		Name:      svc.Name,
 		Namespace: svc.Namespace,
 	}, foundSvc)
-	if err != nil && errors.IsNotFound(err) {
+	if err != nil && kerrors.IsNotFound(err) {
 		r.Log.Info("Creating new client service",
 			"Service.Namespace", svc.Namespace,
 			"Service.Name", svc.Name)
@@ -406,7 +416,7 @@ func (r *ZookeeperClusterReconciler) reconcileHeadlessService(instance *zookeepe
 		Name:      svc.Name,
 		Namespace: svc.Namespace,
 	}, foundSvc)
-	if err != nil && errors.IsNotFound(err) {
+	if err != nil && kerrors.IsNotFound(err) {
 		r.Log.Info("Creating new headless service",
 			"Service.Namespace", svc.Namespace,
 			"Service.Name", svc.Name)
@@ -440,7 +450,7 @@ func (r *ZookeeperClusterReconciler) reconcileAdminServerService(instance *zooke
 		Name:      svc.Name,
 		Namespace: svc.Namespace,
 	}, foundSvc)
-	if err != nil && errors.IsNotFound(err) {
+	if err != nil && kerrors.IsNotFound(err) {
 		r.Log.Info("Creating admin server service",
 			"Service.Namespace", svc.Namespace,
 			"Service.Name", svc.Name)
@@ -474,7 +484,7 @@ func (r *ZookeeperClusterReconciler) reconcilePodDisruptionBudget(instance *zook
 		Name:      pdb.Name,
 		Namespace: pdb.Namespace,
 	}, foundPdb)
-	if err != nil && errors.IsNotFound(err) {
+	if err != nil && kerrors.IsNotFound(err) {
 		r.Log.Info("Creating new pod-disruption-budget",
 			"PodDisruptionBudget.Namespace", pdb.Namespace,
 			"PodDisruptionBudget.Name", pdb.Name)
@@ -499,7 +509,7 @@ func (r *ZookeeperClusterReconciler) reconcileConfigMap(instance *zookeeperv1bet
 		Name:      cm.Name,
 		Namespace: cm.Namespace,
 	}, foundCm)
-	if err != nil && errors.IsNotFound(err) {
+	if err != nil && kerrors.IsNotFound(err) {
 		r.Log.Info("Creating a new Zookeeper Config Map",
 			"ConfigMap.Namespace", cm.Namespace,
 			"ConfigMap.Name", cm.Name)
@@ -694,7 +704,7 @@ func (r *ZookeeperClusterReconciler) reconcileFinalizers(instance *zookeeperv1be
 			}
 		}
 	}
-	return nil
+	return fmt.Errorf("%w, do not continue reconcile", ErrFinalizerDone)
 }
 
 func (r *ZookeeperClusterReconciler) getPVCCount(instance *zookeeperv1beta1.ZookeeperCluster) (pvcCount int, err error) {
