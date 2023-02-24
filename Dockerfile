@@ -1,6 +1,6 @@
 ARG DOCKER_REGISTRY
-ARG ALPINE_VERSION=3.15
-FROM ${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}golang:1.18-alpine${ALPINE_VERSION} as go-builder
+ARG ALPINE_VERSION=3.17
+FROM ${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}golang:1.19-alpine${ALPINE_VERSION} as go-builder
 
 ARG PROJECT_NAME=zookeeper-operator
 ARG REPO_PATH=github.com/pravega/$PROJECT_NAME
@@ -28,14 +28,10 @@ COPY controllers/ controllers/
 RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o /src/${PROJECT_NAME} \
     -ldflags "-X ${REPO_PATH}/pkg/version.Version=${VERSION} -X ${REPO_PATH}/pkg/version.GitSHA=${GIT_SHA}" main.go
 
-FROM ${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}alpine:${ALPINE_VERSION} AS final
-
+FROM gcr.io/distroless/static:nonroot AS final
 
 ARG PROJECT_NAME=zookeeper-operator
 
 COPY --from=go-builder /src/${PROJECT_NAME} /usr/local/bin/${PROJECT_NAME}
-
-RUN adduser -D ${PROJECT_NAME}
-USER ${PROJECT_NAME}
 
 ENTRYPOINT ["/usr/local/bin/zookeeper-operator"]
