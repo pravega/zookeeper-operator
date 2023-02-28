@@ -33,6 +33,5 @@ FROM gcr.io/distroless/static:nonroot AS final
 ARG PROJECT_NAME=zookeeper-operator
 
 COPY --from=go-builder /src/${PROJECT_NAME} /usr/local/bin/${PROJECT_NAME}
-USER ${PROJECT_NAME}
 
 ENTRYPOINT ["/usr/local/bin/zookeeper-operator"]
