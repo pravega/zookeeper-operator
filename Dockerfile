@@ -28,7 +28,7 @@ COPY controllers/ controllers/
 RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o /src/${PROJECT_NAME} \
     -ldflags "-X ${REPO_PATH}/pkg/version.Version=${VERSION} -X ${REPO_PATH}/pkg/version.GitSHA=${GIT_SHA}" main.go
 
-FROM gcr.io/distroless/static:nonroot AS final
+FROM gcr.io/distroless/static-debian11:nonroot AS final
 
 ARG PROJECT_NAME=zookeeper-operator
 
