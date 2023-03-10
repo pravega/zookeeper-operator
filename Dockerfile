@@ -1,4 +1,5 @@
 ARG DOCKER_REGISTRY
+ARG DISTROLESS_DOCKER_REGISTRY
 ARG ALPINE_VERSION=3.17
 FROM ${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}golang:1.19-alpine${ALPINE_VERSION} as go-builder
 
@@ -28,7 +29,7 @@ COPY controllers/ controllers/
 RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o /src/${PROJECT_NAME} \
     -ldflags "-X ${REPO_PATH}/pkg/version.Version=${VERSION} -X ${REPO_PATH}/pkg/version.GitSHA=${GIT_SHA}" main.go
 
-FROM gcr.io/distroless/static-debian11:nonroot AS final
+FROM ${DISTROLESS_DOCKER_REGISTRY:-gcr.io/}distroless/static-debian11:nonroot AS final
 
 ARG PROJECT_NAME=zookeeper-operator
 
