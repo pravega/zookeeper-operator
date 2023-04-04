@@ -79,7 +79,7 @@ var _ = Describe("ZookeeperCluster Types", func() {
 			})
 
 			It("Checking tostring() function", func() {
-				Ω(z.Spec.Image.ToString()).To(Equal("pravega/zookeeper:0.2.14"))
+				Ω(z.Spec.Image.ToString()).To(Equal("pravega/zookeeper:0.2.15"))
 			})
 
 		})
