@@ -38,9 +38,9 @@ roleRef:
 
 apiVersion: v1
 kind: ServiceAccount
-{{- if or .Values.global.imagePullSecrets .Values.serviceAccount.imagePullSecrets }}
+{{- if .Values.global.imagePullSecrets }}
 imagePullSecrets:
-{{- range (default .Values.global.imagePullSecrets .Values.serviceAccount.imagePullSecrets) }}
+{{- range .Values.global.imagePullSecrets }}
   - name: {{ . }}
 {{- end }}
 {{- end }}

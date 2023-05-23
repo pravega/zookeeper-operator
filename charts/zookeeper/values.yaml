@@ -8,6 +8,11 @@ image:
 
 triggerRollingRestart: false
 
+global:
+  # Lists the secrets you need to use to pull zookeeper image from a private registry.
+  imagePullSecrets: []
+  # - private-registry-key
+
 domainName:
 labels: {}
 ports: []
