@@ -125,9 +125,12 @@ func getRollingRestartAnnotation() (string, string) {
 // compareResourceVersion compare resoure versions for the supplied ZookeeperCluster and StatefulSet
 // resources
 // Returns:
-//  0 if versions are equal
+//
+//	0 if versions are equal
+//
 // -1 if ZookeeperCluster version is less than StatefulSet version
-//  1 if ZookeeperCluster version is greater than StatefulSet version
+//
+//	1 if ZookeeperCluster version is greater than StatefulSet version
 func compareResourceVersion(zk *zookeeperv1beta1.ZookeeperCluster, sts *appsv1.StatefulSet) int {
 
 	zkResourceVersion, zkErr := strconv.Atoi(zk.ResourceVersion)
