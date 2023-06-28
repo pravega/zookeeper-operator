@@ -22,3 +22,5 @@ COPY --from=0 /zu/build/libs/zu.jar /opt/libs/
 
 RUN apt-get -q update && \
     apt-get install -y dnsutils curl procps socat
+
+USER zookeeper
