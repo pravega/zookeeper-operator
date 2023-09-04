@@ -15,7 +15,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"runtime"
 	"strings"
@@ -91,13 +90,13 @@ func main() {
 	//ClusterRole and ClusterRoleBinding to Role and RoleBinding respectively
 	//For further information see the kubernetes documentation about
 	//Using [RBAC Authorization](https://kubernetes.io/docs/reference/access-authn-authz/rbac/).
-	managerWatchCache := (cache.NewCacheFunc)(nil)
+	managerNamespaces := []string{}
 	if namespaces != "" {
 		ns := strings.Split(namespaces, ",")
 		for i := range ns {
 			ns[i] = strings.TrimSpace(ns[i])
 		}
-		managerWatchCache = cache.MultiNamespacedCacheBuilder(ns)
+		managerNamespaces = ns
 	}
 
 	// Get a config to talk to the apiserver
@@ -121,9 +120,7 @@ func main() {
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:             scheme,
-		Port:               9443,
-		NewCache:           managerWatchCache,
-		Namespace:          namespaces,
+		Cache:              cache.Options{Namespaces: managerNamespaces},
 		MetricsBindAddress: metricsAddr,
 	})
 	if err != nil {
@@ -164,7 +161,7 @@ func getWatchNamespace() (string, error) {
 }
 
 func GetOperatorNamespace() (string, error) {
-	nsBytes, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace")
+	nsBytes, err := os.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace")
 	if err != nil {
 		if os.IsNotExist(err) {
 			return "", errors.New("file does not exist")
