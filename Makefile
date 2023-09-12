@@ -165,6 +165,7 @@ test-e2e: test-e2e-remote
 test-e2e-remote:
 	make test-login
 	docker buildx build --push --platform linux/amd64,linux/ppc64le . -t $(TEST_IMAGE)
+	docker pull $(TEST_IMAGE)
 	make deploy
 	RUN_LOCAL=false go test -v -timeout 2h ./test/e2e... -args -ginkgo.v
 	make undeploy
