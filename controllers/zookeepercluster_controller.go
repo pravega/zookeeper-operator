@@ -568,9 +568,14 @@ func (r *ZookeeperClusterReconciler) reconcileClusterStatus(instance *zookeeperv
 		}
 		defer r.ZkClient.Close()
 		metaPath := utils.GetMetaPath(instance)
-		r.Log.Info("Connected to zookeeper:", "ZKUri", zkUri, "Creating Path", metaPath)
-		if err := r.ZkClient.CreateNode(instance, metaPath); err != nil {
-			return fmt.Errorf("Error creating cluster metadata path %s, %v", metaPath, err)
+		version, err := r.ZkClient.NodeExists(metaPath)
+		if err != nil {
+			r.Log.Info("Connected to zookeeper:", "ZKUri", zkUri, "Creating Path", metaPath)
+			if err := r.ZkClient.CreateNode(instance, metaPath); err != nil {
+				return fmt.Errorf("Error creating cluster metadata path %s, %v", metaPath, err)
+			}
+		} else {
+			r.Log.Info("Path %s already exists at version %s", metaPath, version)
 		}
 		r.Log.Info("Metadata znode created.")
 		instance.Status.MetaRootCreated = true
