@@ -6,29 +6,47 @@ The project is currently alpha. While no breaking API changes are currently plan
 
 ## Table of Contents
 
- * [Overview](#overview)
- * [Requirements](#requirements)
- * [Usage](#usage)    
-    * [Installation of the Operator](#install-the-operator)
-    * [Deploy a sample Zookeeper Cluster](#deploy-a-sample-zookeeper-cluster)
-    * [Deploy a sample ZooKeeper Cluster with Ephemeral Storage](#Deploy-a-sample-zookeeper-cluster-with-ephemeral-storage)
-    * [Deploy a sample Zookeeper Cluster to a cluster using Istio](#deploy-a-sample-zookeeper-cluster-with-istio)
-    * [Upgrade a Zookeeper Cluster](#upgrade-a-zookeeper-cluster)
-    * [Uninstall the Zookeeper Cluster](#uninstall-the-zookeeper-cluster)
-    * [Upgrade the Zookeeper Operator](#upgrade-the-operator)
-    * [Uninstall the Operator](#uninstall-the-operator)
-    * [The AdminServer](#the-adminserver)
- * [Development](#development)
-    * [Build the Operator Image](#build-the-operator-image)
-    * [Direct Access to Cluster](#direct-access-to-the-cluster)
-    * [Run the Operator Locally](#run-the-operator-locally)
-    * [Installation on GKE](#installation-on-google-kubernetes-engine)
-    * [Installation on Minikube](#installation-on-minikube)
+- [Zookeeper Operator](#zookeeper-operator)
+    - [Project status: alpha](#project-status-alpha)
+  - [Table of Contents](#table-of-contents)
+    - [Overview](#overview)
+  - [Requirements](#requirements)
+  - [Usage](#usage)
+    - [Install the operator](#install-the-operator)
+      - [Install via helm](#install-via-helm)
+      - [Manual deployment](#manual-deployment)
+    - [Deploy a sample Zookeeper cluster](#deploy-a-sample-zookeeper-cluster)
+      - [Install via helm](#install-via-helm-1)
+      - [Manual deployment](#manual-deployment-1)
+    - [Deploy a sample Zookeeper cluster with Ephemeral storage](#deploy-a-sample-zookeeper-cluster-with-ephemeral-storage)
+    - [Deploy a sample Zookeeper cluster with Istio](#deploy-a-sample-zookeeper-cluster-with-istio)
+    - [Upgrade a Zookeeper cluster](#upgrade-a-zookeeper-cluster)
+      - [Trigger the upgrade via helm](#trigger-the-upgrade-via-helm)
+      - [Trigger the upgrade manually](#trigger-the-upgrade-manually)
+    - [Upgrade the Operator](#upgrade-the-operator)
+    - [Uninstall the Zookeeper cluster](#uninstall-the-zookeeper-cluster)
+      - [Uninstall via helm](#uninstall-via-helm)
+      - [Manual uninstall](#manual-uninstall)
+    - [Uninstall the operator](#uninstall-the-operator)
+      - [Uninstall via helm](#uninstall-via-helm-1)
+      - [Manual uninstall](#manual-uninstall-1)
+    - [The AdminServer](#the-adminserver)
+  - [Development](#development)
+    - [Build the operator image](#build-the-operator-image)
+    - [Direct access to the cluster](#direct-access-to-the-cluster)
+    - [Run the operator locally](#run-the-operator-locally)
+    - [Installation on Google Kubernetes Engine](#installation-on-google-kubernetes-engine)
+    - [Installation on Minikube](#installation-on-minikube)
+      - [Minikube Setup](#minikube-setup)
+      - [Cluster Deployment](#cluster-deployment)
+      - [Zookeeper YAML  Exporter](#zookeeper-yaml--exporter)
+        - [How to build Zookeeper Operator](#how-to-build-zookeeper-operator)
+        - [How to use exporter](#how-to-use-exporter)
 
 
 ### Overview
 
-This operator runs a Zookeeper 3.7.1 cluster, and uses Zookeeper dynamic reconfiguration to handle node membership.
+This operator runs a Zookeeper 3.8.3 cluster, and uses Zookeeper dynamic reconfiguration to handle node membership.
 
 The operator itself is built with the [Operator framework](https://github.com/operator-framework/operator-sdk).
 
@@ -371,7 +389,7 @@ The list of available commands are
 ### Build the operator image
 
 Requirements:
-  - Go 1.17+
+  - Go 1.21+
 
 Use the `make` command to build the Zookeeper operator image.
 

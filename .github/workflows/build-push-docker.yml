@@ -9,10 +9,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Go 1.17
+      - name: Set up Go 1.21
         uses: actions/setup-go@v2
         with:
-          go-version: 1.17
+          go-version: 1.21
         id: go
       - name: Set up Go for root
         run: |
@@ -40,7 +40,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: adobe/zookeeper
-          tags: 3.7.1-apache-${{ steps.vars.outputs.tag }}
+          tags: 3.8.3-apache-${{ steps.vars.outputs.tag }}
           add_git_labels: true
           always_pull: true
           push: ${{ startsWith(github.ref, 'refs/tags/zk') }}
@@ -52,7 +52,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: adobe/zookeeper
-          tags: 3.7.1-${{ steps.vars.outputs.tag }}
+          tags: 3.8.3-${{ steps.vars.outputs.tag }}
           add_git_labels: true
           always_pull: true
           push: ${{ startsWith(github.ref, 'refs/tags/') && !startsWith(github.ref, 'refs/tags/zk') }}
