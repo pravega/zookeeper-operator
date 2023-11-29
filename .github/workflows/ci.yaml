@@ -71,6 +71,8 @@ jobs:
     needs: build
     if: github.event_name == 'release' && github.event.action == 'created'
     steps:
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
     - name: Pushing docker images
       run: sudo make push
     - name: Uploading binary files
