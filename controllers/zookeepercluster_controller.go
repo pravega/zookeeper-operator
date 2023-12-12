@@ -621,7 +621,7 @@ func YAMLExporterReconciler(zookeepercluster *zookeeperv1beta1.ZookeeperCluster)
 	var scheme = scheme.Scheme
 	scheme.AddKnownTypes(zookeeperv1beta1.GroupVersion, zookeepercluster)
 	return &ZookeeperClusterReconciler{
-		Client:   fake.NewFakeClient(zookeepercluster),
+		Client:   fake.NewClientBuilder().WithRuntimeObjects(zookeepercluster).Build(),
 		Scheme:   scheme,
 		ZkClient: new(zk.DefaultZookeeperClient),
 	}
