@@ -12,7 +12,6 @@ package yamlexporter
 
 import (
 	"bufio"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -78,7 +77,7 @@ func ReadInputClusterYAMLFile(inyamlfile string) (*v1beta1.ZookeeperCluster, err
 		return nil, err
 	}
 	var z v1beta1.ZookeeperCluster
-	source, err := ioutil.ReadFile(inyamlfile)
+	source, err := os.ReadFile(inyamlfile)
 	if err != nil {
 		return nil, err
 	}
