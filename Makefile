@@ -23,12 +23,19 @@ GIT_SHA=$(shell git rev-parse --short HEAD)
 TEST_IMAGE=$(TEST_REPO)-testimages:$(VERSION)
 DOCKER_TEST_PASS=testzkop@123
 DOCKER_TEST_USER=testzkop
+BUILDER=$(shell docker buildx inspect multi-platform-builder 1>&2 2> /dev/null; echo $$?)
 .PHONY: all build check clean test
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
 GOBIN=$(shell go env GOPATH)/bin
 else
 GOBIN=$(shell go env GOBIN)
+endif
+ifeq ($(BUILDER),0)
+$(shell docker buildx use multi-platform-builder 1>&2 2> /dev/null)
+else
+$(shell docker buildx create --use --platform=linux/ppc64le,linux/amd64 --name multi-platform-builder 1>&2 2> /dev/null)
+$(shell docker buildx inspect --bootstrap 1>&2 2> /dev/null)
 endif
 
 # Install CRDs into a cluster
@@ -116,6 +123,12 @@ build-go:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
 		-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
 		-o bin/$(EXPORTER_NAME)-linux-amd64 cmd/exporter/main.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=ppc64le go build \
+		-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
+		-o bin/$(PROJECT_NAME)-linux-ppc64le main.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=ppc64le go build \
+		-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
+		-o bin/$(EXPORTER_NAME)-linux-ppc64le cmd/exporter/main.go
 	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build \
 		-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
 		-o bin/$(PROJECT_NAME)-darwin-amd64 main.go
@@ -129,18 +142,20 @@ build-go:
 		-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
 		-o bin/$(EXPORTER_NAME)-windows-amd64.exe cmd/exporter/main.go
 
-build-image:
-	docker build --build-arg VERSION=$(VERSION) --build-arg DOCKER_REGISTRY=$(DOCKER_REGISTRY) --build-arg DISTROLESS_DOCKER_REGISTRY=$(DISTROLESS_DOCKER_REGISTRY) --build-arg GIT_SHA=$(GIT_SHA) -t $(REPO):$(VERSION) .
+build-image: login
+	docker buildx build --push --platform linux/amd64,linux/ppc64le --build-arg VERSION=$(VERSION) --build-arg DOCKER_REGISTRY=$(DOCKER_REGISTRY) --build-arg DISTROLESS_DOCKER_REGISTRY=$(DISTROLESS_DOCKER_REGISTRY) --build-arg GIT_SHA=$(GIT_SHA) -t $(REPO):$(VERSION) .
+	docker pull $(REPO):$(VERSION)
 	docker tag $(REPO):$(VERSION) $(REPO):latest
 
-build-zk-image:
-
-	docker build --build-arg VERSION=$(VERSION)  --build-arg DOCKER_REGISTRY=$(DOCKER_REGISTRY) --build-arg GIT_SHA=$(GIT_SHA) -t $(APP_REPO):$(VERSION) ./docker
+build-zk-image: login
+	docker buildx build --push --platform linux/amd64,linux/ppc64le --build-arg VERSION=$(VERSION)  --build-arg DOCKER_REGISTRY=$(DOCKER_REGISTRY) --build-arg GIT_SHA=$(GIT_SHA) -t $(APP_REPO):$(VERSION) ./docker
+	docker pull $(APP_REPO):$(VERSION)
 	docker tag $(APP_REPO):$(VERSION) $(APP_REPO):latest
 
-build-zk-image-swarm:
-	docker build --build-arg VERSION=$(VERSION)-swarm  --build-arg DOCKER_REGISTRY=$(DOCKER_REGISTRY) --build-arg GIT_SHA=$(GIT_SHA) \
+build-zk-image-swarm: login
+	docker buildx build --push --platform linux/amd64,linux/ppc64le --build-arg VERSION=$(VERSION)-swarm  --build-arg DOCKER_REGISTRY=$(DOCKER_REGISTRY) --build-arg GIT_SHA=$(GIT_SHA) \
 		-f ./docker/Dockerfile-swarm -t $(APP_REPO):$(VERSION)-swarm ./docker
+	docker pull $(APP_REPO):$(VERSION)-swarm
 
 test:
 	go test $$(go list ./... | grep -v /vendor/ | grep -v /test/e2e) -race -coverprofile=coverage.txt -covermode=atomic
@@ -149,8 +164,8 @@ test-e2e: test-e2e-remote
 
 test-e2e-remote:
 	make test-login
-	docker build . -t $(TEST_IMAGE)
-	docker push $(TEST_IMAGE)
+	docker buildx build --push --platform linux/amd64,linux/ppc64le . -t $(TEST_IMAGE)
+	docker pull $(TEST_IMAGE)
 	make deploy
 	RUN_LOCAL=false go test -v -timeout 2h ./test/e2e... -args -ginkgo.v
 	make undeploy
@@ -169,10 +184,8 @@ login:
 test-login:
 	echo "$(DOCKER_TEST_PASS)" | docker login -u "$(DOCKER_TEST_USER)" --password-stdin
 
-push: build-image build-zk-image login
-	docker push $(REPO):$(VERSION)
+push: build-image build-zk-image
 	docker push $(REPO):latest
-	docker push $(APP_REPO):$(VERSION)
 	docker push $(APP_REPO):latest
 	docker tag $(REPO):$(VERSION) $(ALTREPO):$(VERSION)
 	docker tag $(REPO):$(VERSION) $(ALTREPO):latest
