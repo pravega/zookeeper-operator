@@ -33,12 +33,13 @@ spec:
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
-        - containerPort: 6000
+        - containerPort: {{ int .Values.metricsPort }}
           name: metrics
         command:
         - zookeeper-operator
-        {{- if .Values.disableFinalizer }}
         args:
+        - -metrics-bind-address={{ .Values.metricsBindAddress }}:{{ int .Values.metricsPort }}
+        {{- if .Values.disableFinalizer }}
         - -disableFinalizer
         {{- end }}
         env:
