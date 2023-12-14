@@ -9,7 +9,7 @@ global:
 
 image:
   repository: pravega/zookeeper-operator
-  tag: 0.2.14
+  tag: 0.2.15
   pullPolicy: IfNotPresent
 
 securityContext: {}
@@ -86,3 +86,7 @@ additionalVolumes: {}
 #   emptyDir: {}
 
 disableFinalizer: false
+
+## In order to enable gathering metrics by Prometheus etc... bind to 0.0.0.0
+metricsBindAddress: 127.0.0.1
+metricsPort: "6000"

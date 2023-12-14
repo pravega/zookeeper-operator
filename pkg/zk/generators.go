@@ -18,12 +18,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/pravega/zookeeper-operator/api/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
-	policyv1beta1 "k8s.io/api/policy/v1beta1"
+	policyv1 "k8s.io/api/policy/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+
+	"github.com/pravega/zookeeper-operator/api/v1beta1"
 )
 
 const (
@@ -93,6 +94,7 @@ func MakeStatefulSet(z *v1beta1.ZookeeperCluster) *appsv1.StatefulSet {
 					GenerateName: z.GetName(),
 					Labels: mergeLabels(
 						z.Spec.Labels,
+						z.Spec.Pod.Labels,
 						map[string]string{
 							"app":  z.GetName(),
 							"kind": "ZookeeperMember",
@@ -189,9 +191,10 @@ func makeZkPodSpec(z *v1beta1.ZookeeperCluster, volumes []v1.Volume) v1.PodSpec 
 
 	zkContainer.Env = append(zkContainer.Env, z.Spec.Pod.Env...)
 	podSpec := v1.PodSpec{
-		Containers: append(z.Spec.Containers, zkContainer),
-		Affinity:   z.Spec.Pod.Affinity,
-		Volumes:    append(z.Spec.Volumes, volumes...),
+		Containers:                append(z.Spec.Containers, zkContainer),
+		Affinity:                  z.Spec.Pod.Affinity,
+		TopologySpreadConstraints: z.Spec.Pod.TopologySpreadConstraints,
+		Volumes:                   append(z.Spec.Volumes, volumes...),
 	}
 	if !reflect.DeepEqual(v1.PodSecurityContext{}, z.Spec.Pod.SecurityContext) {
 		podSpec.SecurityContext = z.Spec.Pod.SecurityContext
@@ -370,19 +373,19 @@ func makeService(name string, ports []v1.ServicePort, clusterIP bool, external b
 }
 
 // MakePodDisruptionBudget returns a pdb for the zookeeper cluster
-func MakePodDisruptionBudget(z *v1beta1.ZookeeperCluster) *policyv1beta1.PodDisruptionBudget {
+func MakePodDisruptionBudget(z *v1beta1.ZookeeperCluster) *policyv1.PodDisruptionBudget {
 	pdbCount := intstr.FromInt(int(z.Spec.MaxUnavailableReplicas))
-	return &policyv1beta1.PodDisruptionBudget{
+	return &policyv1.PodDisruptionBudget{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PodDisruptionBudget",
-			APIVersion: "policy/v1beta1",
+			APIVersion: "policy/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      z.GetName(),
 			Namespace: z.Namespace,
 			Labels:    z.Spec.Labels,
 		},
-		Spec: policyv1beta1.PodDisruptionBudgetSpec{
+		Spec: policyv1.PodDisruptionBudgetSpec{
 			MaxUnavailable: &pdbCount,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{

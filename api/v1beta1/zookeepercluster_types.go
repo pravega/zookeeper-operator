@@ -26,7 +26,7 @@ const (
 
 	// DefaultZkContainerVersion is the default tag used for for the zookeeper
 	// container
-	DefaultZkContainerVersion = "0.2.14"
+	DefaultZkContainerVersion = "0.2.15"
 
 	// DefaultZkContainerPolicy is the default container pull policy used
 	DefaultZkContainerPolicy = "Always"
@@ -82,8 +82,9 @@ type ZookeeperClusterSpec struct {
 	// Image is the  container image. default is zookeeper:0.2.10
 	Image ContainerImage `json:"image,omitempty"`
 
-	// Labels specifies the labels to attach to pods the operator creates for
-	// the zookeeper cluster.
+	// Labels specifies the labels to attach to all resources the operator
+	// creates for the zookeeper cluster, including StatefulSet, Pod,
+	// PersistentVolumeClaim, Service, ConfigMap, et al.
 	Labels map[string]string `json:"labels,omitempty"`
 
 	// Replicas is the expected size of the zookeeper cluster.
@@ -433,8 +434,8 @@ func (c *ContainerImage) ToString() string {
 // PodPolicy defines the common pod configuration for Pods, including when used
 // in deployments, stateful-sets, etc.
 type PodPolicy struct {
-	// Labels specifies the labels to attach to pods the operator creates for
-	// the zookeeper cluster.
+	// Labels specifies the labels to attach to pods the operator creates for the
+	// zookeeper cluster. Overrides any values specified in Spec.Labels.
 	Labels map[string]string `json:"labels,omitempty"`
 
 	// NodeSelector specifies a map of key-value pairs. For the pod to be
@@ -444,6 +445,9 @@ type PodPolicy struct {
 
 	// The scheduling constraints on pods.
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
+
+	// TopologySpreadConstraints to apply to the pods
+	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 
 	// Resources is the resource requirements for the container.
 	// This field cannot be updated once the cluster is created.

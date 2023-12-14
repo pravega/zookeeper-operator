@@ -15,19 +15,19 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/pravega/zookeeper-operator/pkg/controller/config"
-	"github.com/pravega/zookeeper-operator/pkg/utils"
-	"github.com/pravega/zookeeper-operator/pkg/yamlexporter"
-	"github.com/pravega/zookeeper-operator/pkg/zk"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
+	"github.com/pravega/zookeeper-operator/pkg/controller/config"
+	"github.com/pravega/zookeeper-operator/pkg/utils"
+	"github.com/pravega/zookeeper-operator/pkg/yamlexporter"
+	"github.com/pravega/zookeeper-operator/pkg/zk"
+
 	"github.com/go-logr/logr"
-	zookeeperv1beta1 "github.com/pravega/zookeeper-operator/api/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	policyv1beta1 "k8s.io/api/policy/v1beta1"
+	policyv1 "k8s.io/api/policy/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -38,6 +38,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	zookeeperv1beta1 "github.com/pravega/zookeeper-operator/api/v1beta1"
 )
 
 // ReconcileTime is the delay between reconciliations
@@ -123,9 +125,9 @@ func getRollingRestartAnnotation() (string, string) {
 // compareResourceVersion compare resoure versions for the supplied ZookeeperCluster and StatefulSet
 // resources
 // Returns:
-//  0 if versions are equal
+// 0 if versions are equal
 // -1 if ZookeeperCluster version is less than StatefulSet version
-//  1 if ZookeeperCluster version is greater than StatefulSet version
+// 1 if ZookeeperCluster version is greater than StatefulSet version
 func compareResourceVersion(zk *zookeeperv1beta1.ZookeeperCluster, sts *appsv1.StatefulSet) int {
 
 	zkResourceVersion, zkErr := strconv.Atoi(zk.ResourceVersion)
@@ -158,6 +160,33 @@ func compareResourceVersion(zk *zookeeperv1beta1.ZookeeperCluster, sts *appsv1.S
 func (r *ZookeeperClusterReconciler) reconcileStatefulSet(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
 
 	// we cannot upgrade if cluster is in UpgradeFailed
+	if instance.Status.IsClusterInUpgradeFailedState() {
+		sts := zk.MakeStatefulSet(instance)
+		if err = controllerutil.SetControllerReference(instance, sts, r.Scheme); err != nil {
+			return err
+		}
+		foundSts := &appsv1.StatefulSet{}
+		err = r.Client.Get(context.TODO(), types.NamespacedName{
+			Name:      sts.Name,
+			Namespace: sts.Namespace,
+		}, foundSts)
+		if err == nil {
+			err = r.Client.Update(context.TODO(), foundSts)
+			if err != nil {
+				return err
+			}
+			if foundSts.Status.Replicas == foundSts.Status.ReadyReplicas && foundSts.Status.CurrentRevision == foundSts.Status.UpdateRevision {
+				r.Log.Info("failed upgrade completed", "upgrade from:", instance.Status.CurrentVersion, "upgrade to:", instance.Status.TargetVersion)
+				instance.Status.CurrentVersion = instance.Status.TargetVersion
+				instance.Status.SetErrorConditionFalse()
+				return r.clearUpgradeStatus(instance)
+			} else {
+				r.Log.Info("Unable to recover failed upgrade, make sure all nodes are running the target version")
+			}
+
+		}
+	}
+
 	if instance.Status.IsClusterInUpgradeFailedState() {
 		return nil
 	}
@@ -467,7 +496,7 @@ func (r *ZookeeperClusterReconciler) reconcilePodDisruptionBudget(instance *zook
 	if err = controllerutil.SetControllerReference(instance, pdb, r.Scheme); err != nil {
 		return err
 	}
-	foundPdb := &policyv1beta1.PodDisruptionBudget{}
+	foundPdb := &policyv1.PodDisruptionBudget{}
 	err = r.Client.Get(context.TODO(), types.NamespacedName{
 		Name:      pdb.Name,
 		Namespace: pdb.Namespace,
@@ -592,7 +621,7 @@ func YAMLExporterReconciler(zookeepercluster *zookeeperv1beta1.ZookeeperCluster)
 	var scheme = scheme.Scheme
 	scheme.AddKnownTypes(zookeeperv1beta1.GroupVersion, zookeepercluster)
 	return &ZookeeperClusterReconciler{
-		Client:   fake.NewFakeClient(zookeepercluster),
+		Client:   fake.NewClientBuilder().WithRuntimeObjects(zookeepercluster).Build(),
 		Scheme:   scheme,
 		ZkClient: new(zk.DefaultZookeeperClient),
 	}

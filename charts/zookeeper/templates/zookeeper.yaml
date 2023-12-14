@@ -77,6 +77,10 @@ spec:
     affinity:
 {{ toYaml .Values.pod.affinity | indent 6 }}
     {{- end }}
+    {{- if .Values.pod.topologySpreadConstraints }}
+    topologySpreadConstraints:
+{{ toYaml .Values.pod.topologySpreadConstraints | indent 6 }}
+    {{- end }}
     {{- if .Values.pod.resources }}
     resources:
 {{ toYaml .Values.pod.resources | indent 6 }}

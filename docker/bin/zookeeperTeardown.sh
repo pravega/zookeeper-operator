@@ -20,8 +20,8 @@ LOG4J_CONF=/conf/log4j-quiet.properties
 
 # Wait for client connections to drain. Kubernetes will wait until the confiugred
 # "terminationGracePeriodSeconds" before focibly killing the container
-CONN_COUNT=`echo cons | nc localhost 2181 | grep -v "^$" |grep -v "/127.0.0.1:" | wc -l`
 for (( i = 0; i < 6; i++ )); do
+  CONN_COUNT=`echo cons | socat stdio tcp:localhost:$CLIENT_PORT | grep -v "^$" |grep -v "/127.0.0.1:" | wc -l`
   if [[ "$CONN_COUNT" -gt 0 ]]; then
     echo "$CONN_COUNT non-local connections still connected."
     sleep 5

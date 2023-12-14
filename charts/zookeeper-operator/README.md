@@ -55,7 +55,7 @@ The following table lists the configurable parameters of the zookeeper-operator 
 | `hooks.image.tag` | Image tag for batch jobs | `"v1.16.10"` |
 | `image.pullPolicy` | Image pull policy | `IfNotPresent` |
 | `image.repository` | Image repository | `pravega/zookeeper-operator` |
-| `image.tag` | Image tag | `0.2.14` |
+| `image.tag` | Image tag | `0.2.15` |
 | `labels` | Operator pod labels | `{}` |
 | `nodeSelector` | Map of key-value pairs to be present as labels in the node in which the pod should run | `{}` |
 | `rbac.create` | Create RBAC resources | `true` |

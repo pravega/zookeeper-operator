@@ -77,7 +77,8 @@ var _ = Describe("Leader election utils", func() {
 					},
 				}
 
-				client = fake.NewFakeClientWithScheme(clientscheme.Scheme, []runtime.Object{currentPod, otherPod, lockConfigMap}...)
+				client = fake.NewClientBuilder().WithScheme(clientscheme.Scheme).WithRuntimeObjects(
+					[]runtime.Object{currentPod, otherPod, lockConfigMap}...).Build()
 
 				err = precheckLeaderLock(ctx, client, configmapName, namespace)
 			})
@@ -101,7 +102,7 @@ var _ = Describe("Leader election utils", func() {
 						},
 					},
 				}
-				client = fake.NewFakeClientWithScheme(clientscheme.Scheme, []runtime.Object{currentPod, otherPod, lockConfigMap}...)
+				client = fake.NewClientBuilder().WithScheme(clientscheme.Scheme).WithRuntimeObjects([]runtime.Object{currentPod, otherPod, lockConfigMap}...).Build()
 				err = precheckLeaderLock(ctx, client, configmapName, namespace)
 			})
 

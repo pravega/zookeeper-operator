@@ -8,18 +8,16 @@
 
 SHELL=/bin/bash -o pipefail
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
-CRD_OPTIONS ?= "crd:trivialVersions=true"
+CRD_OPTIONS ?= "crd"
 
 PROJECT_NAME=zookeeper-operator
 EXPORTER_NAME=zookeeper-exporter
 APP_NAME=zookeeper
-KUBE_VERSION=1.20.13
 REPO=pravega/$(PROJECT_NAME)
 TEST_REPO=testzkop/$(PROJECT_NAME)
 APP_REPO=pravega/$(APP_NAME)
 ALTREPO=emccorp/$(PROJECT_NAME)
 APP_ALTREPO=emccorp/$(APP_NAME)
-OSDK_VERSION=$(shell operator-sdk version | cut -f2 -d'"')
 VERSION=$(shell git describe --always --tags --dirty | tr -d "v" | sed "s/\(.*\)-g`git rev-parse --short HEAD`/\1/")
 GIT_SHA=$(shell git rev-parse --short HEAD)
 TEST_IMAGE=$(TEST_REPO)-testimages:$(VERSION)
@@ -78,37 +76,25 @@ fmt:
 vet:
 	go vet ./...
 
-# find or download controller-gen
-# download controller-gen if necessary
-controller-gen:
-ifeq (, $(shell which controller-gen))
-	@{ \
-	set -e ;\
-	CONTROLLER_GEN_TMP_DIR=$$(mktemp -d) ;\
-	cd $$CONTROLLER_GEN_TMP_DIR ;\
-	go mod init tmp ;\
-	go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.6.2 ;\
-	rm -rf $$CONTROLLER_GEN_TMP_DIR ;\
-	}
-CONTROLLER_GEN=$(GOBIN)/controller-gen
-else
-CONTROLLER_GEN=$(shell which controller-gen)
-endif
-
-kustomize:
-ifeq (, $(shell which kustomize))
-	@{ \
-	set -e ;\
-	KUSTOMIZE_GEN_TMP_DIR=$$(mktemp -d) ;\
-	cd $$KUSTOMIZE_GEN_TMP_DIR ;\
-	go mod init tmp ;\
-	go install sigs.k8s.io/kustomize/kustomize/v3@v3.5.4 ;\
-	rm -rf $$KUSTOMIZE_GEN_TMP_DIR ;\
-	}
-KUSTOMIZE=$(GOBIN)/kustomize
-else
-KUSTOMIZE=$(shell which kustomize)
-endif
+## Location to install dependencies to
+LOCALBIN ?= $(shell pwd)/bin
+$(LOCALBIN):
+	mkdir -p $(LOCALBIN)
+## Tool Binaries
+KUSTOMIZE ?= $(LOCALBIN)/kustomize
+CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
+## Tool Versions
+KUSTOMIZE_VERSION ?= v3.5.4
+CONTROLLER_TOOLS_VERSION ?= v0.9.0
+KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
+.PHONY: kustomize
+kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
+$(KUSTOMIZE): $(LOCALBIN)
+	test -s $(LOCALBIN)/kustomize || { curl -s $(KUSTOMIZE_INSTALL_SCRIPT) | bash -s -- $(subst v,,$(KUSTOMIZE_VERSION)) $(LOCALBIN); }
+.PHONY: controller-gen
+controller-gen: $(CONTROLLER_GEN) ## Download controller-gen locally if necessary.
+$(CONTROLLER_GEN): $(LOCALBIN)
+	test -s $(LOCALBIN)/controller-gen || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_TOOLS_VERSION)
 
 all: generate check build
 
@@ -116,10 +102,9 @@ generate:
 	$(CONTROLLER_GEN) object paths="./..."
 	make manifests
 	# sync crd generated to helm-chart
-	echo '{{- define "crd.openAPIV3Schema" }}' > charts/zookeeper-operator/templates/_crd_openapiv3schema.tpl
-	echo 'openAPIV3Schema:' >> charts/zookeeper-operator/templates/_crd_openapiv3schema.tpl
-	sed -e '1,/openAPIV3Schema/d' config/crd/bases/zookeeper.pravega.io_zookeeperclusters.yaml | sed -n '/served: true/!p;//q' >> charts/zookeeper-operator/templates/_crd_openapiv3schema.tpl
-	echo '{{- end }}' >> charts/zookeeper-operator/templates/_crd_openapiv3schema.tpl
+	echo '{{- if .Values.crd.create }}' > charts/zookeeper-operator/templates/zookeeper.pravega.io_zookeeperclusters_crd.yaml
+	cat config/crd/bases/zookeeper.pravega.io_zookeeperclusters.yaml >> charts/zookeeper-operator/templates/zookeeper.pravega.io_zookeeperclusters_crd.yaml
+	echo '{{- end }}' >> charts/zookeeper-operator/templates/zookeeper.pravega.io_zookeeperclusters_crd.yaml
 
 
 build: test build-go build-image
@@ -145,10 +130,11 @@ build-go:
 		-o bin/$(EXPORTER_NAME)-windows-amd64.exe cmd/exporter/main.go
 
 build-image:
-	docker build --build-arg VERSION=$(VERSION) --build-arg DOCKER_REGISTRY=$(DOCKER_REGISTRY) --build-arg GIT_SHA=$(GIT_SHA) -t $(REPO):$(VERSION) .
+	docker build --build-arg VERSION=$(VERSION) --build-arg DOCKER_REGISTRY=$(DOCKER_REGISTRY) --build-arg DISTROLESS_DOCKER_REGISTRY=$(DISTROLESS_DOCKER_REGISTRY) --build-arg GIT_SHA=$(GIT_SHA) -t $(REPO):$(VERSION) .
 	docker tag $(REPO):$(VERSION) $(REPO):latest
 
 build-zk-image:
+
 	docker build --build-arg VERSION=$(VERSION)  --build-arg DOCKER_REGISTRY=$(DOCKER_REGISTRY) --build-arg GIT_SHA=$(GIT_SHA) -t $(APP_REPO):$(VERSION) ./docker
 	docker tag $(APP_REPO):$(VERSION) $(APP_REPO):latest
 

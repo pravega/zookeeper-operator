@@ -13,7 +13,7 @@ set -ex
 
 source /conf/env.sh
 
-OK=$(echo ruok | nc 127.0.0.1 $CLIENT_PORT)
+OK=$(echo ruok | socat stdio tcp:localhost:$CLIENT_PORT)
 
 # Check to see if zookeeper service answers
 if [[ "$OK" == "imok" ]]; then

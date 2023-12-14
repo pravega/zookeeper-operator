@@ -26,6 +26,7 @@ func SyncStatefulSet(curr *appsv1.StatefulSet, next *appsv1.StatefulSet) {
 func SyncService(curr *v1.Service, next *v1.Service) {
 	curr.Spec.Ports = next.Spec.Ports
 	curr.Spec.Type = next.Spec.Type
+	curr.SetAnnotations(next.GetAnnotations())
 }
 
 // SyncConfigMap synchronizes a configmap with an updated spec and validates it
