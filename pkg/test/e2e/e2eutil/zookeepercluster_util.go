@@ -13,6 +13,7 @@ package e2eutil
 import (
 	goctx "context"
 	"fmt"
+	"golang.org/x/net/context"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -86,7 +87,7 @@ func GetCluster(logger logr.Logger, k8client client.Client, z *api.ZookeeperClus
 // WaitForClusterToBecomeReady will wait until all cluster pods are ready
 func WaitForClusterToBecomeReady(logger logr.Logger, k8client client.Client, z *api.ZookeeperCluster, size int) error {
 	logger.Info(fmt.Sprintf("waiting for cluster pods to become ready: %s", z.Name))
-	err := wait.Poll(RetryInterval, ReadyTimeout, func() (done bool, err error) {
+	err := wait.PollUntilContextTimeout(context.TODO(), RetryInterval, ReadyTimeout, false, func(ctx context.Context) (done bool, err error) {
 		cluster, err := GetCluster(logger, k8client, z)
 		if err != nil {
 			return false, err
@@ -111,7 +112,7 @@ func WaitForClusterToBecomeReady(logger logr.Logger, k8client client.Client, z *
 // WaitForClusterToUpgrade will wait until all pods are upgraded
 func WaitForClusterToUpgrade(logger logr.Logger, k8client client.Client, z *api.ZookeeperCluster, targetVersion string) error {
 	logger.Info(fmt.Sprintf("waiting for cluster to upgrade: %s", z.Name))
-	err := wait.Poll(RetryInterval, UpgradeTimeout, func() (done bool, err error) {
+	err := wait.PollUntilContextTimeout(context.TODO(), RetryInterval, UpgradeTimeout, false, func(ctx context.Context) (done bool, err error) {
 		cluster, err := GetCluster(logger, k8client, z)
 		if err != nil {
 			return false, err
@@ -150,7 +151,7 @@ func WaitForClusterToTerminate(logger logr.Logger, k8client client.Client, z *ap
 	}
 
 	// Wait for Pods to terminate
-	err := wait.Poll(RetryInterval, TerminateTimeout, func() (done bool, err error) {
+	err := wait.PollUntilContextTimeout(context.TODO(), RetryInterval, TerminateTimeout, false, func(ctx context.Context) (done bool, err error) {
 		podList := corev1.PodList{}
 		err = k8client.List(goctx.TODO(), &podList, listOptions...)
 		if err != nil {
@@ -174,7 +175,7 @@ func WaitForClusterToTerminate(logger logr.Logger, k8client client.Client, z *ap
 	}
 
 	// Wait for PVCs to terminate
-	err = wait.Poll(RetryInterval, TerminateTimeout, func() (done bool, err error) {
+	err = wait.PollUntilContextTimeout(context.TODO(), RetryInterval, TerminateTimeout, false, func(ctx context.Context) (done bool, err error) {
 		pvcList := corev1.PersistentVolumeClaimList{}
 		err = k8client.List(goctx.TODO(), &pvcList, listOptions...)
 		if err != nil {
