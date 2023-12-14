@@ -1,17 +1,17 @@
 replicas: 3
 maxUnavailableReplicas:
 
+global:
+  # Lists the secrets you need to use to pull zookeeper image from a private registry.
+  imagePullSecrets: []
+  # - private-registry-key
+
 image:
   repository: pravega/zookeeper
   tag: 0.2.15
   pullPolicy: IfNotPresent
 
 triggerRollingRestart: false
-
-global:
-  # Lists the secrets you need to use to pull zookeeper image from a private registry.
-  imagePullSecrets: []
-  # - private-registry-key
 
 domainName:
 labels: {}
