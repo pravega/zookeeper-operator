@@ -12,7 +12,7 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib"))
-    implementation("org.apache.zookeeper:zookeeper:3.7.1")
+    implementation("org.apache.zookeeper:zookeeper:3.7.2")
 }
 
 tasks.withType<ShadowJar>() {
