@@ -15,6 +15,11 @@ triggerRollingRestart: false
 
 domainName:
 labels: {}
+
+serviceAccount: {}
+  ## Optionally specify an array of imagePullSecrets. Will override the global parameter if set
+  # imagePullSecrets:
+
 ports: []
   # - containerPort: 2181
   #   name: client
