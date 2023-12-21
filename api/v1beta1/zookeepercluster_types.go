@@ -697,7 +697,7 @@ func (c *ZookeeperConfig) withDefaults() (changed bool) {
 	}
 	if c.SnapCount == 0 {
 		changed = true
-		c.SnapCount = 10000
+		c.SnapCount = 100000
 	}
 	if c.CommitLogCount == 0 {
 		changed = true
