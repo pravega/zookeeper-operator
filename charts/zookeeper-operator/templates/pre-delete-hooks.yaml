@@ -45,6 +45,12 @@ metadata:
     "helm.sh/hook": pre-delete
     "helm.sh/hook-weight": "1"
     "helm.sh/hook-delete-policy": hook-succeeded, before-hook-creation, hook-failed
+{{- if or .Values.global.imagePullSecrets .Values.hooks.serviceAccount.imagePullSecrets }}
+imagePullSecrets:
+{{- range (default .Values.global.imagePullSecrets .Values.hooks.serviceAccount.imagePullSecrets) }}
+  - name: {{ . }}
+{{- end }}
+{{- end }}
 
 ---
 
