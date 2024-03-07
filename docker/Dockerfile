@@ -9,13 +9,13 @@
 #
 
 ARG DOCKER_REGISTRY
-FROM  ${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}openjdk:11-jdk
+FROM ${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}openjdk:11-jdk
 RUN mkdir /zu
 COPY zu /zu
 WORKDIR /zu
 RUN ./gradlew --console=verbose --info shadowJar
 
-FROM ${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}zookeeper:3.7.2
+FROM ${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}zookeeper:3.9.1-jre-11
 COPY bin /usr/local/bin
 RUN chmod +x /usr/local/bin/*
 COPY --from=0 /zu/build/libs/zu.jar /opt/libs/
