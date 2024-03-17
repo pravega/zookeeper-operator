@@ -38,6 +38,12 @@ roleRef:
 
 apiVersion: v1
 kind: ServiceAccount
+{{- if or .Values.global.imagePullSecrets .Values.serviceAccount.imagePullSecrets }}
+imagePullSecrets:
+{{- range (default .Values.global.imagePullSecrets .Values.serviceAccount.imagePullSecrets) }}
+  - name: {{ . }}
+{{- end }}
+{{- end }}
 metadata:
   name: {{ template "zookeeper.fullname" . }}-post-install-upgrade
   namespace: {{ .Release.Namespace }}

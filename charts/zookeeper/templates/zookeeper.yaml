@@ -105,9 +105,11 @@ spec:
     terminationGracePeriodSeconds: {{ .Values.pod.terminationGracePeriodSeconds }}
     {{- end }}
     serviceAccountName: {{ default "zookeeper" .Values.pod.serviceAccountName }}
-    {{- if .Values.pod.imagePullSecrets }}
+    {{- if or .Values.global.imagePullSecrets .Values.pod.imagePullSecrets }}
     imagePullSecrets:
-{{ toYaml .Values.pod.imagePullSecrets | indent 6 }}
+    {{- range (default .Values.global.imagePullSecrets .Values.pod.imagePullSecrets) }}
+      - name: {{ . }}
+    {{- end }}
     {{- end }}
   {{- if .Values.clientService }}
   clientService:
