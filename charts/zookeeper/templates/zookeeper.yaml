@@ -115,6 +115,9 @@ spec:
     annotations:
 {{ toYaml .Values.clientService.annotations | indent 6 }}
     {{- end }}
+    {{- if .Values.clientService.external }}
+    external: {{ .Values.clientService.external }}
+    {{- end }}
   {{- end }}
   {{- if .Values.headlessService }}
   headlessService:

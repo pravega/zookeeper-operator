@@ -378,6 +378,34 @@ var _ = Describe("Generators Spec", func() {
 				"exampleAnnotation",
 				"exampleValue"))
 		})
+
+		It("should have no LoadBalancer attached by default", func() {
+			Ω(s.Spec.Type).NotTo(Equal(v1.ServiceTypeLoadBalancer))
+		})
+	})
+
+	Context("#MakeClientService external with LoadBalancer", func() {
+		var s *v1.Service
+
+		BeforeEach(func() {
+			z := &v1beta1.ZookeeperCluster{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "example",
+					Namespace: "default",
+				},
+				Spec: v1beta1.ZookeeperClusterSpec{
+					ClientService: v1beta1.ClientServicePolicy{
+						External: true,
+					},
+				},
+			}
+			z.WithDefaults()
+			s = zk.MakeClientService(z)
+		})
+
+		It("should have LoadBalancer attached", func() {
+			Ω(s.Spec.Type).To(Equal(v1.ServiceTypeLoadBalancer))
+		})
 	})
 
 	Context("#MakeHeadlessService", func() {

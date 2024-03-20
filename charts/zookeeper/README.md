@@ -86,6 +86,7 @@ The following table lists the configurable parameters of the zookeeper chart and
 | `pod.imagePullSecrets` | ImagePullSecrets is a list of references to secrets in the same namespace to use for pulling any images. | `[]` |
 | `clientService` | Defines the policy to create client Service for the zookeeper cluster. | {} |
 | `clientService.annotations` | Specifies the annotations to attach to client Service the operator creates. | {} |
+| `clientService.external` | Specifies if LoadBalancer should be created for the Client. True means LoadBalancer will be created, false - only ClusterIP will be used. | false |
 | `headlessService` | Defines the policy to create headless Service for the zookeeper cluster. | {} |
 | `headlessService.annotations` | Specifies the annotations to attach to headless Service the operator creates. | {} |
 | `adminServerService` | Defines the policy to create AdminServer Service for the zookeeper cluster. | {} |

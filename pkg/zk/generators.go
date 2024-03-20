@@ -198,7 +198,9 @@ func MakeClientService(z *v1beta1.ZookeeperCluster) *v1.Service {
 	svcPorts := []v1.ServicePort{
 		{Name: "tcp-client", Port: ports.Client},
 	}
-	return makeService(z.GetClientServiceName(), svcPorts, true, false, z.Spec.ClientService.Annotations, z)
+	external := z.Spec.ClientService.External
+	annotations := z.Spec.ClientService.Annotations
+	return makeService(z.GetClientServiceName(), svcPorts, true, external, annotations, z)
 }
 
 // MakeAdminServerService returns a service which provides an interface
