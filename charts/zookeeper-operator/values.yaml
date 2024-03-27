@@ -57,6 +57,10 @@ tolerations: []
 annotations: {}
 
 hooks:
+  ## Optionally specify an array of imagePullSecrets. Will override the global parameter if set
+  serviceAccount:
+    imagePullSecrets: []
+
   backoffLimit: 10
   image:
     repository: lachlanevenson/k8s-kubectl
