@@ -31,6 +31,11 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
+#
+# SLEEVELESS
+#
+SLEEVELESS_REPO=docker.io/tlg2132/$(PROJECT_NAME)
+
 # Install CRDs into a cluster
 install: manifests kustomize
 	$(KUSTOMIZE) build config/crd | kubectl apply -f -
@@ -97,6 +102,11 @@ $(CONTROLLER_GEN): $(LOCALBIN)
 	test -s $(LOCALBIN)/controller-gen || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_TOOLS_VERSION)
 
 all: generate check build
+
+sleeveless: build-image
+	docker tag $(REPO):$(VERSION) $(SLEEVELESS_REPO):sleeveless
+	docker push $(SLEEVELESS_REPO):sleeveless
+
 
 generate:
 	$(CONTROLLER_GEN) object paths="./..."

@@ -36,6 +36,7 @@ import (
 
 	api "github.com/pravega/zookeeper-operator/api/v1beta1"
 	"github.com/pravega/zookeeper-operator/controllers"
+	sleeve "github.com/tgoodwin/sleeveless/client"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -127,7 +128,7 @@ func main() {
 	}
 
 	if err = (&controllers.ZookeeperClusterReconciler{
-		Client:   mgr.GetClient(),
+		Client:   sleeve.Wrap(mgr.GetClient()),
 		Log:      ctrl.Log.WithName("controllers").WithName("ZookeeperCluster"),
 		Scheme:   mgr.GetScheme(),
 		ZkClient: new(zkClient.DefaultZookeeperClient),

@@ -1,6 +1,8 @@
 module github.com/pravega/zookeeper-operator
 
-go 1.21
+go 1.21.0
+
+toolchain go1.21.6
 
 require (
 	github.com/ghodss/yaml v1.0.0
@@ -11,6 +13,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/samuel/go-zookeeper v0.0.0-20201211165307-7117e9ea2414
 	github.com/sirupsen/logrus v1.9.0
+	github.com/tgoodwin/sleeveless/client v0.0.1
 	golang.org/x/net v0.17.0
 	k8s.io/api v0.27.5
 	k8s.io/apimachinery v0.27.5
@@ -75,3 +78,5 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+replace github.com/tgoodwin/sleeveless/client => ./custom/sleeveless-client
