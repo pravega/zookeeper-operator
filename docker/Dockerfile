@@ -9,16 +9,17 @@
 #
 
 ARG DOCKER_REGISTRY
-FROM  ${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}openjdk:11-jdk
+FROM ${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}eclipse-temurin:11-jdk-focal
 RUN mkdir /zu
 COPY zu /zu
 WORKDIR /zu
 RUN ./gradlew --console=verbose --info shadowJar
 
-FROM ${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}zookeeper:3.7.2
+FROM ${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}zookeeper:3.8.2-temurin
 COPY bin /usr/local/bin
 RUN chmod +x /usr/local/bin/*
 COPY --from=0 /zu/build/libs/zu.jar /opt/libs/
 
 RUN apt-get -q update && \
-    apt-get install -y dnsutils curl procps socat
+    apt-get install -y dnsutils curl procps socat; \
+    rm -rf /var/lib/apt/lists/*;
