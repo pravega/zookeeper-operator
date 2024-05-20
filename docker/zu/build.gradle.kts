@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "1.9.24"
-    id("com.github.johnrengelman.shadow") version "7.1.2"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 repositories {
@@ -16,7 +16,7 @@ dependencies {
 }
 
 tasks.withType<ShadowJar>() {
-    classifier = null
+    archiveClassifier = null
     manifest {
         attributes["Main-Class"] = "io.pravega.zookeeper.MainKt"
     }
