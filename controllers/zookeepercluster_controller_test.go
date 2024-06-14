@@ -20,10 +20,12 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	policyv1 "k8s.io/api/policy/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"github.com/pravega/zookeeper-operator/api/v1beta1"
@@ -809,6 +811,58 @@ var _ = Describe("ZookeeperCluster Controller", func() {
 				newRestartValue, restartTimeExists := foundZk.Spec.Pod.Annotations["restartTime"]
 				Ω(restartTimeExists).To(Equal(true))
 				Ω(oldRestartValue).NotTo(Equal(newRestartValue))
+			})
+		})
+
+		Context("orphaned PVCs and reclaim policy is delete", func() {
+			var (
+				cl  client.Client
+				err error
+			)
+
+			BeforeEach(func() {
+				z.WithDefaults()
+				z.UID = "test-uid"
+				z.Spec.Replicas = 1
+				z.Spec.Persistence.VolumeReclaimPolicy = "Delete"
+				pvc_0 := corev1.PersistentVolumeClaim{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "data-zookeeper-0",
+						Namespace: Namespace,
+						Labels: map[string]string{
+							"app": z.GetName(),
+							"uid": "test-uid",
+						},
+					},
+				}
+				pvc_1 := corev1.PersistentVolumeClaim{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "data-zookeeper-1",
+						Namespace: Namespace,
+						Labels: map[string]string{
+							"app": z.GetName(),
+							"uid": "test-uid",
+						},
+					},
+				}
+				sts := zk.MakeStatefulSet(z)
+				sts.Status.ReadyReplicas = 1
+				sts.Status.Replicas = 1
+				cl = fake.NewClientBuilder().WithScheme(scheme.Scheme).WithRuntimeObjects([]runtime.Object{z, &pvc_0, &pvc_1, sts}...).Build()
+				r = &ZookeeperClusterReconciler{Client: cl, Scheme: s, ZkClient: mockZkClient, Log: logf.Log.WithName("Test")}
+			})
+
+			It("should requeue if there is still orphaned pvc", func() {
+				err = r.reconcileStatefulSet(z)
+				Ω(err).To(BeNil())
+			})
+
+			It("should delete orphaned PVC", func() {
+				err = r.cleanupOrphanPVCs(z)
+				Ω(err).To(BeNil())
+				pvcList, err := r.getPVCList(z)
+				Ω(err).To(BeNil())
+				Ω(pvcList.Items).To(HaveLen(1))
 			})
 		})
 	})

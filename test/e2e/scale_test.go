@@ -68,4 +68,48 @@ var _ = Describe("Perform scale for cluster upgrade", func() {
 			Expect(zk_e2eutil.WaitForClusterToTerminate(logger, k8sClient, zk)).NotTo(HaveOccurred())
 		})
 	})
+
+	Context("Scale down and up", func() {
+		It("should wait for orphan PVCs cleaned before scaling up", func() {
+			defaultCluster := zk_e2eutil.NewDefaultCluster(testNamespace)
+			defaultCluster.WithDefaults()
+
+			defaultCluster.Status.Init()
+			defaultCluster.Spec.Persistence.VolumeReclaimPolicy = "Delete"
+
+			zk, err := zk_e2eutil.CreateCluster(logger, k8sClient, defaultCluster)
+
+			Expect(err).NotTo(HaveOccurred())
+
+			// A default zk cluster should have 3 pods
+			podSize := 3
+			Expect(zk_e2eutil.WaitForClusterToBecomeReady(logger, k8sClient, zk, podSize)).NotTo(HaveOccurred())
+
+			// This is to get the latest zk cluster object
+			zk, err = zk_e2eutil.GetCluster(logger, k8sClient, zk)
+			Expect(err).NotTo(HaveOccurred())
+
+			// Scale down zk cluster, decrease replicas to 1
+			zk.Spec.Replicas = 1
+			podSize = 1
+			Expect(zk_e2eutil.UpdateCluster(logger, k8sClient, zk)).NotTo(HaveOccurred())
+
+			Expect(zk_e2eutil.WaitForClusterToBecomeReady(logger, k8sClient, zk, podSize)).NotTo(HaveOccurred())
+
+			zk, err = zk_e2eutil.GetCluster(logger, k8sClient, zk)
+			Expect(err).NotTo(HaveOccurred())
+
+			// Scale up zk cluster to 3 again, before the PVCs are cleaned up
+			zk.Spec.Replicas = 3
+			podSize = 3
+			Expect(zk_e2eutil.UpdateCluster(logger, k8sClient, zk)).NotTo(HaveOccurred())
+
+			Expect(zk_e2eutil.WaitForClusterToBecomeReady(logger, k8sClient, zk, podSize)).NotTo(HaveOccurred())
+
+			// Delete cluster
+			Expect(zk_e2eutil.DeleteCluster(logger, k8sClient, zk)).NotTo(HaveOccurred())
+
+			Expect(zk_e2eutil.WaitForClusterToTerminate(logger, k8sClient, zk)).NotTo(HaveOccurred())
+		})
+	})
 })
