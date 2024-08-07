@@ -57,6 +57,10 @@ tolerations: []
 annotations: {}
 
 hooks:
+  ## Optionally specify an array of imagePullSecrets. Will override the global parameter if set
+  serviceAccount:
+    imagePullSecrets: []
+
   backoffLimit: 10
   image:
     repository: lachlanevenson/k8s-kubectl
@@ -86,3 +90,7 @@ additionalVolumes: {}
 #   emptyDir: {}
 
 disableFinalizer: false
+
+## In order to enable gathering metrics by Prometheus etc... bind to 0.0.0.0
+metricsBindAddress: 127.0.0.1
+metricsPort: "6000"
