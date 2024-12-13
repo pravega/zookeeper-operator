@@ -17,6 +17,8 @@ COPY cmd ./cmd
 COPY go.mod go.mod
 COPY go.sum go.sum
 
+COPY custom/ custom/
+
 # Download all dependencies.
 RUN go mod download
 
@@ -24,6 +26,7 @@ RUN go mod download
 COPY main.go main.go
 COPY api/ api/
 COPY controllers/ controllers/
+
 
 # Build
 RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o /src/${PROJECT_NAME} \
