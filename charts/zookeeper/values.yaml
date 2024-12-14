@@ -52,6 +52,7 @@ adminServerService: {}
 
 clientService: {}
   # annotations: {}
+  # external: false
 
 headlessService: {}
   # annotations: {}

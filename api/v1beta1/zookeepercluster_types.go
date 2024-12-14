@@ -543,6 +543,8 @@ type ClientServicePolicy struct {
 	// Annotations specifies the annotations to attach to client service the operator
 	// creates.
 	Annotations map[string]string `json:"annotations,omitempty"`
+
+	External bool `json:"external,omitempty"`
 }
 
 type HeadlessServicePolicy struct {

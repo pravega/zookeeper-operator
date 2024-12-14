@@ -89,6 +89,8 @@ spec:
                     description: Annotations specifies the annotations to attach to
                       client service the operator creates.
                     type: object
+                  external:
+                    type: boolean
                 type: object
               config:
                 description: Conf is the zookeeper configuration, which will be used
