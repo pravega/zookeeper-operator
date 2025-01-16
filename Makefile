@@ -30,6 +30,12 @@ GOBIN=$(shell go env GOPATH)/bin
 else
 GOBIN=$(shell go env GOBIN)
 endif
+#Setting the java based on the architecture
+ifeq ($(shell uname -m), s390x)
+JAVA_TYPE="ibmjava"
+else
+JAVA_TYPE="openjdk"
+endif
 
 # Install CRDs into a cluster
 install: manifests kustomize
@@ -128,6 +134,12 @@ build-go:
 	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build \
 		-ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
 		-o bin/$(EXPORTER_NAME)-windows-amd64.exe cmd/exporter/main.go
+        CGO_ENABLED=0 GOOS=linux GOARCH=s390x go build \
+                -ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
+                -o bin/$(PROJECT_NAME)-linux-s390x main.go
+        CGO_ENABLED=0 GOOS=linux GOARCH=s390x go build \
+                -ldflags "-X github.com/$(REPO)/pkg/version.Version=$(VERSION) -X github.com/$(REPO)/pkg/version.GitSHA=$(GIT_SHA)" \
+                -o bin/$(EXPORTER_NAME)-linux-s390x cmd/exporter/main.go
 
 build-image:
 	docker build --build-arg VERSION=$(VERSION) --build-arg DOCKER_REGISTRY=$(DOCKER_REGISTRY) --build-arg DISTROLESS_DOCKER_REGISTRY=$(DISTROLESS_DOCKER_REGISTRY) --build-arg GIT_SHA=$(GIT_SHA) -t $(REPO):$(VERSION) .
@@ -135,7 +147,7 @@ build-image:
 
 build-zk-image:
 
-	docker build --build-arg VERSION=$(VERSION)  --build-arg DOCKER_REGISTRY=$(DOCKER_REGISTRY) --build-arg GIT_SHA=$(GIT_SHA) -t $(APP_REPO):$(VERSION) ./docker
+	docker build --build-arg VERSION=$(VERSION)  --build-arg DOCKER_REGISTRY=$(DOCKER_REGISTRY) --build-arg JAVA_TYPE=$(JAVA_TYPE) --build-arg GIT_SHA=$(GIT_SHA) -t $(APP_REPO):$(VERSION) ./docker
 	docker tag $(APP_REPO):$(VERSION) $(APP_REPO):latest
 
 build-zk-image-swarm:
