@@ -238,6 +238,20 @@ func (r *ZookeeperClusterReconciler) reconcileStatefulSet(instance *zookeeperv1b
 	} else if err != nil {
 		return err
 	} else {
+		// check whether orphans PVCs need to be deleted before updating the sts
+		if instance.Spec.Persistence != nil &&
+			instance.Spec.Persistence.VolumeReclaimPolicy == zookeeperv1beta1.VolumeReclaimPolicyDelete {
+			pvcCount, err := r.getPVCCount(instance)
+			if err != nil {
+				return err
+			}
+			r.Log.Info("PVC count", "count", pvcCount, "replicas", foundSts.Status.Replicas, "cr replicas", instance.Spec.Replicas)
+			if pvcCount > int(foundSts.Status.Replicas) {
+				r.Log.Info("Deleting PVCs", "count", pvcCount, "replicas", instance.Status.Replicas)
+				return nil
+			}
+		}
+
 		// check whether zookeeperCluster is updated before updating the sts
 		cmp := compareResourceVersion(instance, foundSts)
 		if cmp < 0 {
@@ -285,8 +299,6 @@ func (r *ZookeeperClusterReconciler) updateStatefulSet(instance *zookeeperv1beta
 	if err != nil {
 		return err
 	}
-	instance.Status.Replicas = foundSts.Status.Replicas
-	instance.Status.ReadyReplicas = foundSts.Status.ReadyReplicas
 	return nil
 }
 
@@ -585,6 +597,15 @@ func (r *ZookeeperClusterReconciler) reconcileClusterStatus(instance *zookeeperv
 	instance.Status.Members.Ready = readyMembers
 	instance.Status.Members.Unready = unreadyMembers
 
+	foundSts := &appsv1.StatefulSet{}
+	err = r.Client.Get(context.TODO(), types.NamespacedName{
+		Name:      instance.GetName(),
+		Namespace: instance.Namespace,
+	}, foundSts)
+
+	instance.Status.Replicas = foundSts.Status.Replicas
+	instance.Status.ReadyReplicas = foundSts.Status.ReadyReplicas
+
 	// If Cluster is in a ready state...
 	if instance.Spec.Replicas == instance.Status.ReadyReplicas && (!instance.Status.MetaRootCreated) {
 		r.Log.Info("Cluster is Ready, Creating ZK Metadata...")
@@ -734,21 +755,38 @@ func (r *ZookeeperClusterReconciler) getPVCCount(instance *zookeeperv1beta1.Zook
 }
 
 func (r *ZookeeperClusterReconciler) cleanupOrphanPVCs(instance *zookeeperv1beta1.ZookeeperCluster) (err error) {
+	// get the up to date STS
+	foundSts := &appsv1.StatefulSet{}
+	err = r.Client.Get(context.TODO(), types.NamespacedName{
+		Name:      instance.GetName(),
+		Namespace: instance.Namespace,
+	}, foundSts)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return nil
+		}
+		return err
+	}
+
 	// this check should make sure we do not delete the PVCs before the STS has scaled down
-	if instance.Status.ReadyReplicas == instance.Spec.Replicas {
+	if foundSts.Status.ReadyReplicas == foundSts.Status.Replicas {
 		pvcCount, err := r.getPVCCount(instance)
 		if err != nil {
 			return err
 		}
-		r.Log.Info("cleanupOrphanPVCs", "PVC Count", pvcCount, "ReadyReplicas Count", instance.Status.ReadyReplicas)
-		if pvcCount > int(instance.Spec.Replicas) {
+
+		r.Log.Info("cleanupOrphanPVCs",
+			"PVC Count", pvcCount,
+			"Replicas Count", foundSts.Spec.Replicas)
+		if pvcCount > int(*foundSts.Spec.Replicas) {
 			pvcList, err := r.getPVCList(instance)
 			if err != nil {
 				return err
 			}
 			for _, pvcItem := range pvcList.Items {
 				// delete only Orphan PVCs
-				if utils.IsPVCOrphan(pvcItem.Name, instance.Spec.Replicas) {
+				if utils.IsPVCOrphan(pvcItem.Name, *foundSts.Spec.Replicas) {
+					r.Log.Info("cleanupOrphanPVCs", "Deleting Orphan PVC", pvcItem.Name)
 					r.deletePVC(pvcItem)
 				}
 			}
